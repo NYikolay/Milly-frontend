@@ -178,6 +178,7 @@ export interface TelegramWebApp {
   setHeaderColor(color: string): void;
   setBackgroundColor(color: string): void;
   setBottomBarColor?(color: string): void;
+  openTelegramLink?(url: string): void;
   enableClosingConfirmation?(): void;
   disableClosingConfirmation?(): void;
   enableVerticalSwipes?(): void;

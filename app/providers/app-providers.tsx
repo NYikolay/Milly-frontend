@@ -2,6 +2,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MotionConfig } from "motion/react";
 import { useState, type PropsWithChildren } from "react";
 
+import { AuthSessionError } from "~/lib/auth/errors";
+import { AuthProvider } from "~/providers/auth-provider";
 import { TelegramProvider } from "~/providers/telegram-provider";
 
 export function AppProviders({ children }: PropsWithChildren) {
@@ -11,7 +13,8 @@ export function AppProviders({ children }: PropsWithChildren) {
         defaultOptions: {
           queries: {
             staleTime: 30_000,
-            retry: 1,
+            retry: (failureCount, error) =>
+              !(error instanceof AuthSessionError) && failureCount < 1,
             refetchOnWindowFocus: false,
           },
         },
@@ -21,7 +24,9 @@ export function AppProviders({ children }: PropsWithChildren) {
   return (
     <MotionConfig reducedMotion="user">
       <QueryClientProvider client={queryClient}>
-        <TelegramProvider>{children}</TelegramProvider>
+        <TelegramProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </TelegramProvider>
       </QueryClientProvider>
     </MotionConfig>
   );
