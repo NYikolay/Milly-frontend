@@ -86,8 +86,10 @@ app/
   выполняется только после refresh. При `401` клиент один раз обновляет
   access через `/auth/refresh` и повторяет запрос; если refresh вернул `401`
   — один раз логинится через `initData` и повторяет; если refresh завершился
-  другой ошибкой — `connection-error` без login-fallback; если после повторов
-  снова `401` — `reauth-required`. Refresh и login — single-flight.
+  сетевой ошибкой или `5xx` — `connection-error` без login-fallback; если
+  refresh вернул `403`, `422` или другой не-`401` 4xx — `reauth-required`;
+  если после повторов снова `401` — `reauth-required`. Refresh и login —
+  single-flight.
 - Access token хранится только в памяти (`app/lib/auth/token-store.ts`);
   refresh token — HttpOnly cookie, выставляемая backend (`credentials:
   "include"`). Запрещено хранить access/refresh/`initData` в

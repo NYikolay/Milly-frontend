@@ -48,6 +48,8 @@ export function refreshAccessToken(): Promise<TokenResponse> {
     return refreshInFlight;
   }
 
+  const tokenAtStart = getAccessToken();
+
   const request = (async () => {
     try {
       const response = await requestJson<TokenResponse>("/auth/refresh", {
@@ -59,7 +61,11 @@ export function refreshAccessToken(): Promise<TokenResponse> {
 
       return response;
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
+      if (
+        error instanceof ApiError &&
+        error.status === 401 &&
+        getAccessToken() === tokenAtStart
+      ) {
         clearAccessToken();
       }
 

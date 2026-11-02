@@ -216,6 +216,20 @@ describe("refreshAccessToken", () => {
     expect(getAccessToken()).toBe("current-access");
   });
 
+  it("does not clear a newer token installed while the refresh was in flight", async () => {
+    setAccessToken("stale-access");
+    const gate = deferred<TokenResponse>();
+    requestJsonMock.mockReturnValue(gate.promise);
+
+    const refresh = refreshAccessToken();
+
+    setAccessToken("access-from-fallback-login");
+    gate.reject(apiError(401));
+
+    await expect(refresh).rejects.toBeInstanceOf(ApiError);
+    expect(getAccessToken()).toBe("access-from-fallback-login");
+  });
+
   it("clears the in-flight request after a failure", async () => {
     const error = apiError(500);
     requestJsonMock

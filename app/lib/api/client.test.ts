@@ -15,6 +15,7 @@ import {
 import { AuthSessionError, EmptyInitDataError } from "~/lib/auth/errors";
 import {
   clearAccessToken,
+  getAccessToken,
   setAccessToken,
 } from "~/lib/auth/token-store";
 import type { AuthFailure } from "~/lib/auth/types";
@@ -460,6 +461,294 @@ describe("apiRequest retry flow", () => {
       status: "connection-error",
       reason: "network",
     });
+  });
+
+  it("becomes terminal reauth when refresh and fallback login both return 401", async () => {
+    setAccessToken("access-1");
+    const listener = vi.fn<(failure: AuthFailure) => void>();
+    setAuthFailureListener(listener);
+    refreshAccessTokenMock.mockImplementation(async () => {
+      clearAccessToken();
+      throw apiError(401);
+    });
+    loginFromTelegramMock.mockRejectedValue(apiError(401));
+    requestJsonMock.mockRejectedValue(apiError(401));
+
+    await expectAuthSessionError(apiRequest("/items"), {
+      status: "reauth-required",
+      reason: "init_data_invalid",
+    });
+
+    expect(getAccessToken()).toBeNull();
+    expect(refreshAccessTokenMock).toHaveBeenCalledTimes(1);
+    expect(loginFromTelegramMock).toHaveBeenCalledTimes(1);
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener).toHaveBeenCalledWith({
+      status: "reauth-required",
+      reason: "init_data_invalid",
+    });
+  });
+
+  it.each([
+    [403, "reauth-required", "forbidden"],
+    [422, "reauth-required", "init_data_invalid"],
+    [503, "connection-error", "server"],
+  ] as const)(
+    "classifies a runtime refresh %i as %s/%s",
+    async (status, expectedStatus, expectedReason) => {
+      setAccessToken("access-1");
+      const listener = vi.fn<(failure: AuthFailure) => void>();
+      setAuthFailureListener(listener);
+      refreshAccessTokenMock.mockRejectedValue(apiError(status));
+      requestJsonMock.mockRejectedValue(apiError(401));
+
+      await expectAuthSessionError(apiRequest("/items"), {
+        status: expectedStatus,
+        reason: expectedReason,
+      });
+
+      expect(loginFromTelegramMock).not.toHaveBeenCalled();
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(listener).toHaveBeenCalledWith({
+        status: expectedStatus,
+        reason: expectedReason,
+      });
+    },
+  );
+});
+
+describe("apiRequest stale token handling", () => {
+  it("retries with a newer token when a late 401 arrives after another refresh", async () => {
+    setAccessToken("access-1");
+    const lateGate = deferred<void>();
+    mockRefreshSuccess("access-2");
+    requestJsonMock.mockImplementation((path, options) => {
+      if (path === "/late" && options?.token === "access-1") {
+        return lateGate.promise.then(() => {
+          throw apiError(401);
+        });
+      }
+
+      if (options?.token === "access-1") {
+        return Promise.reject(apiError(401));
+      }
+
+      return Promise.resolve({ ok: true });
+    });
+
+    const late = apiRequest("/late");
+
+    await vi.waitFor(() => {
+      expect(requestJsonMock).toHaveBeenCalledWith(
+        "/late",
+        expect.objectContaining({ token: "access-1" }),
+      );
+    });
+
+    await expect(apiRequest("/first")).resolves.toEqual({ ok: true });
+    expect(refreshAccessTokenMock).toHaveBeenCalledTimes(1);
+
+    lateGate.resolve();
+
+    await expect(late).resolves.toEqual({ ok: true });
+
+    expect(refreshAccessTokenMock).toHaveBeenCalledTimes(1);
+    expect(loginFromTelegramMock).not.toHaveBeenCalled();
+    expect(
+      requestJsonMock.mock.calls.map(([, options]) => options?.token),
+    ).toEqual(["access-1", "access-1", "access-2", "access-2"]);
+  });
+
+  it("falls back to login when the token-change retry is unauthorized without refreshing again", async () => {
+    setAccessToken("access-1");
+    const lateGate = deferred<void>();
+    mockRefreshSuccess("access-2");
+    mockLoginSuccess("access-3");
+    requestJsonMock.mockImplementation((path, options) => {
+      if (path === "/late" && options?.token === "access-1") {
+        return lateGate.promise.then(() => {
+          throw apiError(401);
+        });
+      }
+
+      if (path === "/late" && options?.token === "access-2") {
+        return Promise.reject(apiError(401));
+      }
+
+      if (path === "/late" && options?.token === "access-3") {
+        return Promise.resolve({ ok: true });
+      }
+
+      if (path === "/first" && options?.token === "access-1") {
+        return Promise.reject(apiError(401));
+      }
+
+      return Promise.resolve({ ok: true });
+    });
+
+    const late = apiRequest("/late");
+
+    await vi.waitFor(() => {
+      expect(requestJsonMock).toHaveBeenCalledWith(
+        "/late",
+        expect.objectContaining({ token: "access-1" }),
+      );
+    });
+
+    await expect(apiRequest("/first")).resolves.toEqual({ ok: true });
+    expect(refreshAccessTokenMock).toHaveBeenCalledTimes(1);
+
+    lateGate.resolve();
+
+    await expect(late).resolves.toEqual({ ok: true });
+
+    expect(refreshAccessTokenMock).toHaveBeenCalledTimes(1);
+    expect(loginFromTelegramMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("rethrows the original 401 without refreshing when the token was cleared meanwhile", async () => {
+    setAccessToken("access-1");
+    const listener = vi.fn<(failure: AuthFailure) => void>();
+    setAuthFailureListener(listener);
+    const gate = deferred<void>();
+    const error = apiError(401);
+    requestJsonMock.mockImplementation((_path, options) => {
+      if (options?.token === "access-1") {
+        return gate.promise.then(() => {
+          throw error;
+        });
+      }
+
+      return Promise.resolve({ ok: true });
+    });
+
+    const request = apiRequest("/items");
+
+    await vi.waitFor(() => {
+      expect(requestJsonMock).toHaveBeenCalledTimes(1);
+    });
+
+    clearAccessToken();
+    gate.resolve();
+
+    await expect(request).rejects.toBe(error);
+
+    expect(requestJsonMock).toHaveBeenCalledTimes(1);
+    expect(refreshAccessTokenMock).not.toHaveBeenCalled();
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it("does not notify a stale refresh failure when a newer token was installed", async () => {
+    setAccessToken("access-1");
+    const listener = vi.fn<(failure: AuthFailure) => void>();
+    setAuthFailureListener(listener);
+    const gate = deferred<void>();
+    refreshAccessTokenMock.mockImplementation(async () => {
+      await gate.promise;
+      throw apiError(503);
+    });
+    requestJsonMock.mockRejectedValue(apiError(401));
+
+    const outcome = apiRequest("/items").then(
+      () => null,
+      (error: unknown) => error,
+    );
+
+    await vi.waitFor(() => {
+      expect(refreshAccessTokenMock).toHaveBeenCalledTimes(1);
+    });
+
+    setAccessToken("access-login-new");
+    gate.resolve();
+
+    const error = await outcome;
+
+    expect(error).toBeInstanceOf(AuthSessionError);
+
+    if (error instanceof AuthSessionError) {
+      expect(error.failure).toEqual({
+        status: "connection-error",
+        reason: "server",
+      });
+    }
+
+    expect(listener).not.toHaveBeenCalled();
+    expect(getAccessToken()).toBe("access-login-new");
+  });
+
+  it("does not notify a stale fallback login failure when a newer token was installed", async () => {
+    setAccessToken("access-1");
+    const listener = vi.fn<(failure: AuthFailure) => void>();
+    setAuthFailureListener(listener);
+    const loginGate = deferred<void>();
+    refreshAccessTokenMock.mockRejectedValue(apiError(401));
+    loginFromTelegramMock.mockImplementation(async () => {
+      await loginGate.promise;
+      throw apiError(503);
+    });
+    requestJsonMock.mockRejectedValue(apiError(401));
+
+    const outcome = apiRequest("/items").then(
+      () => null,
+      (error: unknown) => error,
+    );
+
+    await vi.waitFor(() => {
+      expect(loginFromTelegramMock).toHaveBeenCalledTimes(1);
+    });
+
+    setAccessToken("access-login-new");
+    loginGate.resolve();
+
+    const error = await outcome;
+
+    expect(error).toBeInstanceOf(AuthSessionError);
+
+    if (error instanceof AuthSessionError) {
+      expect(error.failure).toEqual({
+        status: "connection-error",
+        reason: "server",
+      });
+    }
+
+    expect(listener).not.toHaveBeenCalled();
+    expect(getAccessToken()).toBe("access-login-new");
+  });
+
+  it("does not notify a stale terminal failure when a newer token was installed", async () => {
+    setAccessToken("access-1");
+    const listener = vi.fn<(failure: AuthFailure) => void>();
+    setAuthFailureListener(listener);
+    const finalGate = deferred<void>();
+    mockRefreshSuccess("access-2");
+    mockLoginSuccess("access-3");
+    requestJsonMock.mockImplementation((_path, options) => {
+      if (options?.token === "access-3") {
+        return finalGate.promise.then(() => {
+          throw apiError(401);
+        });
+      }
+
+      return Promise.reject(apiError(401));
+    });
+
+    const outcome = apiRequest("/items").then(
+      () => null,
+      (error: unknown) => error,
+    );
+
+    await vi.waitFor(() => {
+      expect(requestJsonMock).toHaveBeenCalledTimes(3);
+    });
+
+    setAccessToken("access-login-new");
+    finalGate.resolve();
+
+    const error = await outcome;
+
+    expect(error).toMatchObject({ status: 401 });
+    expect(listener).not.toHaveBeenCalled();
+    expect(getAccessToken()).toBe("access-login-new");
   });
 });
 
