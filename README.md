@@ -46,9 +46,10 @@ npm run dev        # http://localhost:5173
   backend проверяет Origin на auth-маршрутах.
 
 В production frontend и `/api` должны быть на одном origin: reverse proxy
-обязан направлять `/api` в backend. Refresh-cookie — HttpOnly и host-only,
-поэтому cross-origin развёртывание требует согласованной настройки cookie
-и CORS на backend.
+обязан направлять `/api` в backend. Refresh-cookie — HttpOnly, host-only и
+ограничена path `<api_v1_str>/auth` (по умолчанию `/api/v1/auth`), поэтому
+cross-origin развёртывание требует согласованной настройки cookie и CORS на
+backend.
 
 ## API и авторизация
 
@@ -62,12 +63,15 @@ npm run dev        # http://localhost:5173
    (`app/lib/auth/auth-api.ts`).
 2. Если `initData` пуст или login вернул `401`, выполняется
    `POST /auth/refresh`.
-3. После получения access token пользователь загружается через
-   `GET /auth/me`.
+3. После успешного `POST /auth/telegram` пользователь берётся из ответа
+   login. `GET /auth/me` выполняется только после успешного
+   `POST /auth/refresh`.
 4. При `401` на API-запросе клиент один раз обновляет access через
-   `POST /auth/refresh` и повторяет запрос. Если refresh не удался —
-   один раз логинится через `initData` и повторяет запрос. Если снова
-   `401`, состояние становится `reauth-required`.
+   `POST /auth/refresh` и повторяет запрос. Если refresh вернул `401` —
+   один раз логинится через `initData` и повторяет запрос. Если refresh
+   завершился ошибкой, отличной от `401` (сеть или сервер), состояние
+   становится `connection-error`, а login-fallback не запускается. Если
+   после повторов снова `401`, состояние становится `reauth-required`.
 5. Параллельные запросы используют общий in-flight refresh/login, поэтому
    дублирующих запросов нет.
 

@@ -81,10 +81,12 @@ app/
   `auth-events`, `failure`) и `app/providers/auth-provider.tsx`. `AuthGate`
   в `app/routes/_app.tsx` оборачивает `Outlet`.
 - Auth flow: при старте — `POST /auth/telegram` с сырым `initData`, если он
-  есть (при `401` — `POST /auth/refresh`), иначе сразу `POST /auth/refresh`;
-  затем `GET /auth/me`. При `401` клиент
-  один раз обновляет access через `/auth/refresh` и повторяет запрос; если
-  refresh не удался — один раз логинится через `initData` и повторяет; если
+  есть (при `401` — `POST /auth/refresh`), иначе сразу `POST /auth/refresh`.
+  При успешном login пользователь берётся из ответа login; `GET /auth/me`
+  выполняется только после refresh. При `401` клиент один раз обновляет
+  access через `/auth/refresh` и повторяет запрос; если refresh вернул `401`
+  — один раз логинится через `initData` и повторяет; если refresh завершился
+  другой ошибкой — `connection-error` без login-fallback; если после повторов
   снова `401` — `reauth-required`. Refresh и login — single-flight.
 - Access token хранится только в памяти (`app/lib/auth/token-store.ts`);
   refresh token — HttpOnly cookie, выставляемая backend (`credentials:
