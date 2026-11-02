@@ -1,0 +1,277 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
+
+  --color-app-bg: var(--app-bg);
+  --color-app-card: var(--app-card);
+  --color-app-text: var(--app-text);
+  --color-app-text-secondary: var(--app-text-secondary);
+  --color-app-hint: var(--app-hint);
+  --color-app-accent: var(--app-accent);
+  --color-app-accent-soft: var(--app-accent-soft);
+  --color-app-stroke: var(--app-stroke);
+  --color-app-success: var(--app-success);
+  --color-app-destructive: var(--app-destructive);
+  --color-app-icon: var(--app-icon);
+  --color-app-chip: var(--app-chip);
+  --color-app-track: var(--app-track);
+  --color-app-tab-active: var(--app-tab-active);
+  --color-app-tab-inactive: var(--app-tab-inactive);
+  --color-app-tab-accent: var(--app-tab-accent);
+  --color-app-icon-button: var(--app-icon-button);
+  --color-app-icon-button-stroke: var(--app-icon-button-stroke);
+  --color-app-avatar-ring: var(--app-avatar-ring);
+  --color-app-divider: var(--app-divider);
+
+  --color-tg-bg: var(--tg-theme-bg-color, var(--app-bg));
+  --color-tg-secondary-bg: var(
+    --tg-theme-secondary-bg-color,
+    var(--app-secondary-bg)
+  );
+  --color-tg-text: var(--tg-theme-text-color, var(--app-text));
+  --color-tg-hint: var(--tg-theme-hint-color, var(--app-hint));
+  --color-tg-link: var(--tg-theme-link-color, var(--app-link));
+  --color-tg-button: var(--tg-theme-button-color, var(--app-button));
+  --color-tg-button-text: var(
+    --tg-theme-button-text-color,
+    var(--app-button-text)
+  );
+  --color-tg-accent: var(--tg-theme-accent-text-color, var(--app-link));
+  --color-tg-header-bg: var(--tg-theme-header-bg-color, var(--app-bg));
+  --color-tg-section-bg: var(--tg-theme-section-bg-color, var(--app-bg));
+  --color-tg-section-header: var(
+    --tg-theme-section-header-text-color,
+    var(--app-hint)
+  );
+  --color-tg-subtitle: var(--tg-theme-subtitle-text-color, var(--app-hint));
+  --color-tg-destructive: var(
+    --tg-theme-destructive-text-color,
+    var(--app-destructive)
+  );
+  --color-tg-separator: var(
+    --tg-theme-section-separator-color,
+    var(--app-separator)
+  );
+  --color-tg-bottom-bar: var(
+    --tg-theme-bottom-bar-bg-color,
+    var(--app-secondary-bg)
+  );
+}
+
+:root {
+  color-scheme: light;
+  --app-bg: #f2f2f7;
+  --app-card: #ffffff;
+  --app-text: #303033;
+  --app-text-secondary: #7a7d83;
+  --app-hint: #a2acb0;
+  --app-stroke: #e9e9ee;
+  --app-accent: #007aff;
+  --app-accent-soft: #eaf3ff;
+  --app-success: #31d158;
+  --app-icon: #212121;
+  --app-chip: var(--app-accent-soft);
+  --app-track: #f2f2f7;
+  --app-tab-active: rgba(60, 60, 67, 0.08);
+  --app-tab-inactive: #323234;
+  --app-tab-accent: var(--app-accent);
+  --app-tab-active-highlight: rgba(255, 255, 255, 0.4);
+  --app-tab-active-shadow: rgba(0, 0, 0, 0.06);
+  --app-icon-button: #ffffff;
+  --app-icon-button-stroke: transparent;
+  --app-avatar-ring: #ffffff;
+  --app-divider: rgba(0, 0, 0, 0.15);
+  --app-glass-bg: rgba(255, 255, 255, 0.4);
+  --app-glass-highlight: rgba(255, 255, 255, 0.8);
+  --app-glass-shadow:
+    0 0 20px rgba(15, 23, 42, 0.06),
+    0 8px 28px rgba(15, 23, 42, 0.05);
+  --app-secondary-bg: #efeff4;
+  --app-link: #007aff;
+  --app-button: #007aff;
+  --app-button-text: #ffffff;
+  --app-destructive: #e53935;
+  --app-separator: rgba(0, 0, 0, 0.15);
+  --app-inset-top: calc(
+    var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px)) +
+      var(--tg-content-safe-area-inset-top, 0px)
+  );
+  --app-inset-right: calc(
+    var(--tg-safe-area-inset-right, env(safe-area-inset-right, 0px)) +
+      var(--tg-content-safe-area-inset-right, 0px)
+  );
+  --app-inset-bottom: calc(
+    var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) +
+      var(--tg-content-safe-area-inset-bottom, 0px)
+  );
+  --app-inset-left: calc(
+    var(--tg-safe-area-inset-left, env(safe-area-inset-left, 0px)) +
+      var(--tg-content-safe-area-inset-left, 0px)
+  );
+}
+
+:root[data-app-theme="dark"] {
+  color-scheme: dark;
+  --app-bg: #171717;
+  --app-card: #212121;
+  --app-text: #ffffff;
+  --app-text-secondary: #7a7d83;
+  --app-hint: #a2acb0;
+  --app-stroke: #303033;
+  --app-accent: #007aff;
+  --app-accent-soft: #31373f;
+  --app-success: #32e55e;
+  --app-icon: #efeff4;
+  --app-chip: var(--app-accent-soft);
+  --app-track: #303033;
+  --app-tab-active: rgba(255, 255, 255, 0.08);
+  --app-tab-inactive: rgba(235, 235, 245, 0.88);
+  --app-tab-accent: var(--app-accent);
+  --app-tab-active-highlight: rgba(255, 255, 255, 0.12);
+  --app-tab-active-shadow: rgba(0, 0, 0, 0.18);
+  --app-icon-button: #303033;
+  --app-icon-button-stroke: rgba(255, 255, 255, 0.06);
+  --app-avatar-ring: transparent;
+  --app-divider: rgba(255, 255, 255, 0.05);
+  --app-glass-bg: rgba(44, 44, 48, 0.6);
+  --app-glass-highlight: rgba(255, 255, 255, 0.2);
+  --app-glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --app-secondary-bg: #212121;
+  --app-link: #007aff;
+  --app-button: #007aff;
+  --app-button-text: #ffffff;
+  --app-destructive: #e53935;
+  --app-separator: rgba(255, 255, 255, 0.05);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    min-height: 100%;
+  }
+
+  body {
+    @apply bg-app-bg font-sans text-app-text antialiased;
+    margin: 0;
+    min-height: var(--tg-viewport-stable-height, 100dvh);
+    overscroll-behavior-y: none;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+}
+
+.app-shell {
+  min-height: var(--tg-viewport-stable-height, 100dvh);
+}
+
+.glass-nav {
+  --glass-light-angle: -40deg;
+  --glass-sheen: 0.32;
+  --glass-dispersion: 1;
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(
+        120% 90% at 50% -20%,
+        rgb(255 255 255 / calc(var(--glass-sheen) * 0.9)) 0%,
+        rgb(255 255 255 / 0) 55%
+      )
+      padding-box,
+    linear-gradient(
+        var(--glass-light-angle),
+        rgb(255 255 255 / calc(var(--glass-sheen) * 0.55)) 0%,
+        rgb(255 255 255 / 0.02) 34%,
+        rgb(255 255 255 / 0) 62%,
+        rgb(255 255 255 / calc(var(--glass-sheen) * 0.14)) 100%
+      )
+      padding-box,
+    var(--app-glass-bg);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 var(--app-glass-highlight),
+    inset 0 -1px 0 rgb(255 255 255 / calc(var(--glass-sheen) * 0.12)),
+    var(--app-glass-shadow);
+}
+
+:root[data-app-theme="dark"] .glass-nav {
+  --glass-sheen: 0.1;
+  --glass-dispersion: 0.7;
+}
+
+.glass-nav::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    var(--glass-light-angle),
+    rgb(255 84 84 / calc(0.45 * var(--glass-dispersion))) 0%,
+    rgb(255 214 102 / calc(0.22 * var(--glass-dispersion))) 28%,
+    rgb(97 255 201 / calc(0.18 * var(--glass-dispersion))) 52%,
+    rgb(91 141 255 / calc(0.45 * var(--glass-dispersion))) 100%
+  );
+  opacity: calc(0.35 * var(--glass-dispersion));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.glass-tab-active {
+  background: var(--app-tab-active);
+  box-shadow:
+    inset 0 1px 0 var(--app-tab-active-highlight),
+    0 2px 10px var(--app-tab-active-shadow);
+}
+
+.glass-nav > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes voice-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.32;
+  }
+  70% {
+    opacity: 0.08;
+  }
+  100% {
+    transform: scale(1.34);
+    opacity: 0;
+  }
+}
+
+.voice-pulse-ring {
+  animation: voice-pulse 2.1s cubic-bezier(0.2, 0.65, 0.3, 1) infinite;
+  transform-origin: center;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-pulse-ring {
+    animation: none;
+    opacity: 0;
+  }
+}
