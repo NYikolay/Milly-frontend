@@ -1,7 +1,9 @@
 # AGENTS.md
 
 Инженерные правила и актуальное состояние `frontend/` для coding-агентов.
-Продуктовые детали не выдумывать: `backend/` пока пуст, `frontend/` — самостоятельная часть Milly.
+Продуктовые детали не выдумывать: backend уже реализует auth API
+(`/api/v1/auth`), frontend использует его; остальные сценарии — только по
+спекам в `docs/specs/`.
 
 ## 1. Стек и запуск
 
@@ -12,34 +14,47 @@
 - Шаблоны и текущая архитектура описаны ниже; не мигрировать на SPA, Next.js или другую библиотеку без явного решения.
 
 ```bash
-npm run dev        # dev-сервер, http://localhost:5173
-npm run build      # production-сборка в build/
-npm start          # запуск собранного SSR-сервера, по умолчанию :3000
-npm run typecheck  # react-router typegen && tsc
+npm run dev         # dev-сервер, http://localhost:5173
+npm run build       # production-сборка в build/
+npm start           # запуск собранного SSR-сервера, по умолчанию :3000
+npm run typecheck   # react-router typegen && tsc
+npm test            # Vitest, однократный прогон
+npm run test:watch  # Vitest в watch-режиме
 ```
 
+- Для локальной авторизации backend должен работать на `http://127.0.0.1:8000`:
+  Vite проксирует `/api`, сохраняет путь `/api/v1/...` и переписывает `Origin`
+  на `http://127.0.0.1:8000` (backend проверяет Origin на auth-маршрутах).
 - Docker: multi-stage `Dockerfile`, production-образ запускает `npm run start`.
-- Тестового фреймворка и линтера пока нет. Не выдумывать команды `npm test` / `npm run lint`; при необходимости сначала предложить и настроить инструменты.
+- Тесты — Vitest (`npm test`, `npm run test:watch`), файлы `app/**/*.test.ts`.
+  Линтер пока не настроен: не выдумывать `npm run lint`.
 
 ## 2. Структура
 
 ```text
 app/
   components/
+    auth/                     # AuthGate и AuthScreen (loading/error/no-init-data)
+    home/                     # секции главного экрана
     layout/app-shell.tsx      # каркас с safe-area и max-w-md
-    ui/button.tsx             # базовые UI-примитивы
-    ui/card.tsx
+    ui/                       # переиспользуемые примитивы
+    voice/                    # UI записи голоса
+  hooks/use-voice-recorder.ts
   lib/
+    api/                      # config, http, auth-aware client, errors, types
+    auth/                     # token-store, auth-api, bootstrap, events, failure
+    telegram/                 # client, types, bot-link
+    tasks/                    # временный источник данных главного экрана
+    voice/                    # запись и загрузка голоса
     cn.ts                     # склейка классов
-    telegram/
-      client.ts               # getTelegramWebApp, isTelegramEnvironment, supportsVersion
-      types.ts                # типы Telegram WebApp API и global window.Telegram
+    format-date.ts
   providers/
-    app-providers.tsx         # QueryClientProvider + TelegramProvider
+    app-providers.tsx         # QueryClient + TelegramProvider + AuthProvider
+    auth-provider.tsx         # bootstrap, auth state, retry, auth-events
     telegram-provider.tsx     # init, тема, insets, события, haptics, useTelegram
   routes/
-    _app.tsx                  # pathless layout с AppShell
-    home.tsx                  # тестовый экран на /
+    _app.tsx                  # pathless layout: AppShell > AuthGate > Outlet
+    home.tsx                  # главный экран на /
   app.css                     # Tailwind theme tokens и базовые стили
   root.tsx                    # документ, telegram-web-app.js, провайдеры, ErrorBoundary
   routes.ts                   # ручная конфигурация маршрутов
@@ -59,7 +74,23 @@ app/
 - Node-зависимый код держать в `*.server.ts` и вызывать из loader/action, не из браузерных компонентов.
 - Zustand — только для клиентского UI-состояния, когда оно действительно появляется. Сейчас стора нет; не создавать «заготовку ради заготовки».
 - Формы — `react-hook-form` + схемы `zod`; не дублировать валидацию вручную.
-- API-слой пока не создан. Когда появится backend, добавить единый клиент в `app/lib/api/` и не разбрасывать `fetch` по компонентам.
+- API-слой — `app/lib/api/`. Все запросы идут через `apiRequest` / `requestJson`;
+  не разбрасывать `fetch` по компонентам. База API — `VITE_API_BASE_URL`
+  (по умолчанию `/api/v1`), ошибки — `ApiError` / `ApiNetworkError`.
+- Auth-слой — `app/lib/auth/` (`token-store`, `auth-api`, `bootstrap-auth`,
+  `auth-events`, `failure`) и `app/providers/auth-provider.tsx`. `AuthGate`
+  в `app/routes/_app.tsx` оборачивает `Outlet`.
+- Auth flow: при старте — `POST /auth/telegram` с сырым `initData`, если он
+  есть (при `401` — `POST /auth/refresh`), иначе сразу `POST /auth/refresh`;
+  затем `GET /auth/me`. При `401` клиент
+  один раз обновляет access через `/auth/refresh` и повторяет запрос; если
+  refresh не удался — один раз логинится через `initData` и повторяет; если
+  снова `401` — `reauth-required`. Refresh и login — single-flight.
+- Access token хранится только в памяти (`app/lib/auth/token-store.ts`);
+  refresh token — HttpOnly cookie, выставляемая backend (`credentials:
+  "include"`). Запрещено хранить access/refresh/`initData` в
+  `localStorage`, `sessionStorage`, `indexedDB`, CloudStorage или
+  SecureStorage и логировать их. `useAuth()` не отдаёт токены.
 
 ## 4. Telegram Mini App
 
@@ -67,8 +98,9 @@ app/
 - `TelegramProvider` вызывает `ready()`, `expand()`, синхронизирует `--tg-theme-*`, `--app-inset-*`, слушает `themeChanged`, `viewportChanged`, `safeAreaChanged`, `contentSafeAreaChanged`, `fullscreenChanged`, `activated`/`deactivated`.
 - В компонентах работать с Telegram только через `useTelegram()` и helpers из `app/lib/telegram/`, не через `window.Telegram` напрямую.
 - Новые API гейтить через `supportsVersion("<bot api version>", webApp)`. Ориентиры: haptics — 6.1, fullscreen — 8.0, `setBottomBarColor` — 7.10.
-- `initDataUnsafe` использовать только для отображения. Для авторизации отправлять сырой `initData` на сервер и валидировать HMAC/signature + `auth_date`; сейчас серверной валидации нет.
-- Не требовать непустой `initData`: при запуске с keyboard-кнопки и inline-mode он пустой по дизайну.
+- `initDataUnsafe` использовать только для отображения. Для авторизации отправлять сырой `initData` в `POST /auth/telegram`: backend проверяет HMAC/signature и `auth_date`.
+- Не требовать непустой `initData`: при запуске с keyboard-кнопки и inline-mode он пустой по дизайну; тогда используется refresh-cookie.
+- Deep link `Открыть Milly` строится из `VITE_TG_BOT_USERNAME` в `app/lib/telegram/bot-link.ts` (`https://t.me/<username>?startapp=auth`); при пустом username кнопка не показывается.
 - Тема: только Tailwind-токены `tg-*` (`bg-tg-bg`, `text-tg-hint`, `bg-tg-button` и т.д.). Не хардкодить цвета Telegram и не полагаться на `dark:` для цветов темы. Новые токены добавлять в `@theme inline` в `app/app.css`.
 - Безопасные зоны применяет `AppShell` через `--app-inset-*`; не добавлять фиксированные отступы под чёлку/навигацию.
 - Для нижних панелей использовать `viewportStableHeight` / `--tg-viewport-stable-height`, не `viewportHeight`.
@@ -91,16 +123,19 @@ app/
 - Не добавлять зависимости без необходимости; сначала проверить, что в проекте уже есть подходящая библиотека.
 - Секреты и `BOT_TOKEN` не должны попадать в клиентский бандл, `VITE_*` и репозиторий.
 - Не менять SSR на SPA и не отключать `telegram-web-app.js` без явного решения.
-- Текущие пробелы: нет backend/API, нет серверной валидации `initData`, нет тестов и линтера. Не описывать их как готовые.
+- Не хранить токены и `initData` в браузерных/Telegram-хранилищах и не логировать их.
+- Текущие пробелы: линтер не настроен, e2e/браузерных тестов нет, ручные проверки в Telegram обязательны. Не описывать их как автоматизированные.
 
 ## 7. Проверка перед завершением
 
 ```bash
+npm test
 npm run typecheck
 npm run build
 ```
 
-- Для UI-изменений дополнительно проверить SSR-ответ: `npm run build && PORT=3000 npm start`, затем `curl -s http://localhost:3000/`.
+- Для UI-изменений дополнительно проверить SSR-ответ: `npm run build && PORT=3000 npm start`, затем `curl -s http://localhost:3000/`. В SSR не должно быть защищённого контента — только экран загрузки.
+- Для изменений auth поднять backend на `http://127.0.0.1:8000` и проверить dev proxy: `curl -i http://localhost:5173/api/v1/auth/refresh -X POST` должен вернуть `401`, а не `404`.
 - Если менялись Telegram-интеграция или тема, проверить экран в браузере и в Telegram: светлая/тёмная тема, safe-area, клавиатура, fullscreen.
 - Локальный запуск в Telegram: HTTPS-туннель на `http://localhost:5173` (`cloudflared tunnel --url ...` или `ngrok http 5173`) и URL в BotFather через `/setmenubutton` или `/newapp`. Quick-туннель меняет URL после перезапуска.
-- Перед добавлением тестов согласовать стек (например, Vitest); после настройки добавить `npm test` в скрипты и следовать TDD.
+- Новые тесты — Vitest, `*.test.ts` рядом с модулем; следовать TDD. `npm test` обязателен перед завершением.
