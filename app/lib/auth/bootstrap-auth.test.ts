@@ -1,11 +1,15 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError, ApiNetworkError } from "~/lib/api/errors";
 import type { AuthResponse, AuthUser, TokenResponse } from "~/lib/api/types";
 
 import { bootstrapAuth } from "./bootstrap-auth";
-import type { BootstrapAuthOptions } from "./bootstrap-auth";
+import type {
+  BootstrapAuthOptions,
+  BootstrapRequestOptions,
+} from "./bootstrap-auth";
 import { EmptyInitDataError } from "./errors";
+import { AUTH_BOOTSTRAP_BUDGET_MS } from "./timeouts";
 
 const user: AuthUser = {
   id: 1,
@@ -45,19 +49,42 @@ function apiError(status: number): ApiError {
   });
 }
 
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 function createMocks() {
   return {
-    login: vi.fn<(initData: string) => Promise<AuthResponse>>(),
-    refresh: vi.fn<() => Promise<TokenResponse>>(),
-    fetchMe: vi.fn<() => Promise<AuthUser>>(),
+    login:
+      vi.fn<
+        (
+          initData: string,
+          options: BootstrapRequestOptions,
+        ) => Promise<AuthResponse>
+      >(),
+    refresh:
+      vi.fn<(options: BootstrapRequestOptions) => Promise<TokenResponse>>(),
+    fetchMe: vi.fn<(options: BootstrapRequestOptions) => Promise<AuthUser>>(),
   };
 }
 
 function createOptions(
   mocks: ReturnType<typeof createMocks>,
   initData: string,
+  overrides: Partial<
+    Pick<BootstrapAuthOptions, "budgetMs" | "requestTimeoutMs">
+  > = {},
 ): BootstrapAuthOptions {
-  return { initData, ...mocks };
+  return {
+    initData,
+    budgetMs: AUTH_BOOTSTRAP_BUDGET_MS,
+    ...overrides,
+    ...mocks,
+  };
 }
 
 describe("bootstrapAuth with a non-empty init data", () => {
@@ -69,7 +96,10 @@ describe("bootstrapAuth with a non-empty init data", () => {
 
     expect(result).toEqual({ status: "authenticated", user });
     expect(mocks.login).toHaveBeenCalledTimes(1);
-    expect(mocks.login).toHaveBeenCalledWith("raw-init-data");
+    expect(mocks.login).toHaveBeenCalledWith(
+      "raw-init-data",
+      expect.objectContaining({ timeoutMs: AUTH_BOOTSTRAP_BUDGET_MS }),
+    );
     expect(mocks.refresh).not.toHaveBeenCalled();
     expect(mocks.fetchMe).not.toHaveBeenCalled();
   });
@@ -81,7 +111,10 @@ describe("bootstrapAuth with a non-empty init data", () => {
     const result = await bootstrapAuth(createOptions(mocks, "  raw-init-data  "));
 
     expect(result).toEqual({ status: "authenticated", user });
-    expect(mocks.login).toHaveBeenCalledWith("  raw-init-data  ");
+    expect(mocks.login).toHaveBeenCalledWith(
+      "  raw-init-data  ",
+      expect.objectContaining({ timeoutMs: AUTH_BOOTSTRAP_BUDGET_MS }),
+    );
     expect(mocks.refresh).not.toHaveBeenCalled();
   });
 
@@ -95,7 +128,10 @@ describe("bootstrapAuth with a non-empty init data", () => {
 
     expect(result).toEqual({ status: "authenticated", user });
     expect(mocks.login).toHaveBeenCalledTimes(1);
-    expect(mocks.login).toHaveBeenCalledWith("stale-init-data");
+    expect(mocks.login).toHaveBeenCalledWith(
+      "stale-init-data",
+      expect.objectContaining({ timeoutMs: AUTH_BOOTSTRAP_BUDGET_MS }),
+    );
     expect(mocks.refresh).toHaveBeenCalledTimes(1);
     expect(mocks.fetchMe).toHaveBeenCalledTimes(1);
   });
@@ -400,5 +436,187 @@ describe("bootstrapAuth abort handling", () => {
     mocks.fetchMe.mockRejectedValue(abortError);
 
     await expect(bootstrapAuth(createOptions(mocks, ""))).rejects.toBe(abortError);
+  });
+});
+
+describe("bootstrapAuth budget", () => {
+  it("returns connection-error/network when the budget expires", async () => {
+    const mocks = createMocks();
+    mocks.login.mockImplementation(() => new Promise<AuthResponse>(() => {}));
+
+    const promise = bootstrapAuth(createOptions(mocks, "raw-init-data"));
+
+    await vi.advanceTimersByTimeAsync(AUTH_BOOTSTRAP_BUDGET_MS);
+
+    await expect(promise).resolves.toEqual({
+      status: "connection-error",
+      reason: "network",
+    });
+    expect(mocks.refresh).not.toHaveBeenCalled();
+    expect(mocks.fetchMe).not.toHaveBeenCalled();
+  });
+
+  it("aborts the request signal when the budget expires", async () => {
+    const mocks = createMocks();
+    mocks.login.mockImplementation(() => new Promise<AuthResponse>(() => {}));
+
+    const promise = bootstrapAuth(createOptions(mocks, "raw-init-data"));
+    const options = mocks.login.mock.calls[0]?.[1];
+
+    expect(options?.signal.aborted).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(AUTH_BOOTSTRAP_BUDGET_MS);
+    await promise;
+
+    expect(options?.signal.aborted).toBe(true);
+  });
+
+  it("bounds each request timeout by the remaining budget", async () => {
+    const mocks = createMocks();
+    let rejectLogin!: (error: unknown) => void;
+    mocks.login.mockImplementation(
+      () =>
+        new Promise<AuthResponse>((_, reject) => {
+          rejectLogin = reject;
+        }),
+    );
+    mocks.refresh.mockResolvedValue(tokenResponse);
+    mocks.fetchMe.mockResolvedValue(user);
+
+    const promise = bootstrapAuth(
+      createOptions(mocks, "raw-init-data", {
+        budgetMs: 5000,
+        requestTimeoutMs: 10000,
+      }),
+    );
+
+    await vi.advanceTimersByTimeAsync(2000);
+    rejectLogin(apiError(401));
+
+    await expect(promise).resolves.toEqual({ status: "authenticated", user });
+
+    const loginOptions = mocks.login.mock.calls[0]?.[1];
+    const refreshOptions = mocks.refresh.mock.calls[0]?.[0];
+    const fetchMeOptions = mocks.fetchMe.mock.calls[0]?.[0];
+
+    expect(loginOptions?.timeoutMs).toBe(5000);
+    expect(refreshOptions?.timeoutMs).toBe(3000);
+    expect(fetchMeOptions?.timeoutMs).toBe(3000);
+    expect(loginOptions?.signal).toBe(refreshOptions?.signal);
+    expect(refreshOptions?.signal).toBe(fetchMeOptions?.signal);
+  });
+
+  it("does not start the next request when the budget is exhausted", async () => {
+    const mocks = createMocks();
+    let rejectLogin!: (error: unknown) => void;
+    mocks.login.mockImplementation(
+      () =>
+        new Promise<AuthResponse>((_, reject) => {
+          rejectLogin = reject;
+        }),
+    );
+
+    const promise = bootstrapAuth(createOptions(mocks, "raw-init-data"));
+
+    await vi.advanceTimersByTimeAsync(AUTH_BOOTSTRAP_BUDGET_MS - 1);
+    vi.setSystemTime(Date.now() + 1);
+    rejectLogin(apiError(401));
+
+    await expect(promise).resolves.toEqual({
+      status: "connection-error",
+      reason: "network",
+    });
+    expect(mocks.refresh).not.toHaveBeenCalled();
+    expect(mocks.fetchMe).not.toHaveBeenCalled();
+  });
+
+  it("uses requestTimeoutMs when it is below the remaining budget", async () => {
+    const mocks = createMocks();
+    mocks.login.mockResolvedValue(authResponse);
+
+    const result = await bootstrapAuth(
+      createOptions(mocks, "raw-init-data", { requestTimeoutMs: 1500 }),
+    );
+
+    expect(result).toEqual({ status: "authenticated", user });
+    expect(mocks.login.mock.calls[0]?.[1]?.timeoutMs).toBe(1500);
+  });
+
+  it("finishes within a custom budget of 3000 ms", async () => {
+    const mocks = createMocks();
+    mocks.login.mockImplementation(() => new Promise<AuthResponse>(() => {}));
+
+    let settled = false;
+    const promise = bootstrapAuth(
+      createOptions(mocks, "raw-init-data", { budgetMs: 3000 }),
+    ).then((result) => {
+      settled = true;
+
+      return result;
+    });
+
+    await vi.advanceTimersByTimeAsync(2999);
+    expect(settled).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(1);
+
+    await expect(promise).resolves.toEqual({
+      status: "connection-error",
+      reason: "network",
+    });
+    expect(settled).toBe(true);
+  });
+
+  it.each([0, -1])(
+    "returns connection-error/network without requests when budgetMs is %i",
+    async (budgetMs) => {
+      const mocks = createMocks();
+
+      const result = await bootstrapAuth(
+        createOptions(mocks, "raw-init-data", { budgetMs }),
+      );
+
+      expect(result).toEqual({ status: "connection-error", reason: "network" });
+      expect(mocks.login).not.toHaveBeenCalled();
+      expect(mocks.refresh).not.toHaveBeenCalled();
+      expect(mocks.fetchMe).not.toHaveBeenCalled();
+    },
+  );
+
+  it("ignores a late login success after the budget expires", async () => {
+    const mocks = createMocks();
+    let resolveLogin!: (response: AuthResponse) => void;
+    mocks.login.mockImplementation(
+      () =>
+        new Promise<AuthResponse>((resolve) => {
+          resolveLogin = resolve;
+        }),
+    );
+
+    const promise = bootstrapAuth(createOptions(mocks, "raw-init-data"));
+
+    await vi.advanceTimersByTimeAsync(AUTH_BOOTSTRAP_BUDGET_MS);
+
+    await expect(promise).resolves.toEqual({
+      status: "connection-error",
+      reason: "network",
+    });
+
+    resolveLogin(authResponse);
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(mocks.refresh).not.toHaveBeenCalled();
+    expect(mocks.fetchMe).not.toHaveBeenCalled();
+  });
+
+  it("maps a request timeout from login to connection-error/network", async () => {
+    const mocks = createMocks();
+    mocks.login.mockRejectedValue(new ApiNetworkError("Request timed out"));
+
+    const result = await bootstrapAuth(createOptions(mocks, "raw-init-data"));
+
+    expect(result).toEqual({ status: "connection-error", reason: "network" });
+    expect(mocks.refresh).not.toHaveBeenCalled();
+    expect(mocks.fetchMe).not.toHaveBeenCalled();
   });
 });

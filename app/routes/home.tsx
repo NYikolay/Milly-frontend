@@ -6,6 +6,8 @@ import { FaqSection } from "~/components/home/faq-section";
 import { HomeHeader } from "~/components/home/home-header";
 import { QuickAccessSection } from "~/components/home/quick-access-section";
 import { VoiceRecorderSheet } from "~/components/voice/voice-recorder-sheet";
+import { ApiError } from "~/lib/api/errors";
+import { throwAppError } from "~/lib/errors/route-error";
 import { formatTodayLabel } from "~/lib/format-date";
 import { getDailyTasksSummary } from "~/lib/tasks/daily-tasks";
 import { useTelegram } from "~/providers/telegram-provider";
@@ -19,7 +21,31 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const emptyPreview = new URL(request.url).searchParams.get("state") === "empty";
+  const state = new URL(request.url).searchParams.get("state");
+  const emptyPreview = state === "empty";
+
+  if (import.meta.env.DEV) {
+    if (state === "429") {
+      throwAppError(
+        new ApiError("Too many requests", {
+          status: 429,
+          code: "rate_limited",
+          requestId: "",
+        }),
+      );
+    }
+
+    if (state === "5xx") {
+      throwAppError(
+        new ApiError("Internal server error", {
+          status: 500,
+          code: "internal_error",
+          requestId: "preview-5xx-0001",
+        }),
+      );
+    }
+  }
+
   const summary = emptyPreview
     ? { total: 0, completed: 0 }
     : await getDailyTasksSummary();

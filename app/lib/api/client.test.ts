@@ -251,6 +251,21 @@ describe("apiRequest retry flow", () => {
     expect(listener).not.toHaveBeenCalled();
   });
 
+  it("propagates an original request timeout without notifying or refreshing", async () => {
+    setAccessToken("access-1");
+    const listener = vi.fn<(failure: AuthFailure) => void>();
+    setAuthFailureListener(listener);
+    const error = new ApiNetworkError("Request timed out");
+    requestJsonMock.mockRejectedValue(error);
+
+    await expect(apiRequest("/items")).rejects.toBe(error);
+
+    expect(requestJsonMock).toHaveBeenCalledTimes(1);
+    expect(refreshAccessTokenMock).not.toHaveBeenCalled();
+    expect(loginFromTelegramMock).not.toHaveBeenCalled();
+    expect(listener).not.toHaveBeenCalled();
+  });
+
   it("propagates an AbortError from the original request without refreshing", async () => {
     setAccessToken("access-1");
     const listener = vi.fn<(failure: AuthFailure) => void>();
@@ -279,6 +294,25 @@ describe("apiRequest retry flow", () => {
     expect(requestJsonMock).toHaveBeenCalledTimes(2);
     expect(refreshAccessTokenMock).toHaveBeenCalledTimes(1);
     expect(loginFromTelegramMock).not.toHaveBeenCalled();
+  });
+
+  it("propagates a timeout from the retry after refresh without refreshing again", async () => {
+    setAccessToken("access-1");
+    const listener = vi.fn<(failure: AuthFailure) => void>();
+    setAuthFailureListener(listener);
+    const error = new ApiNetworkError("Request timed out");
+    mockRefreshSuccess("access-2");
+    requestJsonMock
+      .mockRejectedValueOnce(apiError(401))
+      .mockRejectedValueOnce(error);
+
+    await expect(apiRequest("/items")).rejects.toBe(error);
+
+    expect(requestJsonMock).toHaveBeenCalledTimes(2);
+    expect(tokenAt(1)).toBe("access-2");
+    expect(refreshAccessTokenMock).toHaveBeenCalledTimes(1);
+    expect(loginFromTelegramMock).not.toHaveBeenCalled();
+    expect(listener).not.toHaveBeenCalled();
   });
 
   it("propagates an AbortError from the retry without falling back to login", async () => {
@@ -395,6 +429,29 @@ describe("apiRequest retry flow", () => {
     expect(listener).toHaveBeenCalledWith({
       status: "connection-error",
       reason: "server",
+    });
+  });
+
+  it("reports a network connection error when refresh times out", async () => {
+    setAccessToken("access-1");
+    const listener = vi.fn<(failure: AuthFailure) => void>();
+    setAuthFailureListener(listener);
+    refreshAccessTokenMock.mockRejectedValue(
+      new ApiNetworkError("Request timed out"),
+    );
+    requestJsonMock.mockRejectedValue(apiError(401));
+
+    await expectAuthSessionError(apiRequest("/items"), {
+      status: "connection-error",
+      reason: "network",
+    });
+
+    expect(requestJsonMock).toHaveBeenCalledTimes(1);
+    expect(loginFromTelegramMock).not.toHaveBeenCalled();
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener).toHaveBeenCalledWith({
+      status: "connection-error",
+      reason: "network",
     });
   });
 

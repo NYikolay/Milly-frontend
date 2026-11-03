@@ -27,7 +27,8 @@ VITE_TG_BOT_USERNAME=millyco_bot
 
 - `VITE_API_BASE_URL` — база API. По умолчанию `/api/v1`.
 - `VITE_TG_BOT_USERNAME` — username бота без `@`. Если значение пустое,
-  кнопка `Открыть Milly` на экране авторизации не показывается.
+  на экране `no-init-data` скрывается кнопка `Открыть в боте` и
+  показывается `Повторить`.
 - Все `VITE_*` попадают в клиентский бандл. Секретов и `BOT_TOKEN` там
   быть не должно.
 
@@ -92,6 +93,24 @@ backend.
 `app/components/auth/`) показывают загрузку и состояния
 `no-init-data`, `connection-error`, `reauth-required`; защищённый контент
 рендерится только после успешной авторизации.
+
+Bootstrap и таймауты:
+
+- Общий бюджет bootstrap — 5 секунд от mount `AuthProvider`
+  (`AUTH_BOOTSTRAP_BUDGET_MS = 5000`). Ожидание Telegram WebApp занимает
+  не больше 2 секунд (`AUTH_TELEGRAM_INIT_TIMEOUT_MS = 2000`); если
+  Telegram не появился, bootstrap идёт по refresh-пути с остатком
+  бюджета.
+- Каждый HTTP-запрос ограничен 5 секундами (`HTTP_REQUEST_TIMEOUT_MS =
+  5000`); во время bootstrap таймаут не превышает остаток общего бюджета.
+  Таймаут даёт `ApiNetworkError("Request timed out")`, а не `AbortError`.
+- При исчерпании бюджета или таймауте показывается `connection-error`
+  (`reason = "network"`) с кнопкой «Повторить»; сессия, пользователь и
+  кэш React Query не очищаются.
+- SSR boot-watchdog (`BOOT_WATCHDOG_TIMEOUT_MS = 5000`) в inline-скрипте
+  показывает статический экран «Нет соединения» с кнопкой «Повторить»,
+  если JS-бандл или `telegram-web-app.js` не загрузился за 5 секунд.
+  `app/entry.client.tsx` снимает watchdog до `hydrateRoot`.
 
 ## Скрипты
 

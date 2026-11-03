@@ -1,4 +1,6 @@
-import { apiUrl } from "./config";
+import axios from "axios";
+
+import { apiUrl, HTTP_REQUEST_TIMEOUT_MS } from "./config";
 import { ApiError, ApiNetworkError } from "./errors";
 import type { ApiErrorEnvelope } from "./types";
 
@@ -8,6 +10,7 @@ export interface HttpRequestOptions {
   token?: string | null;
   signal?: AbortSignal;
   credentials?: RequestCredentials;
+  timeoutMs?: number;
 }
 
 function isAbortError(error: unknown): boolean {
@@ -16,6 +19,23 @@ function isAbortError(error: unknown): boolean {
     error !== null &&
     "name" in error &&
     error.name === "AbortError"
+  );
+}
+
+function isCancelError(error: unknown): boolean {
+  return (
+    axios.isCancel(error) ||
+    (typeof error === "object" &&
+      error !== null &&
+      (("name" in error && error.name === "CanceledError") ||
+        ("code" in error && error.code === "ERR_CANCELED")))
+  );
+}
+
+function isTimeoutError(error: unknown): boolean {
+  return (
+    axios.isAxiosError(error) &&
+    (error.code === "ETIMEDOUT" || error.code === "ECONNABORTED")
   );
 }
 
@@ -34,21 +54,7 @@ function isApiErrorEnvelope(value: unknown): value is ApiErrorEnvelope {
   );
 }
 
-async function readErrorEnvelope(
-  response: Response,
-): Promise<ApiErrorEnvelope | null> {
-  let text: string;
-
-  try {
-    text = await response.text();
-  } catch (error) {
-    if (isAbortError(error)) {
-      throw error;
-    }
-
-    return null;
-  }
-
+function readErrorEnvelope(text: string): ApiErrorEnvelope | null {
   if (text.trim() === "") {
     return null;
   }
@@ -62,19 +68,23 @@ async function readErrorEnvelope(
   }
 }
 
-async function toApiError(response: Response): Promise<ApiError> {
-  const envelope = await readErrorEnvelope(response);
+function toApiError(
+  status: number,
+  statusText: string,
+  text: string,
+): ApiError {
+  const envelope = readErrorEnvelope(text);
 
   if (envelope) {
     return new ApiError(envelope.message, {
-      status: response.status,
+      status,
       code: envelope.code,
       requestId: envelope.request_id,
     });
   }
 
-  return new ApiError(response.statusText || "Request failed", {
-    status: response.status,
+  return new ApiError(statusText || "Request failed", {
+    status,
     code: "http_error",
     requestId: "",
   });
@@ -90,29 +100,52 @@ export async function requestJson<T>(
     token,
     signal,
     credentials = "include",
+    timeoutMs,
   } = options;
 
-  const headers = new Headers();
+  const requestTimeout =
+    timeoutMs !== undefined && timeoutMs > 0
+      ? timeoutMs
+      : HTTP_REQUEST_TIMEOUT_MS;
+
+  const headers: Record<string, string> = {};
 
   if (body !== undefined) {
-    headers.set("Content-Type", "application/json");
+    headers["Content-Type"] = "application/json";
   }
 
   if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
+    headers.Authorization = `Bearer ${token}`;
   }
 
-  let response: Response;
+  let response: Awaited<ReturnType<typeof axios.request<string>>>;
 
   try {
-    response = await fetch(apiUrl(path), {
+    response = await axios.request<string>({
+      url: apiUrl(path),
       method,
       headers,
-      credentials,
+      withCredentials: credentials === "include",
+      data: body === undefined ? undefined : JSON.stringify(body),
       signal,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      timeout: requestTimeout,
+      responseType: "text",
+      transformResponse: [(data) => data],
+      validateStatus: () => true,
     });
   } catch (error) {
+    if (isTimeoutError(error)) {
+      throw new ApiNetworkError("Request timed out", { cause: error });
+    }
+
+    if (isCancelError(error)) {
+      if (signal?.reason !== undefined) {
+        throw signal.reason;
+      }
+
+      throw new DOMException("Aborted", "AbortError");
+    }
+
     if (isAbortError(error)) {
       throw error;
     }
@@ -120,15 +153,15 @@ export async function requestJson<T>(
     throw new ApiNetworkError("Network request failed", { cause: error });
   }
 
-  if (!response.ok) {
-    throw await toApiError(response);
+  if (response.status < 200 || response.status >= 300) {
+    throw toApiError(response.status, response.statusText, response.data);
   }
 
   if (response.status === 204) {
     return undefined as T;
   }
 
-  const text = await response.text();
+  const text = response.data;
 
   if (text.trim() === "") {
     return undefined as T;

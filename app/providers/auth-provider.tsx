@@ -21,6 +21,12 @@ import {
   setAuthFailureListener,
 } from "~/lib/auth/auth-events";
 import { bootstrapAuth } from "~/lib/auth/bootstrap-auth";
+import { isAbortError } from "~/lib/auth/failure";
+import {
+  AUTH_BOOTSTRAP_BUDGET_MS,
+  AUTH_TELEGRAM_INIT_TIMEOUT_MS,
+  remainingBudgetMs,
+} from "~/lib/auth/timeouts";
 import { clearAccessToken } from "~/lib/auth/token-store";
 import type {
   AuthFailure,
@@ -29,8 +35,6 @@ import type {
 } from "~/lib/auth/types";
 import type { TelegramHapticNotificationType } from "~/lib/telegram/types";
 import { useTelegram } from "~/providers/telegram-provider";
-
-const AUTH_TELEGRAM_INIT_TIMEOUT_MS = 8000;
 
 interface AuthState {
   status: AuthStatus;
@@ -71,8 +75,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const initDataRef = useRef(initData);
   const isActiveRef = useRef(isActive);
   const hapticsRef = useRef(haptics);
-  const autoBootstrapStartedRef = useRef(false);
+  const bootstrapDeadlineRef = useRef<number | null>(null);
+  const bootstrapAttemptRef = useRef(0);
   const bootstrapInFlightRef = useRef(false);
+  const autoBootstrapStartedRef = useRef(false);
+  const mountedRef = useRef(true);
 
   stateRef.current = state;
   initDataRef.current = initData;
@@ -111,68 +118,114 @@ export function AuthProvider({ children }: PropsWithChildren) {
     [playHaptic, queryClient],
   );
 
-  const runBootstrap = useCallback(async () => {
-    if (bootstrapInFlightRef.current) {
-      return;
-    }
-
-    bootstrapInFlightRef.current = true;
-
-    const previousStatus = stateRef.current.status;
-    const shouldPlaySuccessHaptic = isFailureStatus(previousStatus);
-
-    setState((current) => ({
-      ...current,
-      status: "booting",
-      reason: null,
-    }));
-
-    try {
-      const result = await bootstrapAuth({
-        initData: initDataRef.current,
-        login: loginWithInitData,
-        refresh: refreshAccessToken,
-        fetchMe: fetchCurrentUser,
-      });
-
-      if (result.status === "authenticated") {
-        setState({
-          status: "authenticated",
-          user: result.user,
-          reason: null,
-        });
-        resetAuthFailureNotification();
-
-        if (shouldPlaySuccessHaptic) {
-          playHaptic("success");
-        }
-
+  const runBootstrap = useCallback(
+    async (budgetMs: number) => {
+      if (bootstrapInFlightRef.current) {
         return;
       }
 
-      if (result.status === "connection-error") {
+      bootstrapInFlightRef.current = true;
+
+      const attempt = ++bootstrapAttemptRef.current;
+      const previousStatus = stateRef.current.status;
+      const shouldPlaySuccessHaptic = isFailureStatus(previousStatus);
+
+      setState((current) => ({
+        ...current,
+        status: "booting",
+        reason: null,
+      }));
+
+      try {
+        const result = await bootstrapAuth({
+          initData: initDataRef.current,
+          budgetMs,
+          login: (initData, options) =>
+            loginWithInitData(initData, options),
+          refresh: (options) => refreshAccessToken(options),
+          fetchMe: (options) => fetchCurrentUser(options),
+        });
+
+        if (!mountedRef.current || attempt !== bootstrapAttemptRef.current) {
+          return;
+        }
+
+        if (result.status === "authenticated") {
+          setState({
+            status: "authenticated",
+            user: result.user,
+            reason: null,
+          });
+          resetAuthFailureNotification();
+
+          if (shouldPlaySuccessHaptic) {
+            playHaptic("success");
+          }
+
+          return;
+        }
+
+        if (result.status === "connection-error") {
+          setState((current) => ({
+            status: "connection-error",
+            user: current.user,
+            reason: result.reason,
+          }));
+          playHaptic("error");
+
+          return;
+        }
+
+        clearAccessToken();
+        queryClient.clear();
+        setState({
+          status: result.status,
+          user: null,
+          reason: result.reason,
+        });
+        playHaptic("error");
+      } catch (error) {
+        if (!mountedRef.current || attempt !== bootstrapAttemptRef.current) {
+          return;
+        }
+
         setState((current) => ({
           status: "connection-error",
           user: current.user,
-          reason: result.reason,
+          reason: isAbortError(error) ? "network" : "server",
         }));
         playHaptic("error");
-
-        return;
+      } finally {
+        if (attempt === bootstrapAttemptRef.current) {
+          bootstrapInFlightRef.current = false;
+        }
       }
+    },
+    [playHaptic, queryClient],
+  );
 
-      clearAccessToken();
-      queryClient.clear();
-      setState({
-        status: result.status,
-        user: null,
-        reason: result.reason,
-      });
-      playHaptic("error");
-    } finally {
-      bootstrapInFlightRef.current = false;
+  const startBootstrap = useCallback(() => {
+    const deadline = bootstrapDeadlineRef.current;
+
+    if (deadline === null) {
+      return;
     }
-  }, [playHaptic, queryClient]);
+
+    const budgetMs = remainingBudgetMs(deadline);
+
+    if (budgetMs <= 0) {
+      setState((current) => ({
+        status: "connection-error",
+        user: current.user,
+        reason: "network",
+      }));
+      playHaptic("error");
+
+      return;
+    }
+
+    void runBootstrap(budgetMs);
+  }, [playHaptic, runBootstrap]);
 
   const retry = useCallback(() => {
     if (stateRef.current.status === "booting") {
@@ -180,8 +233,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
 
     resetAuthFailureNotification();
-    void runBootstrap();
+    bootstrapDeadlineRef.current =
+      Date.now() + AUTH_BOOTSTRAP_BUDGET_MS;
+    void runBootstrap(AUTH_BOOTSTRAP_BUDGET_MS);
   }, [runBootstrap]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     setAuthFailureListener(applyFailure);
@@ -196,9 +259,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
       return;
     }
 
+    if (bootstrapDeadlineRef.current === null) {
+      bootstrapDeadlineRef.current =
+        Date.now() + AUTH_BOOTSTRAP_BUDGET_MS;
+    }
+
     if (isAvailable) {
       autoBootstrapStartedRef.current = true;
-      void runBootstrap();
+      startBootstrap();
 
       return;
     }
@@ -209,11 +277,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
       }
 
       autoBootstrapStartedRef.current = true;
-      void runBootstrap();
+      startBootstrap();
     }, AUTH_TELEGRAM_INIT_TIMEOUT_MS);
 
     return () => window.clearTimeout(timer);
-  }, [isAvailable, runBootstrap]);
+  }, [isAvailable, startBootstrap]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

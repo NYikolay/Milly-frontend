@@ -1,14 +1,23 @@
+import { HTTP_REQUEST_TIMEOUT_MS } from "~/lib/api/config";
 import { ApiError } from "~/lib/api/errors";
 import type { AuthResponse, AuthUser, TokenResponse } from "~/lib/api/types";
 
-import { classifyAuthFailure } from "./failure";
+import { classifyAuthFailure, isAbortError } from "./failure";
+import type { BootstrapRequestOptions } from "./timeouts";
 import type { AuthFailure, AuthFailureReason } from "./types";
+
+export type { BootstrapRequestOptions } from "./timeouts";
 
 export interface BootstrapAuthOptions {
   initData: string;
-  login: (initData: string) => Promise<AuthResponse>;
-  refresh: () => Promise<TokenResponse>;
-  fetchMe: () => Promise<AuthUser>;
+  budgetMs: number;
+  requestTimeoutMs?: number;
+  login: (
+    initData: string,
+    options: BootstrapRequestOptions,
+  ) => Promise<AuthResponse>;
+  refresh: (options: BootstrapRequestOptions) => Promise<TokenResponse>;
+  fetchMe: (options: BootstrapRequestOptions) => Promise<AuthUser>;
 }
 
 export type BootstrapAuthResult =
@@ -16,6 +25,13 @@ export type BootstrapAuthResult =
   | { status: "connection-error"; reason: "network" | "server" }
   | { status: "reauth-required"; reason: AuthFailureReason }
   | { status: "no-init-data"; reason: "init_data_missing" };
+
+class BootstrapBudgetError extends Error {
+  constructor() {
+    super("Bootstrap budget exceeded");
+    this.name = "BootstrapBudgetError";
+  }
+}
 
 function toBootstrapAuthResult(failure: AuthFailure): BootstrapAuthResult {
   switch (failure.status) {
@@ -31,6 +47,19 @@ function toBootstrapAuthResult(failure: AuthFailure): BootstrapAuthResult {
   }
 }
 
+function toResult(
+  error: unknown,
+  unauthorizedReason: AuthFailureReason,
+): BootstrapAuthResult {
+  if (error instanceof BootstrapBudgetError) {
+    return { status: "connection-error", reason: "network" };
+  }
+
+  return toBootstrapAuthResult(
+    classifyAuthFailure(error, unauthorizedReason),
+  );
+}
+
 function isUnauthorized(error: unknown): boolean {
   return error instanceof ApiError && error.status === 401;
 }
@@ -38,40 +67,92 @@ function isUnauthorized(error: unknown): boolean {
 export async function bootstrapAuth(
   options: BootstrapAuthOptions,
 ): Promise<BootstrapAuthResult> {
+  const { budgetMs } = options;
+
+  if (budgetMs <= 0) {
+    return { status: "connection-error", reason: "network" };
+  }
+
   const { initData } = options;
   const loginAttempted = initData.trim() !== "";
+  const deadline = Date.now() + budgetMs;
+  const controller = new AbortController();
+  let timedOut = false;
+  let timer: ReturnType<typeof setTimeout> | undefined;
 
-  if (loginAttempted) {
-    try {
-      const response = await options.login(initData);
+  const requestOptions = (): BootstrapRequestOptions => {
+    const remaining = deadline - Date.now();
 
-      return { status: "authenticated", user: response.user };
-    } catch (error) {
-      if (!isUnauthorized(error)) {
-        return toBootstrapAuthResult(
-          classifyAuthFailure(error, "session_expired"),
-        );
+    if (remaining <= 0) {
+      throw new BootstrapBudgetError();
+    }
+
+    return {
+      signal: controller.signal,
+      timeoutMs: Math.min(
+        options.requestTimeoutMs ?? HTTP_REQUEST_TIMEOUT_MS,
+        Math.max(1, remaining),
+      ),
+    };
+  };
+
+  const workflow = async (): Promise<BootstrapAuthResult> => {
+    if (loginAttempted) {
+      try {
+        const response = await options.login(initData, requestOptions());
+
+        return { status: "authenticated", user: response.user };
+      } catch (error) {
+        if (!isUnauthorized(error)) {
+          return toResult(error, "session_expired");
+        }
       }
     }
-  }
 
-  try {
-    await options.refresh();
-  } catch (error) {
-    if (isUnauthorized(error)) {
-      return loginAttempted
-        ? { status: "reauth-required", reason: "session_expired" }
-        : { status: "no-init-data", reason: "init_data_missing" };
+    try {
+      await options.refresh(requestOptions());
+    } catch (error) {
+      if (isUnauthorized(error)) {
+        return loginAttempted
+          ? { status: "reauth-required", reason: "session_expired" }
+          : { status: "no-init-data", reason: "init_data_missing" };
+      }
+
+      return toResult(error, "session_expired");
     }
 
-    return toBootstrapAuthResult(classifyAuthFailure(error, "session_expired"));
-  }
+    try {
+      const user = await options.fetchMe(requestOptions());
+
+      return { status: "authenticated", user };
+    } catch (error) {
+      return toResult(error, "session_expired");
+    }
+  };
+
+  const budget = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+      reject(new BootstrapBudgetError());
+    }, budgetMs);
+  });
 
   try {
-    const user = await options.fetchMe();
-
-    return { status: "authenticated", user };
+    return await Promise.race([workflow(), budget]);
   } catch (error) {
-    return toBootstrapAuthResult(classifyAuthFailure(error, "session_expired"));
+    if (timedOut || error instanceof BootstrapBudgetError) {
+      return { status: "connection-error", reason: "network" };
+    }
+
+    if (isAbortError(error)) {
+      throw error;
+    }
+
+    return toResult(error, "session_expired");
+  } finally {
+    if (timer !== undefined) {
+      clearTimeout(timer);
+    }
   }
 }

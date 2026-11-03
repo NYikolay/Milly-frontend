@@ -21,6 +21,12 @@ describe("classifyAuthFailure", () => {
     });
   });
 
+  it("classifies a request timeout as connection-error/network", () => {
+    expect(
+      classifyAuthFailure(new ApiNetworkError("Request timed out"), "session_expired"),
+    ).toEqual({ status: "connection-error", reason: "network" });
+  });
+
   it("classifies ApiError 401 as reauth-required with the unauthorized reason", () => {
     expect(classifyAuthFailure(apiError(401), "session_expired")).toEqual({
       status: "reauth-required",

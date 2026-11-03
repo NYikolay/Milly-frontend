@@ -162,6 +162,75 @@ describe("loginWithInitData", () => {
 
     expect(requestJsonMock).toHaveBeenCalledTimes(2);
   });
+
+  it("forwards the abort signal and timeout to /auth/telegram", async () => {
+    const controller = new AbortController();
+    requestJsonMock.mockResolvedValue(authResponse);
+
+    await expect(
+      loginWithInitData("raw-init-data", {
+        signal: controller.signal,
+        timeoutMs: 1500,
+      }),
+    ).resolves.toEqual(authResponse);
+
+    expect(requestOptions()).toEqual({
+      method: "POST",
+      body: { init_data: "raw-init-data" },
+      credentials: "include",
+      signal: controller.signal,
+      timeoutMs: 1500,
+    });
+  });
+
+  it("clears the in-flight slot when the request is aborted", async () => {
+    const controller = new AbortController();
+    const gate = deferred<AuthResponse>();
+
+    requestJsonMock.mockImplementation((_path, options) => {
+      options?.signal?.addEventListener(
+        "abort",
+        () => gate.reject(options.signal?.reason),
+        { once: true },
+      );
+
+      return gate.promise;
+    });
+
+    const first = loginWithInitData("first-init-data", {
+      signal: controller.signal,
+      timeoutMs: 5000,
+    });
+
+    controller.abort();
+
+    await expect(first).rejects.toMatchObject({ name: "AbortError" });
+
+    requestJsonMock.mockResolvedValue(authResponse);
+
+    await expect(loginWithInitData("second-init-data")).resolves.toEqual(
+      authResponse,
+    );
+
+    expect(requestJsonMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not store the access token when the request resolves after abort", async () => {
+    const controller = new AbortController();
+    const gate = deferred<AuthResponse>();
+    requestJsonMock.mockReturnValue(gate.promise);
+
+    const request = loginWithInitData("raw-init-data", {
+      signal: controller.signal,
+      timeoutMs: 5000,
+    });
+
+    controller.abort();
+    gate.resolve(authResponse);
+
+    await expect(request).rejects.toMatchObject({ name: "AbortError" });
+    expect(getAccessToken()).toBeNull();
+  });
 });
 
 describe("refreshAccessToken", () => {
@@ -241,6 +310,72 @@ describe("refreshAccessToken", () => {
 
     expect(requestJsonMock).toHaveBeenCalledTimes(2);
   });
+
+  it("forwards the abort signal and timeout to /auth/refresh", async () => {
+    const controller = new AbortController();
+    requestJsonMock.mockResolvedValue(tokenResponse);
+
+    await expect(
+      refreshAccessToken({
+        signal: controller.signal,
+        timeoutMs: 1500,
+      }),
+    ).resolves.toEqual(tokenResponse);
+
+    expect(requestOptions()).toEqual({
+      method: "POST",
+      credentials: "include",
+      signal: controller.signal,
+      timeoutMs: 1500,
+    });
+  });
+
+  it("clears the in-flight slot when the request is aborted", async () => {
+    const controller = new AbortController();
+    const gate = deferred<TokenResponse>();
+
+    requestJsonMock.mockImplementation((_path, options) => {
+      options?.signal?.addEventListener(
+        "abort",
+        () => gate.reject(options.signal?.reason),
+        { once: true },
+      );
+
+      return gate.promise;
+    });
+
+    const first = refreshAccessToken({
+      signal: controller.signal,
+      timeoutMs: 5000,
+    });
+
+    controller.abort();
+
+    await expect(first).rejects.toMatchObject({ name: "AbortError" });
+
+    requestJsonMock.mockResolvedValue(tokenResponse);
+
+    await expect(refreshAccessToken()).resolves.toEqual(tokenResponse);
+
+    expect(requestJsonMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not store the access token when the request resolves after abort", async () => {
+    const controller = new AbortController();
+    const gate = deferred<TokenResponse>();
+    requestJsonMock.mockReturnValue(gate.promise);
+
+    const request = refreshAccessToken({
+      signal: controller.signal,
+      timeoutMs: 5000,
+    });
+
+    controller.abort();
+    gate.resolve(tokenResponse);
+
+    await expect(request).rejects.toMatchObject({ name: "AbortError" });
+    expect(getAccessToken()).toBeNull();
+  });
 });
 
 describe("fetchCurrentUser", () => {
@@ -284,6 +419,26 @@ describe("fetchCurrentUser", () => {
     expect(requestJsonMock.mock.calls[0]?.[0]).toBe("/auth/me");
     expect(getAccessToken()).toBe("stale-access");
   });
+
+  it("forwards the abort signal and timeout to /auth/me", async () => {
+    const controller = new AbortController();
+    setAccessToken("access-1");
+    requestJsonMock.mockResolvedValue(user);
+
+    await expect(
+      fetchCurrentUser({
+        signal: controller.signal,
+        timeoutMs: 1500,
+      }),
+    ).resolves.toEqual(user);
+
+    expect(requestOptions()).toEqual({
+      method: "GET",
+      token: "access-1",
+      signal: controller.signal,
+      timeoutMs: 1500,
+    });
+  });
 });
 
 describe("loginFromTelegram", () => {
@@ -316,5 +471,25 @@ describe("loginFromTelegram", () => {
     );
 
     expect(requestJsonMock).not.toHaveBeenCalled();
+  });
+
+  it("forwards the request options to the login request", async () => {
+    const controller = new AbortController();
+    getTelegramWebAppMock.mockReturnValue(
+      webAppWithInitData("telegram-init-data"),
+    );
+    requestJsonMock.mockResolvedValue(authResponse);
+
+    await expect(
+      loginFromTelegram({ signal: controller.signal, timeoutMs: 2000 }),
+    ).resolves.toEqual(authResponse);
+
+    expect(requestOptions()).toEqual({
+      method: "POST",
+      body: { init_data: "telegram-init-data" },
+      credentials: "include",
+      signal: controller.signal,
+      timeoutMs: 2000,
+    });
   });
 });

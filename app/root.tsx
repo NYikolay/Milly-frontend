@@ -1,6 +1,4 @@
 import {
-  isRouteErrorResponse,
-  Link,
   Links,
   Meta,
   Outlet,
@@ -9,6 +7,8 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { AppErrorBoundary } from "./components/errors/app-error-boundary";
+import { getBootWatchdogScript } from "./lib/boot/watchdog";
 import { AppProviders } from "./providers/app-providers";
 import "./app.css";
 
@@ -33,6 +33,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: getBootWatchdogScript(),
+          }}
         />
         <script src="https://telegram.org/js/telegram-web-app.js" />
         <Meta />
@@ -74,36 +79,5 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
-  let stack: string | undefined;
-
-  if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message;
-    stack = error.stack;
-  }
-
-  return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-3 p-6">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-tg-hint">
-        Milly
-      </p>
-      <h1 className="text-2xl font-bold">{message}</h1>
-      <p className="text-sm text-tg-hint">{details}</p>
-      {stack && (
-        <pre className="w-full overflow-x-auto rounded-xl bg-tg-secondary-bg p-3 text-xs text-tg-hint">
-          <code>{stack}</code>
-        </pre>
-      )}
-      <Link className="text-sm font-semibold text-tg-link" to="/">
-        Back to home
-      </Link>
-    </main>
-  );
+  return <AppErrorBoundary error={error} />;
 }

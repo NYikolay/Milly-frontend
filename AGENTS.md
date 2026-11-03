@@ -35,6 +35,7 @@ npm run test:watch  # Vitest в watch-режиме
 app/
   components/
     auth/                     # AuthGate и AuthScreen (loading/error/no-init-data)
+    errors/                   # ErrorScreen, AppErrorPage, AppErrorBoundary
     home/                     # секции главного экрана
     layout/app-shell.tsx      # каркас с safe-area и max-w-md
     ui/                       # переиспользуемые примитивы
@@ -43,6 +44,8 @@ app/
   lib/
     api/                      # config, http, auth-aware client, errors, types
     auth/                     # token-store, auth-api, bootstrap, events, failure
+    boot/                     # inline SSR boot-watchdog
+    errors/                   # классификация, копирайт, навигация, throwAppError
     telegram/                 # client, types, bot-link
     tasks/                    # временный источник данных главного экрана
     voice/                    # запись и загрузка голоса
@@ -56,7 +59,8 @@ app/
     _app.tsx                  # pathless layout: AppShell > AuthGate > Outlet
     home.tsx                  # главный экран на /
   app.css                     # Tailwind theme tokens и базовые стили
-  root.tsx                    # документ, telegram-web-app.js, провайдеры, ErrorBoundary
+  entry.client.tsx            # снятие boot-watchdog перед hydrateRoot
+  root.tsx                    # документ, watchdog, telegram-web-app.js, провайдеры, ErrorBoundary
   routes.ts                   # ручная конфигурация маршрутов
 ```
 
@@ -65,6 +69,11 @@ app/
 - Файлы — `kebab-case`, экспортируемые компоненты — `PascalCase`.
 - Алиас `~/*` указывает на `app/*`; использовать его вместо относительных `../../`.
 - `default export` обязателен только для route-модулей; остальные компоненты и функции экспортировать именованно.
+- `root.tsx` и `routes/_app.tsx` экспортируют `ErrorBoundary`; оба рендерят общий `AppErrorBoundary`.
+- Unmatched URL обрабатывает корневой boundary: HTTP-статус `404`, экран публичный (вне `AuthGate`). Отдельный catch-all route не добавлять.
+- 404/429/5xx показываются только через route error boundaries; глобального перехвата ошибок React Query нет.
+- Loader/action с `ApiError` бросают `throwAppError` из `app/lib/errors/route-error.ts`, чтобы сохранить статус при SSR-сериализации.
+- Error-экраны рендерят нижнюю навигацию; активна вкладка «Главная». Корневой boundary не использует провайдеры (`useTelegram`, `useAuth`, React Query, haptics).
 
 ## 3. Провайдеры, данные и состояние
 
@@ -78,7 +87,7 @@ app/
   не разбрасывать `fetch` по компонентам. База API — `VITE_API_BASE_URL`
   (по умолчанию `/api/v1`), ошибки — `ApiError` / `ApiNetworkError`.
 - Auth-слой — `app/lib/auth/` (`token-store`, `auth-api`, `bootstrap-auth`,
-  `auth-events`, `failure`) и `app/providers/auth-provider.tsx`. `AuthGate`
+  `auth-events`, `failure`, `timeouts`) и `app/providers/auth-provider.tsx`. `AuthGate`
   в `app/routes/_app.tsx` оборачивает `Outlet`.
 - Auth flow: при старте — `POST /auth/telegram` с сырым `initData`, если он
   есть (при `401` — `POST /auth/refresh`), иначе сразу `POST /auth/refresh`.
@@ -90,6 +99,16 @@ app/
   refresh вернул `403`, `422` или другой не-`401` 4xx — `reauth-required`;
   если после повторов снова `401` — `reauth-required`. Refresh и login —
   single-flight.
+- Bootstrap ограничен по времени: `AUTH_BOOTSTRAP_BUDGET_MS = 5000` от
+  mount `AuthProvider`; ожидание Telegram — не более
+  `AUTH_TELEGRAM_INIT_TIMEOUT_MS = 2000`, затем bootstrap идёт по
+  refresh-пути с остатком бюджета. Каждый HTTP-запрос ограничен
+  `HTTP_REQUEST_TIMEOUT_MS = 5000` (во время bootstrap — не больше
+  остатка бюджета).
+- Таймаут-ошибка (`ApiNetworkError("Request timed out")`) не является
+  `AbortError` и классифицируется как `connection-error/network`; при
+  исчерпании бюджета — `connection-error` с «Повторить» без очистки
+  сессии, пользователя и кэша React Query.
 - Access token хранится только в памяти (`app/lib/auth/token-store.ts`);
   refresh token — HttpOnly cookie, выставляемая backend (`credentials:
   "include"`). Запрещено хранить access/refresh/`initData` в
@@ -99,12 +118,13 @@ app/
 ## 4. Telegram Mini App
 
 - `telegram-web-app.js` подключён в `<head>` в `root.tsx` до `Meta`, `Links` и app-скриптов. Не переносить в `<body>` и не подключать лениво.
+- Перед `telegram-web-app.js` в `<head>` встроен inline SSR boot-watchdog (`app/lib/boot/watchdog.ts`, `BOOT_WATCHDOG_TIMEOUT_MS = 5000`): если JS-бандл или Telegram-скрипт не загрузился, через 5 секунд появляется статический fallback с «Повторить» и перезагрузкой страницы. `app/entry.client.tsx` вызывает `clearBootWatchdog()` до `hydrateRoot`, чтобы снять watchdog и убрать fallback до гидратации.
 - `TelegramProvider` вызывает `ready()`, `expand()`, синхронизирует `--tg-theme-*`, `--app-inset-*`, слушает `themeChanged`, `viewportChanged`, `safeAreaChanged`, `contentSafeAreaChanged`, `fullscreenChanged`, `activated`/`deactivated`.
 - В компонентах работать с Telegram только через `useTelegram()` и helpers из `app/lib/telegram/`, не через `window.Telegram` напрямую.
 - Новые API гейтить через `supportsVersion("<bot api version>", webApp)`. Ориентиры: haptics — 6.1, fullscreen — 8.0, `setBottomBarColor` — 7.10.
 - `initDataUnsafe` использовать только для отображения. Для авторизации отправлять сырой `initData` в `POST /auth/telegram`: backend проверяет HMAC/signature и `auth_date`.
 - Не требовать непустой `initData`: при запуске с keyboard-кнопки и inline-mode он пустой по дизайну; тогда используется refresh-cookie.
-- Deep link `Открыть Milly` строится из `VITE_TG_BOT_USERNAME` в `app/lib/telegram/bot-link.ts` (`https://t.me/<username>?startapp=auth`); при пустом username кнопка не показывается.
+- Deep link `Открыть в боте` строится из `VITE_TG_BOT_USERNAME` в `app/lib/telegram/bot-link.ts` (`https://t.me/<username>?startapp=auth`); при пустом username кнопка не показывается.
 - Тема: только Tailwind-токены `tg-*` (`bg-tg-bg`, `text-tg-hint`, `bg-tg-button` и т.д.). Не хардкодить цвета Telegram и не полагаться на `dark:` для цветов темы. Новые токены добавлять в `@theme inline` в `app/app.css`.
 - Безопасные зоны применяет `AppShell` через `--app-inset-*`; не добавлять фиксированные отступы под чёлку/навигацию.
 - Для нижних панелей использовать `viewportStableHeight` / `--tg-viewport-stable-height`, не `viewportHeight`.
@@ -139,7 +159,11 @@ npm run build
 ```
 
 - Для UI-изменений дополнительно проверить SSR-ответ: `npm run build && PORT=3000 npm start`, затем `curl -s http://localhost:3000/`. В SSR не должно быть защищённого контента — только экран загрузки.
+- Для error-экранов проверить `curl -i http://localhost:3000/does-not-exist`: должен вернуться HTTP `404` и тексты 404-экрана с нижней навигацией.
+- DEV preview `?state=429` и `?state=5xx` работает только в dev-режиме (`import.meta.env.DEV`); в production он не активен.
+- Error-экраны вручную проверить на ширине 320 px, в light/dark теме и с учётом safe-area.
 - Для изменений auth поднять backend на `http://127.0.0.1:8000` и проверить dev proxy: `curl -i http://localhost:5173/api/v1/auth/refresh -X POST` должен вернуть `401`, а не `404`.
+- Для изменений bootstrap/watchdog вручную проверить блокировку JS-бандла и `telegram-web-app.js` (DevTools → Network → Block request URL): через 5 секунд должен появиться статический fallback с «Повторить», а при нормальной загрузке — не появляться.
 - Если менялись Telegram-интеграция или тема, проверить экран в браузере и в Telegram: светлая/тёмная тема, safe-area, клавиатура, fullscreen.
 - Локальный запуск в Telegram: HTTPS-туннель на `http://localhost:5173` (`cloudflared tunnel --url ...` или `ngrok http 5173`) и URL в BotFather через `/setmenubutton` или `/newapp`. Quick-туннель меняет URL после перезапуска.
 - Новые тесты — Vitest, `*.test.ts` рядом с модулем; следовать TDD. `npm test` обязателен перед завершением.
