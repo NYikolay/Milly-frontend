@@ -91,12 +91,12 @@ watchdog) остаются в силе.
 
 ## 5. Критерии приёмки
 
-- [ ] `AUTH_BOOTSTRAP_BUDGET_MS = 10000`.
-- [ ] `AUTH_TELEGRAM_INIT_TIMEOUT_MS = 4000`.
-- [ ] `HTTP_REQUEST_TIMEOUT_MS = 10000`.
-- [ ] `BOOT_WATCHDOG_TIMEOUT_MS = 5000` не изменён.
-- [ ] `npm test` проходит.
-- [ ] `npm run typecheck` проходит.
-- [ ] `npm run build` проходит.
-- [ ] README и AGENTS.md не содержат старых значений для этих трёх
+- [x] `AUTH_BOOTSTRAP_BUDGET_MS = 10000`.
+- [x] `AUTH_TELEGRAM_INIT_TIMEOUT_MS = 4000`.
+- [x] `HTTP_REQUEST_TIMEOUT_MS = 10000`.
+- [x] `BOOT_WATCHDOG_TIMEOUT_MS = 5000` не изменён.
+- [x] `npm test` проходит.
+- [x] `npm run typecheck` проходит.
+- [x] `npm run build` проходит.
+- [x] README и AGENTS.md не содержат старых значений для этих трёх
       констант.
