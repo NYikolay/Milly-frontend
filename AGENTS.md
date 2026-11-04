@@ -99,11 +99,11 @@ app/
   refresh вернул `403`, `422` или другой не-`401` 4xx — `reauth-required`;
   если после повторов снова `401` — `reauth-required`. Refresh и login —
   single-flight.
-- Bootstrap ограничен по времени: `AUTH_BOOTSTRAP_BUDGET_MS = 5000` от
+- Bootstrap ограничен по времени: `AUTH_BOOTSTRAP_BUDGET_MS = 10000` от
   mount `AuthProvider`; ожидание Telegram — не более
-  `AUTH_TELEGRAM_INIT_TIMEOUT_MS = 2000`, затем bootstrap идёт по
+  `AUTH_TELEGRAM_INIT_TIMEOUT_MS = 4000`, затем bootstrap идёт по
   refresh-пути с остатком бюджета. Каждый HTTP-запрос ограничен
-  `HTTP_REQUEST_TIMEOUT_MS = 5000` (во время bootstrap — не больше
+  `HTTP_REQUEST_TIMEOUT_MS = 10000` (во время bootstrap — не больше
   остатка бюджета).
 - Таймаут-ошибка (`ApiNetworkError("Request timed out")`) не является
   `AbortError` и классифицируется как `connection-error/network`; при
