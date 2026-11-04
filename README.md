@@ -96,13 +96,13 @@ backend.
 
 Bootstrap и таймауты:
 
-- Общий бюджет bootstrap — 5 секунд от mount `AuthProvider`
-  (`AUTH_BOOTSTRAP_BUDGET_MS = 5000`). Ожидание Telegram WebApp занимает
-  не больше 2 секунд (`AUTH_TELEGRAM_INIT_TIMEOUT_MS = 2000`); если
+- Общий бюджет bootstrap — 10 секунд от mount `AuthProvider`
+  (`AUTH_BOOTSTRAP_BUDGET_MS = 10000`). Ожидание Telegram WebApp занимает
+  не больше 4 секунд (`AUTH_TELEGRAM_INIT_TIMEOUT_MS = 4000`); если
   Telegram не появился, bootstrap идёт по refresh-пути с остатком
   бюджета.
-- Каждый HTTP-запрос ограничен 5 секундами (`HTTP_REQUEST_TIMEOUT_MS =
-  5000`); во время bootstrap таймаут не превышает остаток общего бюджета.
+- Каждый HTTP-запрос ограничен 10 секундами (`HTTP_REQUEST_TIMEOUT_MS =
+  10000`); во время bootstrap таймаут не превышает остаток общего бюджета.
   Таймаут даёт `ApiNetworkError("Request timed out")`, а не `AbortError`.
 - При исчерпании бюджета или таймауте показывается `connection-error`
   (`reason = "network"`) с кнопкой «Повторить»; сессия, пользователь и

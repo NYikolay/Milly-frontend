@@ -1,6 +1,26 @@
 import { describe, expect, it } from "vitest";
 
-import { remainingBudgetMs } from "./timeouts";
+import {
+  AUTH_BOOTSTRAP_BUDGET_MS,
+  AUTH_TELEGRAM_INIT_TIMEOUT_MS,
+  remainingBudgetMs,
+} from "./timeouts";
+
+describe("auth timeout constants", () => {
+  it("allows a 10 second bootstrap budget", () => {
+    expect(AUTH_BOOTSTRAP_BUDGET_MS).toBe(10000);
+  });
+
+  it("waits 4 seconds for Telegram inside the budget", () => {
+    expect(AUTH_TELEGRAM_INIT_TIMEOUT_MS).toBe(4000);
+  });
+
+  it("keeps the Telegram wait inside the bootstrap budget", () => {
+    expect(AUTH_TELEGRAM_INIT_TIMEOUT_MS).toBeLessThan(
+      AUTH_BOOTSTRAP_BUDGET_MS,
+    );
+  });
+});
 
 describe("remainingBudgetMs", () => {
   it("returns the remaining time before the deadline", () => {

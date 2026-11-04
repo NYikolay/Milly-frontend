@@ -129,7 +129,7 @@ describe("requestJson", () => {
 
     await requestJson("/auth/me");
 
-    expect(HTTP_REQUEST_TIMEOUT_MS).toBe(5000);
+    expect(HTTP_REQUEST_TIMEOUT_MS).toBe(10000);
     expect(requestConfig().timeout).toBe(HTTP_REQUEST_TIMEOUT_MS);
   });
 
@@ -149,8 +149,8 @@ describe("requestJson", () => {
     await requestJson("/auth/me", { timeoutMs: 0 });
     await requestJson("/auth/me", { timeoutMs: -1 });
 
-    expect(requestConfig(0).timeout).toBe(5000);
-    expect(requestConfig(1).timeout).toBe(5000);
+    expect(requestConfig(0).timeout).toBe(10000);
+    expect(requestConfig(1).timeout).toBe(10000);
   });
 
   it("returns parsed JSON for a successful response", async () => {
