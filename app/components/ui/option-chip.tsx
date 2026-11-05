@@ -26,8 +26,10 @@ export function OptionChip({
       aria-haspopup="dialog"
       aria-label={ariaLabel}
       className={cn(
-        "inline-flex h-[45px] shrink-0 items-center gap-[10px] whitespace-nowrap rounded-[50px] border border-app-stroke bg-app-card px-[10px] text-[13px] text-app-text transition-colors active:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-accent",
-        active && "border-app-accent text-app-accent",
+        "inline-flex h-[45px] shrink-0 items-center gap-[10px] whitespace-nowrap rounded-[50px] border bg-app-card px-[10px] text-[13px] transition-colors active:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-accent",
+        active
+          ? "border-app-accent text-app-accent"
+          : "border-app-stroke text-app-text",
         className,
       )}
       onClick={onClick}
