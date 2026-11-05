@@ -86,6 +86,19 @@ describe("date formatting", () => {
       formatDueHint("2026-11-11", "16:00", "Europe/Moscow", now, false),
     ).toBe("На 11.11.2026, 16:00");
   });
+
+  it("uses the numeric date in the one-off hint for tomorrow", () => {
+    const hint = formatDueHint(
+      "2026-11-06",
+      "16:00",
+      "Europe/Moscow",
+      now,
+      false,
+    );
+
+    expect(hint).toBe("На 06.11.2026, 16:00");
+    expect(hint).not.toContain("Завтра");
+  });
 });
 
 describe("calendar helpers", () => {

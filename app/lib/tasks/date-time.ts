@@ -189,7 +189,14 @@ export function formatDueHint(
     return `С ${formatNumericDate(date)}, ежедневно в ${time}`;
   }
 
-  return formatDueChip(date, time, timeZone, now);
+  const { year, month, day } = getZonedNow(now, timeZone);
+  const today = formatDate(year, month, day);
+
+  if (date === today) {
+    return `Сегодня, ${time}`;
+  }
+
+  return `На ${formatNumericDate(date)}, ${time}`;
 }
 
 export function formatMonthTitle(year: number, month: number): string {
