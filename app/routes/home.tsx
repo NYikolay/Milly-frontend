@@ -5,6 +5,7 @@ import { DailyProgressCard } from "~/components/home/daily-progress-card";
 import { FaqSection } from "~/components/home/faq-section";
 import { HomeHeader } from "~/components/home/home-header";
 import { QuickAccessSection } from "~/components/home/quick-access-section";
+import { QuickAddSheet } from "~/components/tasks/quick-add/quick-add-sheet";
 import { VoiceRecorderSheet } from "~/components/voice/voice-recorder-sheet";
 import { ApiError } from "~/lib/api/errors";
 import { throwAppError } from "~/lib/errors/route-error";
@@ -58,7 +59,9 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function Home({ loaderData }: Route.ComponentProps) {
   const { haptics } = useTelegram();
-  const [isVoiceOpen, setIsVoiceOpen] = useState(false);
+  const [activeModal, setActiveModal] = useState<
+    "voice" | "quick-add" | null
+  >(null);
   const { summary, dateLabel } = loaderData;
   const isEmpty = summary.total === 0;
   const title = isEmpty ? "Задач на сегодня нет 😴" : "Задачи на сегодня";
@@ -84,7 +87,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             haptics.impact("light");
 
             if (id === "voice") {
-              setIsVoiceOpen(true);
+              setActiveModal("voice");
+              return;
+            }
+
+            if (id === "interactive") {
+              setActiveModal("quick-add");
             }
           }}
         />
@@ -107,7 +115,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </div>
       </div>
 
-      <VoiceRecorderSheet open={isVoiceOpen} onOpenChange={setIsVoiceOpen} />
+      <VoiceRecorderSheet
+        open={activeModal === "voice"}
+        onOpenChange={(open) => setActiveModal(open ? "voice" : null)}
+      />
+      <QuickAddSheet
+        open={activeModal === "quick-add"}
+        onOpenChange={(open) => setActiveModal(open ? "quick-add" : null)}
+      />
     </main>
   );
 }

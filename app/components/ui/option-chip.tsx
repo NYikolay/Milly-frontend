@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement, ReactNode, Ref } from "react";
 
 import { cn } from "~/lib/cn";
 
@@ -10,6 +10,7 @@ export interface OptionChipProps {
   onClick: () => void;
   ariaLabel: string;
   className?: string;
+  buttonRef?: Ref<HTMLButtonElement>;
 }
 
 export function OptionChip({
@@ -20,9 +21,11 @@ export function OptionChip({
   onClick,
   ariaLabel,
   className,
+  buttonRef,
 }: OptionChipProps): ReactElement {
   return (
     <button
+      ref={buttonRef}
       aria-haspopup="dialog"
       aria-label={ariaLabel}
       className={cn(
