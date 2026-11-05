@@ -59,6 +59,21 @@ describe("OptionChip", () => {
     expect(html).toContain("max-w-[200px]");
   });
 
+  it("renders an icon-only chip as a 45px square", () => {
+    const html = renderToStaticMarkup(
+      createElement(OptionChip, {
+        icon: createElement("span"),
+        onClick: () => {},
+        ariaLabel: "Выбрать метки",
+      }),
+    );
+
+    expect(html).toContain("w-[45px]");
+    expect(html).toContain("justify-center");
+    expect(html).toContain("px-0");
+    expect(html).not.toContain("px-[10px]");
+  });
+
   it("uses the tight icon gap when requested", () => {
     const html = renderToStaticMarkup(
       createElement(OptionChip, {

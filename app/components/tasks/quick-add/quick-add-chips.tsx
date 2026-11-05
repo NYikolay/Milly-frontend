@@ -94,7 +94,7 @@ export function QuickAddChips({
       <OptionChip
         ariaLabel="Приоритет задачи"
         buttonRef={chipRefs?.priority}
-        className="w-[45px] justify-center px-[10px] text-center"
+        className="w-[45px] justify-center text-center"
         label={priorityShortLabel(priority)}
         onClick={() => onOpenStep("priority")}
       />

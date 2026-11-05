@@ -31,7 +31,8 @@ export function OptionChip({
       aria-haspopup="dialog"
       aria-label={ariaLabel}
       className={cn(
-        "inline-flex h-[45px] max-w-[200px] shrink-0 items-center whitespace-nowrap rounded-[50px] border bg-app-card px-[10px] text-[13px] transition-colors active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent",
+        "inline-flex h-[45px] max-w-[200px] shrink-0 items-center whitespace-nowrap rounded-[50px] border bg-app-card text-[13px] transition-colors active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent",
+        label ? "px-[10px]" : "w-[45px] justify-center px-0",
         iconGap === "tight" ? "gap-[2px]" : "gap-[5px]",
         active
           ? "border-app-accent text-app-accent"

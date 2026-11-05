@@ -30,7 +30,7 @@ export function TimeInput({
     <input
       aria-label={ariaLabel}
       className={cn(
-        "w-[114px] border-0 bg-app-track p-0 text-center font-semibold text-app-accent outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent",
+        "w-[114px] border-0 bg-app-track p-0 text-center font-semibold text-app-accent outline-none focus-visible:outline-solid focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent",
         SIZE_CLASSES[size],
         className,
       )}

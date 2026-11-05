@@ -164,7 +164,7 @@ export function RemindersStep({
                   <div className="flex flex-wrap items-start gap-[15px]">
                     <input
                       aria-label="За сколько до завершения задачи напомнить"
-                      className="h-12 w-[114px] shrink-0 rounded-[28px] bg-app-track p-0 text-center text-[15px] font-semibold text-app-accent outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent"
+                      className="h-12 w-[114px] shrink-0 rounded-[28px] bg-app-track p-0 text-center text-[15px] font-semibold text-app-accent outline-none focus-visible:outline-solid focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent"
                       inputMode="numeric"
                       onChange={handleAmountChange}
                       type="text"

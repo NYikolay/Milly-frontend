@@ -150,8 +150,9 @@ app/
 - Семантические токены: `tg-bg`, `tg-secondary-bg`, `tg-text`, `tg-hint`, `tg-link`, `tg-button`, `tg-button-text`, `tg-accent`, `tg-section-bg`, `tg-destructive`, `tg-separator`, `tg-bottom-bar`.
 - Палитра `app-*` — основа UI главного экрана (`docs/specs/2026-11-02-home-dashboard/spec.md`) и быстрого создания задачи (форма, шаги, общие шторки и примитивы), light/dark через `data-app-theme`. `tg-*` остаются для Telegram chrome и будущих Telegram-native поверхностей; не переводить главный экран и шторки быстрого создания обратно на `tg-*` без пересмотра спек.
 - Переиспользуемые примитивы — в `app/components/ui/`; композицию классов делать через `cn()`.
-- Шапка шторки — общий `SheetHeader` внутри `BottomSheet`: back/close, заголовок и
-  разделитель. Переходы между шагами быстрого создания — Motion `layout` на панели
+- Шапка шторки — общий `SheetHeader` внутри `BottomSheet`: back, заголовок и
+  разделитель; отдельной кнопки закрытия нет — закрытие через нижнюю «Закрыть» или
+  Escape. Переходы между шагами быстрого создания — Motion `layout` на панели
   и `AnimatePresence` для контента; `MotionConfig reducedMotion="user"` в
   `AppProviders` отключает transform-анимации при reduced motion.
 - Каркас мобильный: контент ограничен `max-w-md`, отступы безопасных зон уже учтены в `AppShell`.

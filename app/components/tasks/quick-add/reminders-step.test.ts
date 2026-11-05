@@ -52,6 +52,14 @@ describe("RemindersStep", () => {
     expect(html.match(/overflow-hidden/g)).toHaveLength(3);
   });
 
+  it("keeps focus rings visible on the amount and time pills", () => {
+    const html = render({
+      value: { ...defaults, scheduledEnabled: true },
+    });
+
+    expect(html.match(/focus-visible:outline-solid/g)).toHaveLength(2);
+  });
+
   it("shows scheduled controls when the scheduled rule is on", () => {
     const html = render({
       value: { ...defaults, scheduledEnabled: true },

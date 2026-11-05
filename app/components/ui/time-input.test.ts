@@ -16,6 +16,7 @@ describe("TimeInput", () => {
 
     expect(html).toContain("rounded-xl");
     expect(html).toContain("text-[17px]");
+    expect(html).toContain("focus-visible:outline-solid");
   });
 
   it("renders the compact reminders pill", () => {
@@ -30,6 +31,7 @@ describe("TimeInput", () => {
 
     expect(html).toContain("rounded-[28px]");
     expect(html).toContain("text-[15px]");
+    expect(html).toContain("focus-visible:outline-solid");
     expect(html).not.toContain("rounded-xl");
   });
 });

@@ -6,6 +6,7 @@ import type { Transition, Variants } from "motion/react";
 import { useRevalidator } from "react-router";
 
 import { BottomSheet, BottomSheetAction } from "~/components/ui/bottom-sheet";
+import { useKeyboardViewport } from "~/hooks/use-keyboard-viewport";
 import { ApiError } from "~/lib/api/errors";
 import { fetchLabels } from "~/lib/labels/labels-api";
 import { pruneMissingLabelIds } from "~/lib/labels/labels-selection";
@@ -67,6 +68,7 @@ export function QuickAddSheet({
 }: QuickAddSheetProps): ReactElement {
   const { user } = useAuth();
   const { haptics } = useTelegram();
+  const keyboard = useKeyboardViewport(open);
   const queryClient = useQueryClient();
   const revalidator = useRevalidator();
   const timeZone = user?.timezone ?? "UTC";
@@ -384,7 +386,7 @@ export function QuickAddSheet({
     >
       <motion.div
         className="relative w-full overflow-hidden"
-        layout
+        layout={keyboard.keyboardInset === 0}
         transition={LAYOUT_TRANSITION}
       >
         <AnimatePresence custom={direction} initial={false} mode="popLayout">

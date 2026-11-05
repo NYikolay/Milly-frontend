@@ -117,7 +117,7 @@ export function BottomSheet({
       }}
     >
       <motion.div
-        layout={panelAnimateLayout}
+        layout={panelAnimateLayout && !keyboardOpen}
         className={cn(
           "relative flex w-full flex-col overflow-hidden rounded-[25px] bg-app-card",
           panelClassName,
