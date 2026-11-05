@@ -195,43 +195,43 @@ export function VoiceRecorderSheet({
       onOpenChange={handleDismiss}
       title="Голосовое сообщение"
       describedBy={descriptionId}
+      panelHeight={380}
+      bodyClassName="items-center justify-between gap-5 px-6 pb-[30px] pt-[15px]"
       footer={
         <BottomSheetAction onClick={handleDismiss}>Закрыть</BottomSheetAction>
       }
     >
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-between gap-5 px-6 py-[15px]">
-        <p
-          id={descriptionId}
-          className="text-center text-[15px] leading-[1.3] text-app-text-secondary"
-        >
-          Расскажите какую задачу или трату необходимо записать
+      <p
+        id={descriptionId}
+        className="text-center text-[15px] leading-[1.3] text-app-text-secondary"
+      >
+        Расскажите какую задачу или трату необходимо записать
+      </p>
+      <VoiceRecordButton
+        status={status}
+        cancelArmed={cancelArmed}
+        disabled={!open || status === "preparing" || status === "sending"}
+        describedBy={instructionId}
+        onCancelArmedChange={handleCancelArmedChange}
+        onPressStart={handlePressStart}
+        onPressEnd={handlePressEnd}
+      />
+      <div
+        id={instructionId}
+        aria-live="polite"
+        className="flex flex-col items-center gap-[5px] text-center"
+      >
+        <p className="text-[15px] font-semibold leading-[18px] text-app-text">
+          {instruction.title}
         </p>
-        <VoiceRecordButton
-          status={status}
-          cancelArmed={cancelArmed}
-          disabled={!open || status === "preparing" || status === "sending"}
-          describedBy={instructionId}
-          onCancelArmedChange={handleCancelArmedChange}
-          onPressStart={handlePressStart}
-          onPressEnd={handlePressEnd}
-        />
-        <div
-          id={instructionId}
-          aria-live="polite"
-          className="flex flex-col items-center gap-[5px] text-center"
+        <p
+          className={cn(
+            "text-[13px] leading-[1.4]",
+            TONE_CLASSES[instruction.tone],
+          )}
         >
-          <p className="text-[15px] font-semibold leading-[18px] text-app-text">
-            {instruction.title}
-          </p>
-          <p
-            className={cn(
-              "text-[13px] leading-[1.4]",
-              TONE_CLASSES[instruction.tone],
-            )}
-          >
-            {instruction.subtitle}
-          </p>
-        </div>
+          {instruction.subtitle}
+        </p>
       </div>
     </BottomSheet>
   );

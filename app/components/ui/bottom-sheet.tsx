@@ -5,8 +5,10 @@ import type {
   ReactNode,
   RefObject,
 } from "react";
+import { motion } from "motion/react";
 
 import { Modal } from "~/components/ui/modal";
+import { SheetHeader } from "~/components/ui/sheet-header";
 import { cn } from "~/lib/cn";
 
 export interface BottomSheetProps {
@@ -21,6 +23,10 @@ export interface BottomSheetProps {
   bodyClassName?: string;
   closeOnOverlayClick?: boolean;
   closeOnEscape?: boolean;
+  onBack?: () => void;
+  showCloseButton?: boolean;
+  panelHeight?: number | "auto";
+  panelAnimateLayout?: boolean;
 }
 
 export function BottomSheet({
@@ -35,6 +41,10 @@ export function BottomSheet({
   bodyClassName,
   closeOnOverlayClick,
   closeOnEscape,
+  onBack,
+  showCloseButton = true,
+  panelHeight = "auto",
+  panelAnimateLayout = false,
 }: BottomSheetProps): ReactElement {
   const titleId = useId();
 
@@ -55,31 +65,33 @@ export function BottomSheet({
         paddingBottom: "max(15px, var(--app-inset-bottom))",
       }}
     >
-      <div
+      <motion.div
+        layout={panelAnimateLayout}
         className={cn(
-          "relative flex h-[380px] w-full flex-col overflow-hidden rounded-[25px] bg-app-card p-[15px]",
+          "relative flex w-full flex-col overflow-hidden rounded-[25px] bg-app-card",
           panelClassName,
         )}
         style={{
+          height: panelHeight === "auto" ? undefined : panelHeight,
           maxHeight:
             "calc(var(--tg-viewport-stable-height, 100dvh) - var(--app-inset-top) - var(--app-inset-bottom) - 90px)",
         }}
       >
-        <h2
-          id={titleId}
-          className="shrink-0 text-center text-[17px] font-semibold leading-[1.4] text-app-text"
-        >
-          {title}
-        </h2>
+        <SheetHeader
+          titleId={titleId}
+          title={title}
+          onClose={showCloseButton ? () => onOpenChange(false) : undefined}
+          onBack={onBack}
+        />
         <div
           className={cn(
-            "flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain",
+            "flex min-h-0 flex-auto flex-col overflow-y-auto overscroll-contain",
             bodyClassName,
           )}
         >
           {children}
         </div>
-      </div>
+      </motion.div>
       {footer != null ? <div className="shrink-0">{footer}</div> : null}
     </Modal>
   );
@@ -98,6 +110,23 @@ export function BottomSheetAction({
       type={type}
       className={cn(
         "flex h-[50px] w-full items-center justify-center rounded-[25px] bg-app-card text-[15px] font-semibold text-app-accent transition-opacity active:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-accent",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export function BottomSheetPrimaryAction({
+  className,
+  type = "button",
+  ...props
+}: BottomSheetActionProps): ReactElement {
+  return (
+    <button
+      type={type}
+      className={cn(
+        "flex h-[50px] w-full items-center justify-center rounded-[25px] bg-app-accent text-[15px] font-semibold text-white transition-opacity active:opacity-70 disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-accent",
         className,
       )}
       {...props}
