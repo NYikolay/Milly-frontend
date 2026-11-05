@@ -11,7 +11,7 @@ const MAX_LABEL_COUNT = 100;
 const STATUS_CLASSES =
   "flex min-h-[120px] flex-col items-center justify-center gap-[10px] px-[15px] text-center text-[15px] text-app-text-secondary";
 const RETRY_BUTTON_CLASSES =
-  "text-[15px] font-semibold text-app-accent transition-opacity active:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-accent";
+  "text-[15px] font-semibold text-app-accent transition-opacity active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent";
 
 export type LabelsStepState = "loading" | "error" | "empty";
 
@@ -120,7 +120,7 @@ export function LabelsStep({
             <li className="border-b border-app-stroke" key={label.id}>
               <button
                 aria-checked={isSelected}
-                className="flex h-[47px] w-full items-center gap-[10px] text-left transition-opacity active:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-accent"
+                className="flex h-[47px] w-full items-center gap-[10px] text-left transition-opacity active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent"
                 onClick={() => toggleLabel(label.id)}
                 role="checkbox"
                 type="button"

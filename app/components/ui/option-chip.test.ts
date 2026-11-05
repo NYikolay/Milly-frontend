@@ -43,4 +43,34 @@ describe("OptionChip", () => {
     expect(html).not.toContain("text-app-accent");
     expect(html).not.toContain("border-app-accent");
   });
+
+  it("renders only the label when no icon is provided", () => {
+    const html = renderToStaticMarkup(
+      createElement(OptionChip, {
+        label: "P2",
+        onClick: () => {},
+        ariaLabel: "Приоритет задачи",
+      }),
+    );
+
+    expect(html).toContain(">P2<");
+    expect(html).not.toContain('aria-hidden="true"');
+    expect(html).toContain("gap-[5px]");
+    expect(html).toContain("max-w-[200px]");
+  });
+
+  it("uses the tight icon gap when requested", () => {
+    const html = renderToStaticMarkup(
+      createElement(OptionChip, {
+        icon: createElement("span"),
+        iconGap: "tight",
+        label: "Сегодня, 16:00",
+        onClick: () => {},
+        ariaLabel: "Дата и время задачи",
+      }),
+    );
+
+    expect(html).toContain("gap-[2px]");
+    expect(html).not.toContain("gap-[5px]");
+  });
 });

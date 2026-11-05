@@ -237,7 +237,7 @@ export function SelectField<T extends string | number>({
         aria-haspopup="listbox"
         aria-label={ariaLabel}
         className={cn(
-          "flex h-[49px] w-full items-center justify-between gap-[10px] rounded-[25px] bg-app-track px-[15px] text-left text-[15px] text-app-text transition-colors active:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-accent",
+          "flex h-[49px] w-full items-center justify-between gap-[10px] rounded-[25px] bg-app-track px-[15px] text-left text-[15px] text-app-text transition-colors active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent",
           className,
         )}
         onClick={handleToggle}
@@ -280,7 +280,7 @@ export function SelectField<T extends string | number>({
                         }}
                         aria-selected={isSelected}
                         className={cn(
-                          "flex h-[54px] w-full items-center justify-between gap-[10px] text-left text-[15px] text-app-text transition-colors active:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-accent",
+                          "flex h-[54px] w-full items-center justify-between gap-[10px] text-left text-[15px] text-app-text transition-colors active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent",
                           index < options.length - 1 &&
                             "border-b border-app-stroke",
                         )}

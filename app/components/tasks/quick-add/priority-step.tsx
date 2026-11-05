@@ -31,7 +31,7 @@ export function PriorityStep({
           return (
             <button
               aria-checked={isSelected}
-              className="flex h-[50px] w-full items-center gap-[10px] border-b border-app-stroke text-left text-[15px] text-app-text transition-opacity active:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-accent"
+              className="flex h-[50px] w-full items-center gap-[10px] border-b border-app-stroke text-left text-[15px] text-app-text transition-opacity active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent"
               key={option.value}
               onClick={() => setSelected(option.value)}
               role="radio"

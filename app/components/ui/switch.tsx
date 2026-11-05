@@ -23,7 +23,7 @@ export function Switch({
       aria-checked={checked}
       aria-label={label}
       className={cn(
-        "relative inline-flex h-11 w-12 shrink-0 items-center justify-center rounded-full active:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-accent disabled:cursor-not-allowed disabled:opacity-40",
+        "relative inline-flex h-11 w-12 shrink-0 items-center justify-center rounded-full active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent disabled:cursor-not-allowed disabled:opacity-40",
         className,
       )}
       disabled={disabled}

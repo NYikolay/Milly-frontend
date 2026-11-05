@@ -3,7 +3,8 @@ import type { ReactElement, ReactNode, Ref } from "react";
 import { cn } from "~/lib/cn";
 
 export interface OptionChipProps {
-  icon: ReactNode;
+  icon?: ReactNode;
+  iconGap?: "tight" | "default";
   label?: string;
   endIcon?: ReactNode;
   active?: boolean;
@@ -15,6 +16,7 @@ export interface OptionChipProps {
 
 export function OptionChip({
   icon,
+  iconGap = "default",
   label,
   endIcon,
   active = false,
@@ -29,7 +31,8 @@ export function OptionChip({
       aria-haspopup="dialog"
       aria-label={ariaLabel}
       className={cn(
-        "inline-flex h-[45px] shrink-0 items-center gap-[10px] whitespace-nowrap rounded-[50px] border bg-app-card px-[10px] text-[13px] transition-colors active:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-accent",
+        "inline-flex h-[45px] max-w-[200px] shrink-0 items-center whitespace-nowrap rounded-[50px] border bg-app-card px-[10px] text-[13px] transition-colors active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent",
+        iconGap === "tight" ? "gap-[2px]" : "gap-[5px]",
         active
           ? "border-app-accent text-app-accent"
           : "border-app-stroke text-app-text",
@@ -39,9 +42,7 @@ export function OptionChip({
       type="button"
     >
       {icon}
-      {label ? (
-        <span className="max-w-[200px] truncate">{label}</span>
-      ) : null}
+      {label ? <span className="min-w-0 truncate">{label}</span> : null}
       {endIcon}
     </button>
   );

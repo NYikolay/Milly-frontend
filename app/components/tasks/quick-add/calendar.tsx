@@ -57,7 +57,7 @@ function chunkWeeks(cells: MonthCell[]): MonthCell[][] {
 }
 
 const NAVIGATION_BUTTON_CLASSES =
-  "flex size-11 items-center justify-center rounded-full text-app-accent active:opacity-70 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-accent";
+  "flex size-11 items-center justify-center rounded-full text-app-accent active:opacity-70 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent";
 
 export function Calendar({
   value,
@@ -132,7 +132,7 @@ export function Calendar({
                   aria-current={cell.date === today ? "date" : undefined}
                   aria-selected={isSelected}
                   className={cn(
-                    "mx-auto flex h-9 w-12 max-w-full items-center justify-center rounded-[25px] text-[15px] transition-colors active:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-accent disabled:cursor-not-allowed",
+                    "mx-auto flex h-9 w-12 max-w-full items-center justify-center rounded-[25px] text-[15px] transition-colors active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent disabled:cursor-not-allowed",
                     isSelected
                       ? "bg-app-accent font-semibold text-white"
                       : cell.inCurrentMonth

@@ -1,8 +1,6 @@
 import type { ReactElement, Ref } from "react";
 
-import calendarIcon from "~/assets/icons/calendar.svg";
-import clockIcon from "~/assets/icons/clock.svg";
-import flagIcon from "~/assets/icons/flag.svg";
+import calendarIcon from "~/assets/icons/calendar.svg?no-inline";
 import repeatIcon from "~/assets/icons/repeat.svg";
 import tagPlusIcon from "~/assets/icons/tag-plus.svg";
 import tagIcon from "~/assets/icons/tag.svg";
@@ -82,6 +80,7 @@ export function QuickAddChips({
           isRecurring ? <AssetIcon className="size-6" src={repeatIcon} /> : null
         }
         icon={<AssetIcon className="size-6" src={calendarIcon} />}
+        iconGap="tight"
         label={formatDueChip(dueDate, dueTime, timeZone, now)}
         onClick={() => onOpenStep("due")}
       />
@@ -95,7 +94,7 @@ export function QuickAddChips({
       <OptionChip
         ariaLabel="Приоритет задачи"
         buttonRef={chipRefs?.priority}
-        icon={<AssetIcon className="size-6" src={flagIcon} />}
+        className="w-[45px] justify-center px-[10px] text-center"
         label={priorityShortLabel(priority)}
         onClick={() => onOpenStep("priority")}
       />
@@ -103,7 +102,6 @@ export function QuickAddChips({
         active={remindersEnabled && (beforeDueEnabled || scheduledEnabled)}
         ariaLabel="Автонапоминания"
         buttonRef={chipRefs?.reminders}
-        icon={<AssetIcon className="size-6" src={clockIcon} />}
         label="Напоминание"
         onClick={() => onOpenStep("reminders")}
       />

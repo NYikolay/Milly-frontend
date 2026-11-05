@@ -49,8 +49,8 @@ export function QuickAddForm({
         Введите быструю задачу, например: Запись к стоматологу в четверг на 10
         утра
       </p>
-      <div className="flex flex-col gap-[10px]">
-        <div className="flex items-center justify-between gap-[10px] text-[15px]">
+      <div className="flex flex-col gap-[5px]">
+        <div className="flex items-center justify-between gap-[10px] px-[15px] text-[15px]">
           <span className="text-app-text">Название</span>
           <span className="text-app-text-secondary">
             {title.length}/{TITLE_MAX_LENGTH}
@@ -59,7 +59,7 @@ export function QuickAddForm({
         <textarea
           {...form.register("title")}
           aria-label="Название задачи"
-          className="h-[104px] w-full resize-none rounded-[25px] border border-app-stroke bg-app-card px-[15px] py-[12px] text-[15px] text-app-text placeholder:text-app-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-accent"
+          className="h-[104px] w-full resize-none rounded-[25px] border border-app-stroke bg-app-card px-[15px] py-[12px] text-[15px] text-app-text placeholder:text-app-text-secondary focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent"
           maxLength={TITLE_MAX_LENGTH}
           placeholder="Запись к стоматологу завтра в 10 утра"
         />
