@@ -2,7 +2,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { RemindersStep } from "./reminders-step";
+import { normalizeReminderDraft, RemindersStep } from "./reminders-step";
 
 const defaults = {
   remindersEnabled: true,
@@ -72,5 +72,22 @@ describe("RemindersStep", () => {
     expect(html).not.toMatch(
       /<button[^>]*disabled=""[^>]*>Применить<\/button>/,
     );
+  });
+});
+
+describe("normalizeReminderDraft", () => {
+  it("normalizes an invalid hidden scheduled time to the default", () => {
+    const draft = normalizeReminderDraft({
+      ...defaults,
+      scheduledEnabled: false,
+      scheduledTime: "",
+    });
+
+    expect(draft.scheduledTime).toBe("14:00");
+    expect(draft.scheduledEnabled).toBe(false);
+  });
+
+  it("leaves the default draft unchanged when the scheduled time is valid", () => {
+    expect(normalizeReminderDraft(defaults)).toEqual(defaults);
   });
 });

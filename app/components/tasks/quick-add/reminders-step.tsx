@@ -11,6 +11,7 @@ import { isValidTime } from "~/lib/tasks/date-time";
 import type { DueUnit } from "~/lib/tasks/quick-task-schema";
 
 const SETTINGS_TRANSITION = { duration: 0.22, ease: "easeOut" } as const;
+const DEFAULT_SCHEDULED_TIME = "14:00";
 
 export const REMINDER_UNIT_OPTIONS: SelectOption<DueUnit>[] = [
   { value: "minutes", label: "Минут" },
@@ -40,6 +41,14 @@ export interface RemindersStepProps {
   value: ReminderDraft;
   onApply: (value: ReminderDraft) => void;
   onToggleHaptic?: () => void;
+}
+
+export function normalizeReminderDraft(draft: ReminderDraft): ReminderDraft {
+  if (isValidTime(draft.scheduledTime)) {
+    return draft;
+  }
+
+  return { ...draft, scheduledTime: DEFAULT_SCHEDULED_TIME };
 }
 
 function parseAmount(input: string): number | null {
@@ -107,15 +116,17 @@ export function RemindersStep({
       return;
     }
 
-    onApply({
-      remindersEnabled,
-      beforeDueEnabled,
-      beforeDueAmount: parsedAmount ?? 1,
-      beforeDueUnit,
-      scheduledEnabled,
-      scheduledIntervalDays,
-      scheduledTime,
-    });
+    onApply(
+      normalizeReminderDraft({
+        remindersEnabled,
+        beforeDueEnabled,
+        beforeDueAmount: parsedAmount ?? 1,
+        beforeDueUnit,
+        scheduledEnabled,
+        scheduledIntervalDays,
+        scheduledTime,
+      }),
+    );
   }
 
   return (
