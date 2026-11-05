@@ -137,6 +137,10 @@ app/
 - Тема: только Tailwind-токены `tg-*` (`bg-tg-bg`, `text-tg-hint`, `bg-tg-button` и т.д.). Не хардкодить цвета Telegram и не полагаться на `dark:` для цветов темы. Новые токены добавлять в `@theme inline` в `app/app.css`.
 - Безопасные зоны применяет `AppShell` через `--app-inset-*`; не добавлять фиксированные отступы под чёлку/навигацию.
 - Для нижних панелей использовать `viewportStableHeight` / `--tg-viewport-stable-height`, не `viewportHeight`.
+- Клавиатура в нижних шторках: `BottomSheet` компенсирует
+  `visualViewport` (`keyboardInset`), а не `viewportHeight`; в meta
+  viewport включён `interactive-widget=resizes-content`. Не фиксировать
+  нижнюю панель через `viewportHeight`.
 - `BackButton` не навигирует автоматически; `requestFullscreen()` не возвращает promise — не вызывать `.catch()`.
 - Полные правила и версии API — в `.opencode/skills/telegram-mini-apps/`.
 
