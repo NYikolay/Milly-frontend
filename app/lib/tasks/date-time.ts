@@ -230,10 +230,14 @@ export function isValidTime(value: string): boolean {
   return TIME_PATTERN.test(value);
 }
 
-export function isDateInRange(date: string): boolean {
+export function isDateInRange(
+  date: string,
+  minDate: string = MIN_API_DATE,
+  maxDate: string = MAX_API_DATE,
+): boolean {
   return (
     /^\d{4}-\d{2}-\d{2}$/.test(date) &&
-    date >= MIN_API_DATE &&
-    date <= MAX_API_DATE
+    date >= minDate &&
+    date <= maxDate
   );
 }

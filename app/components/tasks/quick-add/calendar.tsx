@@ -5,7 +5,11 @@ import chevronLeftIcon from "~/assets/icons/chevron-left.svg";
 import chevronRightIcon from "~/assets/icons/chevron-right.svg";
 import { AssetIcon } from "~/components/ui/asset-icon";
 import { cn } from "~/lib/cn";
-import { formatMonthTitle, getMonthGrid } from "~/lib/tasks/date-time";
+import {
+  formatMonthTitle,
+  getMonthGrid,
+  isDateInRange,
+} from "~/lib/tasks/date-time";
 import type { MonthCell } from "~/lib/tasks/date-time";
 
 const DEFAULT_MIN_DATE = "2025-01-01";
@@ -57,7 +61,7 @@ function chunkWeeks(cells: MonthCell[]): MonthCell[][] {
 }
 
 const NAVIGATION_BUTTON_CLASSES =
-  "flex size-11 items-center justify-center rounded-full text-app-accent active:opacity-70 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent";
+  "flex size-11 -m-[10px] items-center justify-center rounded-full text-app-accent active:opacity-70 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent";
 
 export function Calendar({
   value,
@@ -77,6 +81,10 @@ export function Calendar({
   const canGoNext = compareMonths(view, maxView) < 0;
 
   function handleSelect(cell: MonthCell) {
+    if (!isDateInRange(cell.date, minDate, maxDate)) {
+      return;
+    }
+
     if (!cell.inCurrentMonth) {
       setView(toMonth(cell.date));
     }
@@ -109,11 +117,11 @@ export function Calendar({
           <AssetIcon className="size-6" src={chevronRightIcon} />
         </button>
       </div>
-      <div aria-label={title} className="mt-[10px]" role="grid">
+      <div aria-label={title} className="mt-4" role="grid">
         <div className="grid grid-cols-7" role="row">
           {WEEKDAYS.map((weekday) => (
             <span
-              className="flex h-8 items-center justify-center text-[11px] text-app-text-secondary"
+              className="flex h-[18px] items-center justify-center text-[11px] text-app-text-secondary"
               key={weekday}
               role="columnheader"
             >
@@ -125,7 +133,7 @@ export function Calendar({
           <div className="grid grid-cols-7" key={week[0]?.date} role="row">
             {week.map((cell) => {
               const isSelected = cell.date === value;
-              const isDisabled = cell.date < minDate || cell.date > maxDate;
+              const isDisabled = !isDateInRange(cell.date, minDate, maxDate);
 
               return (
                 <button

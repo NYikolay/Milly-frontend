@@ -61,4 +61,12 @@ describe("DueStep", () => {
       /<button[^>]*disabled=""[^>]*>Готово<\/button>/,
     );
   });
+
+  it("uses today as the minimum date", () => {
+    const html = render();
+
+    expect(html).toMatch(
+      /<button[^>]*aria-label="Предыдущий месяц"[^>]*disabled=""/,
+    );
+  });
 });

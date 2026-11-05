@@ -8,7 +8,6 @@ import { Switch } from "~/components/ui/switch";
 import { TimeInput } from "~/components/ui/time-input";
 import { formatDueHint, getZonedNow, isValidTime } from "~/lib/tasks/date-time";
 
-const MIN_DATE = "2025-01-01";
 const MAX_DATE = "2100-12-31";
 const HINT_TRANSITION = { duration: 0.18, ease: "easeOut" } as const;
 
@@ -47,7 +46,10 @@ export function DueStep({
   onApply,
   onToggleHaptic,
 }: DueStepProps): ReactElement {
-  const [selectedDate, setSelectedDate] = useState(date);
+  const today = formatZonedToday(now, timeZone);
+  const [selectedDate, setSelectedDate] = useState(() =>
+    date < today ? today : date,
+  );
   const [selectedTime, setSelectedTime] = useState(time);
   const [recurring, setRecurring] = useState(isRecurring);
 
@@ -59,7 +61,6 @@ export function DueStep({
     recurring,
   );
   const hintKey = recurring ? "recurring" : hint;
-  const today = formatZonedToday(now, timeZone);
   const isTimeValid = isValidTime(selectedTime);
 
   function handleRecurringChange(checked: boolean) {
@@ -71,7 +72,7 @@ export function DueStep({
     <div className="flex flex-col">
       <Calendar
         maxDate={MAX_DATE}
-        minDate={MIN_DATE}
+        minDate={today}
         onSelect={setSelectedDate}
         today={today}
         value={selectedDate}

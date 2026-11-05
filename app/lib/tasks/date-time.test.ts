@@ -148,3 +148,11 @@ describe("calendar helpers", () => {
     expect(isDateInRange("2101-01-01")).toBe(false);
   });
 });
+
+describe("isDateInRange with custom bounds", () => {
+  it("rejects dates before the selected minimum", () => {
+    expect(isDateInRange("2026-11-04", "2026-11-05", "2100-12-31")).toBe(false);
+    expect(isDateInRange("2026-11-05", "2026-11-05", "2100-12-31")).toBe(true);
+    expect(isDateInRange("2101-01-01", "2026-11-05", "2100-12-31")).toBe(false);
+  });
+});
