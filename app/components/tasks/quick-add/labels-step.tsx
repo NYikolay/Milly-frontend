@@ -65,18 +65,27 @@ export function LabelsStep({
   );
 
   const items = uniqueLabels(labels);
+  const visibleIds = new Set(items.map((label) => label.id));
+  const isReady = !isLoading && !isError;
+  const visibleSelected = isReady
+    ? selected.filter((id) => visibleIds.has(id))
+    : selected;
 
   function toggleLabel(id: number) {
     setSelected((current) => {
-      if (current.includes(id)) {
-        return current.filter((selectedId) => selectedId !== id);
+      const base = isReady
+        ? current.filter((selectedId) => visibleIds.has(selectedId))
+        : current;
+
+      if (base.includes(id)) {
+        return base.filter((selectedId) => selectedId !== id);
       }
 
-      if (current.length >= MAX_LABEL_COUNT) {
-        return current;
+      if (base.length >= MAX_LABEL_COUNT) {
+        return base;
       }
 
-      return [...current, id];
+      return [...base, id];
     });
   }
 
@@ -105,7 +114,7 @@ export function LabelsStep({
     content = (
       <ul className="flex flex-col">
         {items.map((label) => {
-          const isSelected = selected.includes(label.id);
+          const isSelected = visibleSelected.includes(label.id);
 
           return (
             <li className="border-b border-app-stroke" key={label.id}>
@@ -152,7 +161,7 @@ export function LabelsStep({
       {content}
       <BottomSheetPrimaryAction
         className="mt-[15px]"
-        onClick={() => onApply(uniqueLabelIds(selected))}
+        onClick={() => onApply(uniqueLabelIds(visibleSelected))}
       >
         Применить
       </BottomSheetPrimaryAction>

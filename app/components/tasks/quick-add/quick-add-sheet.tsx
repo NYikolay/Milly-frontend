@@ -8,6 +8,7 @@ import { useRevalidator } from "react-router";
 import { BottomSheet, BottomSheetAction } from "~/components/ui/bottom-sheet";
 import { ApiError } from "~/lib/api/errors";
 import { fetchLabels } from "~/lib/labels/labels-api";
+import { pruneMissingLabelIds } from "~/lib/labels/labels-selection";
 import { describeQuickAddError } from "~/lib/tasks/quick-task-errors";
 import type { Priority } from "~/lib/tasks/types";
 import { useAuth } from "~/providers/auth-provider";
@@ -121,7 +122,7 @@ export function QuickAddSheet({
       resetToDefaults();
       void revalidator.revalidate();
     },
-    onError: (mutationError, variables) => {
+    onError: async (mutationError, variables) => {
       submittingRef.current = false;
 
       if (variables.signal.aborted) {
@@ -133,6 +134,17 @@ export function QuickAddSheet({
 
       if (mutationError instanceof ApiError && mutationError.status === 404) {
         void queryClient.invalidateQueries({ queryKey: ["labels"] });
+        const result = await labelsQuery.refetch();
+
+        if (!result.isSuccess) {
+          return;
+        }
+
+        form.setValue(
+          "labelIds",
+          pruneMissingLabelIds(form.getValues("labelIds"), result.data ?? []),
+          { shouldDirty: true, shouldValidate: true },
+        );
       }
     },
   });
