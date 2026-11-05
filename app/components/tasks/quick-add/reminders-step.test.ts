@@ -35,6 +35,23 @@ describe("RemindersStep", () => {
     expect(html).not.toContain("Каждый день");
   });
 
+  it("uses the compact pill sizes and indented helpers", () => {
+    const html = render();
+
+    expect(html).toContain("rounded-[28px]");
+    expect(html).toContain("text-[15px]");
+    expect(html).toContain("px-[15px]");
+    expect(html.match(/overflow-hidden/g)).toHaveLength(2);
+  });
+
+  it("animates the scheduled block with its own collapsible", () => {
+    const html = render({
+      value: { ...defaults, scheduledEnabled: true },
+    });
+
+    expect(html.match(/overflow-hidden/g)).toHaveLength(3);
+  });
+
   it("shows scheduled controls when the scheduled rule is on", () => {
     const html = render({
       value: { ...defaults, scheduledEnabled: true },

@@ -2,11 +2,17 @@ import type { ChangeEvent, ReactElement } from "react";
 
 import { cn } from "~/lib/cn";
 
+const SIZE_CLASSES = {
+  default: "h-11 rounded-xl text-[17px]",
+  compact: "h-12 rounded-[28px] text-[15px]",
+} as const;
+
 export interface TimeInputProps {
   value: string;
   onChange: (value: string) => void;
   ariaLabel?: string;
   className?: string;
+  size?: keyof typeof SIZE_CLASSES;
 }
 
 export function TimeInput({
@@ -14,6 +20,7 @@ export function TimeInput({
   onChange,
   ariaLabel = "Время",
   className,
+  size = "default",
 }: TimeInputProps): ReactElement {
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
     onChange(event.target.value);
@@ -23,7 +30,8 @@ export function TimeInput({
     <input
       aria-label={ariaLabel}
       className={cn(
-        "h-11 w-[114px] rounded-xl border-0 bg-app-track p-0 text-center text-[17px] font-semibold text-app-accent outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent",
+        "w-[114px] border-0 bg-app-track p-0 text-center font-semibold text-app-accent outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent",
+        SIZE_CLASSES[size],
         className,
       )}
       onChange={handleChange}
