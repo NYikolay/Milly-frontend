@@ -13,6 +13,7 @@ export interface TelegramProfile {
 
 export interface AuthUser {
   id: number;
+  timezone: string;
   created_at: string;
   telegram_profile: TelegramProfile;
 }

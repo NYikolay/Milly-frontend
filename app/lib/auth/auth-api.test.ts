@@ -33,6 +33,7 @@ const getTelegramWebAppMock = vi.mocked(getTelegramWebApp);
 
 const user: AuthUser = {
   id: 1,
+  timezone: "UTC",
   created_at: "2026-11-02T10:00:00Z",
   telegram_profile: {
     telegram_id: 100,

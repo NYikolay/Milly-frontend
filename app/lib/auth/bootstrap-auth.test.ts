@@ -13,6 +13,7 @@ import { AUTH_BOOTSTRAP_BUDGET_MS } from "./timeouts";
 
 const user: AuthUser = {
   id: 1,
+  timezone: "UTC",
   created_at: "2026-11-02T10:00:00Z",
   telegram_profile: {
     telegram_id: 100,
