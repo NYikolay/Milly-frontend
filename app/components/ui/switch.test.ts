@@ -18,4 +18,17 @@ describe("Switch", () => {
     expect(html).toContain('aria-checked="true"');
     expect(html).toContain('aria-label="Регулярная задача"');
   });
+
+  it("keeps a 44px hit area around the 48x28 track", () => {
+    const html = renderToStaticMarkup(
+      createElement(Switch, {
+        checked: false,
+        onCheckedChange: () => {},
+        label: "Регулярная задача",
+      }),
+    );
+
+    expect(html).toMatch(/<button[^>]*class="[^"]*h-11[^"]*"/);
+    expect(html).toMatch(/<span[^>]*class="[^"]*h-7 w-12[^"]*"/);
+  });
 });
