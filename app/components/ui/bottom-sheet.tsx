@@ -24,7 +24,6 @@ export interface BottomSheetProps {
   closeOnOverlayClick?: boolean;
   closeOnEscape?: boolean;
   onBack?: () => void;
-  showCloseButton?: boolean;
   panelHeight?: number | "auto";
   panelAnimateLayout?: boolean;
 }
@@ -42,7 +41,6 @@ export function BottomSheet({
   closeOnOverlayClick,
   closeOnEscape,
   onBack,
-  showCloseButton = true,
   panelHeight = "auto",
   panelAnimateLayout = false,
 }: BottomSheetProps): ReactElement {
@@ -77,12 +75,7 @@ export function BottomSheet({
             "calc(var(--tg-viewport-stable-height, 100dvh) - var(--app-inset-top) - var(--app-inset-bottom) - 90px)",
         }}
       >
-        <SheetHeader
-          titleId={titleId}
-          title={title}
-          onClose={showCloseButton ? () => onOpenChange(false) : undefined}
-          onBack={onBack}
-        />
+        <SheetHeader titleId={titleId} title={title} onBack={onBack} />
         <div
           className={cn(
             "flex min-h-0 flex-auto flex-col overflow-y-auto overscroll-contain",

@@ -7,18 +7,18 @@ import { SheetHeader } from "./sheet-header";
 const noop = () => {};
 
 describe("SheetHeader", () => {
-  it("renders a centered title, close button and divider", () => {
+  it("renders a centered title, divider and no close button", () => {
     const html = renderToStaticMarkup(
       createElement(SheetHeader, {
         titleId: "title",
         title: "Добавление задачи",
-        onClose: noop,
       }),
     );
 
     expect(html).toContain("Добавление задачи");
-    expect(html).toContain('aria-label="Закрыть"');
     expect(html).toContain("border-b");
+    expect(html).toContain("left-1/2");
+    expect(html).not.toContain('aria-label="Закрыть"');
     expect(html).not.toContain('aria-label="Назад"');
   });
 
@@ -27,11 +27,11 @@ describe("SheetHeader", () => {
       createElement(SheetHeader, {
         titleId: "title",
         title: "Метки",
-        onClose: noop,
         onBack: noop,
       }),
     );
 
     expect(html).toContain('aria-label="Назад"');
+    expect(html).not.toContain('aria-label="Закрыть"');
   });
 });

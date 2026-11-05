@@ -6,40 +6,17 @@ import { AssetIcon } from "~/components/ui/asset-icon";
 export interface SheetHeaderProps {
   titleId: string;
   title: string;
-  onClose?: () => void;
   onBack?: () => void;
-  closeLabel?: string;
   backLabel?: string;
 }
 
 const ICON_BUTTON_CLASSES =
-  "relative flex size-11 -m-[10px] items-center justify-center rounded-full text-app-text active:opacity-70 focus-visible:outline-2 focus-visible:outline-app-accent";
-
-function CloseIcon(): ReactElement {
-  return (
-    <svg
-      aria-hidden="true"
-      className="size-6"
-      fill="none"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M6 6L18 18M18 6L6 18"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.5"
-      />
-    </svg>
-  );
-}
+  "relative flex size-11 -m-[10px] items-center justify-center rounded-full text-app-text active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent";
 
 export function SheetHeader({
   titleId,
   title,
-  onClose,
   onBack,
-  closeLabel = "Закрыть",
   backLabel = "Назад",
 }: SheetHeaderProps): ReactElement {
   return (
@@ -62,18 +39,6 @@ export function SheetHeader({
       >
         {title}
       </h2>
-      {onClose ? (
-        <button
-          aria-label={closeLabel}
-          className={ICON_BUTTON_CLASSES}
-          onClick={onClose}
-          type="button"
-        >
-          <CloseIcon />
-        </button>
-      ) : (
-        <span aria-hidden="true" className="size-6" />
-      )}
     </div>
   );
 }
