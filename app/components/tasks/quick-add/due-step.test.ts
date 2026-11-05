@@ -45,4 +45,20 @@ describe("DueStep", () => {
 
     expect(html).toContain("На 11.11.2026, 16:00");
   });
+
+  it("disables apply and shows the helper when the time is empty", () => {
+    const html = render({ time: "" });
+
+    expect(html).toContain("Укажите время");
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Готово<\/button>/);
+  });
+
+  it("keeps apply enabled when the time is valid", () => {
+    const html = render();
+
+    expect(html).not.toContain("Укажите время");
+    expect(html).not.toMatch(
+      /<button[^>]*disabled=""[^>]*>Готово<\/button>/,
+    );
+  });
 });

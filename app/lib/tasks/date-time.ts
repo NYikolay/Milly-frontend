@@ -45,6 +45,7 @@ const MONTH_TITLES = [
 const MIN_API_DATE = "2025-01-01";
 const MAX_API_DATE = "2100-12-31";
 const MONTH_CELL_COUNT = 42;
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 function pad(value: number): string {
   return String(value).padStart(2, "0");
@@ -223,6 +224,10 @@ export function getMonthGrid(year: number, month: number): MonthCell[] {
   }
 
   return cells;
+}
+
+export function isValidTime(value: string): boolean {
+  return TIME_PATTERN.test(value);
 }
 
 export function isDateInRange(date: string): boolean {

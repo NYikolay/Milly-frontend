@@ -53,4 +53,24 @@ describe("RemindersStep", () => {
     expect(html).toContain("Автонапоминания");
     expect(html).not.toContain("До срока задачи");
   });
+
+  it("disables apply and shows the helper when the scheduled time is empty", () => {
+    const html = render({
+      value: { ...defaults, scheduledEnabled: true, scheduledTime: "" },
+    });
+
+    expect(html).toContain("Укажите время");
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Применить<\/button>/);
+  });
+
+  it("keeps apply enabled when the scheduled time is valid", () => {
+    const html = render({
+      value: { ...defaults, scheduledEnabled: true, scheduledTime: "09:30" },
+    });
+
+    expect(html).not.toContain("Укажите время");
+    expect(html).not.toMatch(
+      /<button[^>]*disabled=""[^>]*>Применить<\/button>/,
+    );
+  });
 });

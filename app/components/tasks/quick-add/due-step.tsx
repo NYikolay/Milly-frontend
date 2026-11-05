@@ -6,7 +6,7 @@ import { Calendar } from "~/components/tasks/quick-add/calendar";
 import { BottomSheetPrimaryAction } from "~/components/ui/bottom-sheet";
 import { Switch } from "~/components/ui/switch";
 import { TimeInput } from "~/components/ui/time-input";
-import { formatDueHint, getZonedNow } from "~/lib/tasks/date-time";
+import { formatDueHint, getZonedNow, isValidTime } from "~/lib/tasks/date-time";
 
 const MIN_DATE = "2025-01-01";
 const MAX_DATE = "2100-12-31";
@@ -60,6 +60,7 @@ export function DueStep({
   );
   const hintKey = recurring ? "recurring" : hint;
   const today = formatZonedToday(now, timeZone);
+  const isTimeValid = isValidTime(selectedTime);
 
   function handleRecurringChange(checked: boolean) {
     setRecurring(checked);
@@ -79,6 +80,11 @@ export function DueStep({
         <span className="text-[16px] text-app-text">Время</span>
         <TimeInput onChange={setSelectedTime} value={selectedTime} />
       </div>
+      {isTimeValid ? null : (
+        <p className="pt-[5px] text-[13px] leading-[1.4] text-app-text-secondary">
+          Укажите время
+        </p>
+      )}
       <div className="flex min-h-[50px] items-center justify-between gap-[15px] border-b border-app-stroke">
         <span className="text-[16px] text-app-text">Регулярная задача</span>
         <Switch
@@ -105,6 +111,7 @@ export function DueStep({
       </div>
       <BottomSheetPrimaryAction
         className="mt-[15px]"
+        disabled={!isTimeValid}
         onClick={() =>
           onApply({
             date: selectedDate,

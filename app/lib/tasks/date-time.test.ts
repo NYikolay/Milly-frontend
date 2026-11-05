@@ -9,6 +9,7 @@ import {
   getMonthGrid,
   getZonedNow,
   isDateInRange,
+  isValidTime,
   zonedDateTimeToIso,
 } from "./date-time";
 
@@ -98,6 +99,23 @@ describe("date formatting", () => {
 
     expect(hint).toBe("На 06.11.2026, 16:00");
     expect(hint).not.toContain("Завтра");
+  });
+});
+
+describe("isValidTime", () => {
+  it("accepts zero-padded times within the day", () => {
+    expect(isValidTime("00:00")).toBe(true);
+    expect(isValidTime("09:05")).toBe(true);
+    expect(isValidTime("23:59")).toBe(true);
+  });
+
+  it("rejects empty, out-of-range and non-padded times", () => {
+    expect(isValidTime("")).toBe(false);
+    expect(isValidTime("24:00")).toBe(false);
+    expect(isValidTime("23:60")).toBe(false);
+    expect(isValidTime("9:05")).toBe(false);
+    expect(isValidTime("09:5")).toBe(false);
+    expect(isValidTime("09:05:00")).toBe(false);
   });
 });
 

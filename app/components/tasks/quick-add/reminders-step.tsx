@@ -7,6 +7,7 @@ import { SelectField } from "~/components/ui/select-field";
 import type { SelectOption } from "~/components/ui/select-field";
 import { Switch } from "~/components/ui/switch";
 import { TimeInput } from "~/components/ui/time-input";
+import { isValidTime } from "~/lib/tasks/date-time";
 import type { DueUnit } from "~/lib/tasks/quick-task-schema";
 
 const SETTINGS_TRANSITION = { duration: 0.22, ease: "easeOut" } as const;
@@ -77,8 +78,10 @@ export function RemindersStep({
   const [scheduledTime, setScheduledTime] = useState(value.scheduledTime);
 
   const parsedAmount = parseAmount(beforeDueAmountInput);
+  const isScheduledTimeValid = isValidTime(scheduledTime);
   const isApplyDisabled =
-    remindersEnabled && beforeDueEnabled && parsedAmount === null;
+    (remindersEnabled && beforeDueEnabled && parsedAmount === null) ||
+    (remindersEnabled && scheduledEnabled && !isScheduledTimeValid);
 
   function handleRemindersEnabledChange(checked: boolean) {
     setRemindersEnabled(checked);
@@ -216,6 +219,11 @@ export function RemindersStep({
                         />
                       </div>
                     </div>
+                    {isScheduledTimeValid ? null : (
+                      <p className="text-[13px] leading-[1.4] text-app-text-secondary">
+                        Укажите время
+                      </p>
+                    )}
                     <p className="text-[13px] leading-[1.4] text-app-text-secondary">
                       Напоминание по расписанию будет высылаться в чат с Milly
                       каждый заданный промежуток времени.
