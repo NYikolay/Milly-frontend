@@ -38,7 +38,9 @@ app/
     errors/                   # ErrorScreen, AppErrorPage, AppErrorBoundary
     home/                     # секции главного экрана
     layout/app-shell.tsx      # каркас с safe-area и max-w-md
-    ui/                       # переиспользуемые примитивы
+    tasks/quick-add/          # быстрое создание: форма, шаги, календарь, отправка
+    ui/                       # примитивы: sheet-header, switch, select-field,
+                              #   time-input, option-chip, bottom-sheet
     voice/                    # UI записи голоса
   hooks/use-voice-recorder.ts
   lib/
@@ -46,8 +48,10 @@ app/
     auth/                     # token-store, auth-api, bootstrap, events, failure
     boot/                     # inline SSR boot-watchdog
     errors/                   # классификация, копирайт, навигация, throwAppError
+    labels/                   # read-only API меток (GET /labels) и типы
     telegram/                 # client, types, bot-link
-    tasks/                    # временный источник данных главного экрана
+    tasks/                    # модель формы, payload, API задач/серий, date-time,
+                              #   priority и временный источник данных главного экрана
     voice/                    # запись и загрузка голоса
     cn.ts                     # склейка классов
     format-date.ts
@@ -83,6 +87,10 @@ app/
 - Node-зависимый код держать в `*.server.ts` и вызывать из loader/action, не из браузерных компонентов.
 - Zustand — только для клиентского UI-состояния, когда оно действительно появляется. Сейчас стора нет; не создавать «заготовку ради заготовки».
 - Формы — `react-hook-form` + схемы `zod`; не дублировать валидацию вручную.
+- Быстрое создание задачи: метки читаются через `GET /labels` (read-only);
+  создание — `POST /tasks` для разовой задачи и `POST /task-series` для
+  ежедневной серии. Обязательный `AuthUser.timezone` используется для
+  расчёта `due_at` и поля `timezone` серии.
 - API-слой — `app/lib/api/`. Все запросы идут через `apiRequest` / `requestJson`;
   не разбрасывать `fetch` по компонентам. База API — `VITE_API_BASE_URL`
   (по умолчанию `/api/v1`), ошибки — `ApiError` / `ApiNetworkError`.
@@ -137,6 +145,10 @@ app/
 - Семантические токены: `tg-bg`, `tg-secondary-bg`, `tg-text`, `tg-hint`, `tg-link`, `tg-button`, `tg-button-text`, `tg-accent`, `tg-section-bg`, `tg-destructive`, `tg-separator`, `tg-bottom-bar`.
 - Исключение для главного экрана: палитра `app-*` из `docs/specs/2026-11-02-home-dashboard/spec.md`, light/dark через `data-app-theme`. `tg-*` остаются для Telegram chrome и будущих экранов; не переводить главный экран обратно на `tg-*` без пересмотра спеки.
 - Переиспользуемые примитивы — в `app/components/ui/`; композицию классов делать через `cn()`.
+- Шапка шторки — общий `SheetHeader` внутри `BottomSheet`: back/close, заголовок и
+  разделитель. Переходы между шагами быстрого создания — Motion `layout` на панели
+  и `AnimatePresence` для контента; `MotionConfig reducedMotion="user"` в
+  `AppProviders` отключает transform-анимации при reduced motion.
 - Каркас мобильный: контент ограничен `max-w-md`, отступы безопасных зон уже учтены в `AppShell`.
 - Внешний вид главного экрана зафиксирован в `docs/specs/2026-11-02-home-dashboard/spec.md`; остальные экраны и продуктовые тексты — нет. Не выдумывать продуктовые сценарии.
 
