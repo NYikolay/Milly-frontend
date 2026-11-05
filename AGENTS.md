@@ -39,8 +39,9 @@ app/
     home/                     # секции главного экрана
     layout/app-shell.tsx      # каркас с safe-area и max-w-md
     tasks/quick-add/          # быстрое создание: форма, шаги, календарь, отправка
-    ui/                       # примитивы: sheet-header, switch, select-field,
-                              #   time-input, option-chip, bottom-sheet
+    ui/                       # примитивы, включая bottom-sheet, sheet-header, switch,
+                              #   select-field, time-input, option-chip, button,
+                              #   card, modal, asset-icon
     voice/                    # UI записи голоса
   hooks/use-voice-recorder.ts
   lib/
@@ -143,7 +144,7 @@ app/
 
 - Только Tailwind CSS 4 через `@tailwindcss/vite`; без CSS-модулей и styled-components.
 - Семантические токены: `tg-bg`, `tg-secondary-bg`, `tg-text`, `tg-hint`, `tg-link`, `tg-button`, `tg-button-text`, `tg-accent`, `tg-section-bg`, `tg-destructive`, `tg-separator`, `tg-bottom-bar`.
-- Исключение для главного экрана: палитра `app-*` из `docs/specs/2026-11-02-home-dashboard/spec.md`, light/dark через `data-app-theme`. `tg-*` остаются для Telegram chrome и будущих экранов; не переводить главный экран обратно на `tg-*` без пересмотра спеки.
+- Палитра `app-*` — основа UI главного экрана (`docs/specs/2026-11-02-home-dashboard/spec.md`) и быстрого создания задачи (форма, шаги, общие шторки и примитивы), light/dark через `data-app-theme`. `tg-*` остаются для Telegram chrome и будущих Telegram-native поверхностей; не переводить главный экран и шторки быстрого создания обратно на `tg-*` без пересмотра спек.
 - Переиспользуемые примитивы — в `app/components/ui/`; композицию классов делать через `cn()`.
 - Шапка шторки — общий `SheetHeader` внутри `BottomSheet`: back/close, заголовок и
   разделитель. Переходы между шагами быстрого создания — Motion `layout` на панели
