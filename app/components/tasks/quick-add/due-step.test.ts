@@ -31,6 +31,13 @@ describe("DueStep", () => {
     expect(html).toContain("Готово");
   });
 
+  it("keeps the divider above time and removes bottom borders", () => {
+    const html = render();
+
+    expect(html).toContain("border-t border-app-stroke");
+    expect(html).not.toContain("border-b");
+  });
+
   it("renders the recurring hint", () => {
     const html = render({
       date: "2026-11-11",

@@ -77,16 +77,18 @@ export function DueStep({
         today={today}
         value={selectedDate}
       />
-      <div className="mt-[15px] flex min-h-11 items-center justify-between gap-[15px] border-b border-app-stroke">
-        <span className="text-[16px] text-app-text">Время</span>
-        <TimeInput onChange={setSelectedTime} value={selectedTime} />
+      <div className="mt-[15px] border-t border-app-stroke pt-[17px]">
+        <div className="flex min-h-11 items-center justify-between gap-[15px]">
+          <span className="text-[16px] text-app-text">Время</span>
+          <TimeInput onChange={setSelectedTime} value={selectedTime} />
+        </div>
+        {isTimeValid ? null : (
+          <p className="pt-[5px] text-[13px] leading-[1.4] text-app-text-secondary">
+            Укажите время
+          </p>
+        )}
       </div>
-      {isTimeValid ? null : (
-        <p className="pt-[5px] text-[13px] leading-[1.4] text-app-text-secondary">
-          Укажите время
-        </p>
-      )}
-      <div className="flex min-h-[50px] items-center justify-between gap-[15px] border-b border-app-stroke">
+      <div className="mt-[15px] flex min-h-[50px] items-center justify-between gap-[15px]">
         <span className="text-[16px] text-app-text">Регулярная задача</span>
         <Switch
           checked={recurring}
