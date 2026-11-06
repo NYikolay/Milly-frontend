@@ -31,15 +31,22 @@ describe("toTaskCreateInput", () => {
       title: "Позвонить врачу",
       due_at: "2026-11-06T07:00:00.000Z",
       priority: "urgent_important",
+      project_id: null,
       label_ids: [3, 4],
       reminders_enabled: true,
       reminders: [{ kind: "before_due", enabled: true, offset_minutes: 60 }],
     });
   });
+
+  it("passes the project id from the draft", () => {
+    expect(toTaskCreateInput(draft({ projectId: 10 }), moscow).project_id).toBe(
+      10,
+    );
+  });
 });
 
 describe("toSeriesCreateInput", () => {
-  it("builds a daily series without interval_days or project", () => {
+  it("builds a daily series without interval_days", () => {
     const input = toSeriesCreateInput(
       draft({ isRecurring: true, labelIds: [3] }),
       moscow,
@@ -52,6 +59,7 @@ describe("toSeriesCreateInput", () => {
       time_of_day: "10:00:00",
       timezone: moscow,
       starts_on: "2026-11-06",
+      project_id: null,
       label_ids: [3],
       reminders_enabled: true,
       reminders: [{ kind: "before_due", enabled: true, offset_minutes: 60 }],
@@ -65,6 +73,13 @@ describe("toSeriesCreateInput", () => {
     );
 
     expect(input.starts_on).toBe("2026-01-01");
+  });
+
+  it("passes the project id from the draft", () => {
+    expect(
+      toSeriesCreateInput(draft({ isRecurring: true, projectId: 10 }), moscow)
+        .project_id,
+    ).toBe(10);
   });
 });
 

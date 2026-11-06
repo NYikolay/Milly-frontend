@@ -12,6 +12,7 @@ export interface QuickTaskDraft {
   dueTime: string;
   isRecurring: boolean;
   priority: Priority;
+  projectId: number | null;
   labelIds: number[];
   remindersEnabled: boolean;
   beforeDueEnabled: boolean;
@@ -57,6 +58,7 @@ export const quickTaskSchema: z.ZodType<QuickTaskDraft> = z.object({
   dueTime: timeSchema,
   isRecurring: z.boolean(),
   priority: prioritySchema,
+  projectId: z.number().int().positive().nullable(),
   labelIds: z
     .array(z.number().int().positive())
     .max(MAX_LABEL_COUNT)
@@ -104,6 +106,7 @@ export function createQuickTaskDefaults(
     dueTime: due.time,
     isRecurring: false,
     priority: "important_not_urgent",
+    projectId: null,
     labelIds: [],
     remindersEnabled: true,
     beforeDueEnabled: true,

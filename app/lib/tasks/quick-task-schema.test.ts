@@ -17,6 +17,7 @@ describe("quick task defaults", () => {
       dueTime: "16:07",
       isRecurring: false,
       priority: "important_not_urgent",
+      projectId: null,
       labelIds: [],
       remindersEnabled: true,
       beforeDueEnabled: true,
@@ -42,6 +43,23 @@ describe("quick task schema", () => {
     expect(
       quickTaskSchema.safeParse({ ...base, title: "Задача" }).success,
     ).toBe(true);
+  });
+
+  it("accepts a nullable positive project id", () => {
+    const base = {
+      ...createQuickTaskDefaults(now, "Europe/Moscow"),
+      title: "Задача",
+    };
+
+    expect(
+      quickTaskSchema.safeParse({ ...base, projectId: null }).success,
+    ).toBe(true);
+    expect(
+      quickTaskSchema.safeParse({ ...base, projectId: 10 }).success,
+    ).toBe(true);
+    expect(
+      quickTaskSchema.safeParse({ ...base, projectId: 0 }).success,
+    ).toBe(false);
   });
 
   it("keeps the submit button disabled for empty titles and pending state", () => {
