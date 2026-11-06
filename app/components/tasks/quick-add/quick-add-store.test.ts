@@ -115,4 +115,30 @@ describe("quick add store", () => {
     expect(store.getState().draft.labelIds).toEqual([2, 3]);
     expect(store.getState().stepDraft?.labelIds).toEqual([2, 3]);
   });
+
+  it("commits and discards the project step like other steps", () => {
+    const store = createStore();
+    store.getState().patchDraft({ projectId: 10 });
+    store.getState().openStep("project");
+    store.getState().patchStepDraft({ projectId: 11 });
+    expect(store.getState().draft.projectId).toBe(10);
+
+    store.getState().closeStep();
+    expect(store.getState().draft.projectId).toBe(10);
+
+    store.getState().openStep("project");
+    store.getState().applyStep({ projectId: 12 });
+    expect(store.getState().draft.projectId).toBe(12);
+  });
+
+  it("prunes a missing project from both drafts", () => {
+    const store = createStore();
+    store.getState().patchDraft({ projectId: 10 });
+    store.getState().openStep("project");
+    store.getState().patchStepDraft({ projectId: 11 });
+
+    store.getState().pruneProjectId([11]);
+    expect(store.getState().draft.projectId).toBeNull();
+    expect(store.getState().stepDraft?.projectId).toBe(11);
+  });
 });

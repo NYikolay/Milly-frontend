@@ -26,6 +26,7 @@ export interface QuickAddStoreState {
   patchDraft: (patch: Partial<QuickTaskDraft>) => void;
   patchStepDraft: (patch: Partial<QuickTaskDraft>) => void;
   pruneLabelIds: (validIds: number[]) => void;
+  pruneProjectId: (validIds: number[]) => void;
   openStep: (step: QuickAddStep) => void;
   closeStep: () => void;
   applyStep: (patch?: Partial<QuickTaskDraft>) => void;
@@ -77,6 +78,22 @@ export function createQuickAddStore(
                   labels,
                 ),
               },
+      }));
+    },
+    pruneProjectId: (validIds) => {
+      const valid = new Set(validIds);
+
+      set((state) => ({
+        draft:
+          state.draft.projectId !== null && !valid.has(state.draft.projectId)
+            ? { ...state.draft, projectId: null }
+            : state.draft,
+        stepDraft:
+          state.stepDraft !== null &&
+          state.stepDraft.projectId !== null &&
+          !valid.has(state.stepDraft.projectId)
+            ? { ...state.stepDraft, projectId: null }
+            : state.stepDraft,
       }));
     },
     openStep: (step) => {
