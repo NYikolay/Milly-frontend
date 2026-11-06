@@ -71,7 +71,7 @@ export function QuickAddChips({
   );
 
   return (
-    <div className="flex gap-[5px] overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex gap-[5px] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <OptionChip
         active
         ariaLabel="Дата и время задачи"

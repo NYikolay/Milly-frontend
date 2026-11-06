@@ -143,6 +143,7 @@ export function QuickAddComposer({
   }
 
   function handleOpenDetail(nextStep: QuickAddStep) {
+    haptics.selection();
     blurActiveElement();
     pendingChipFocusRef.current = nextStep;
 

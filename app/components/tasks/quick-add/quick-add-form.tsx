@@ -47,7 +47,7 @@ export function QuickAddForm({
         <textarea
           {...form.register("title")}
           aria-label="Название задачи"
-          className="h-full w-full resize-none rounded-[25px] bg-transparent px-[15px] py-[12px] pb-[30px] pr-[60px] text-[15px] leading-[1.3] text-app-text placeholder:text-app-text focus-visible:outline-none"
+          className="h-full w-full resize-none rounded-[25px] bg-transparent pl-[15px] pt-[12px] pr-[60px] pb-[30px] text-[15px] leading-[1.3] text-app-text placeholder:text-app-text focus-visible:outline-none"
           maxLength={TITLE_MAX_LENGTH}
           placeholder="Запись к стоматологу завтра в 10 утра"
         />
