@@ -75,7 +75,7 @@ export default function Tasks() {
       >
         {overviewQuery.isPending ? (
           <TodayTasksSkeleton />
-        ) : overviewQuery.isError || overview === undefined ? (
+        ) : overview === undefined ? (
           <TodayTasksError
             dateLabel={dateLabel}
             onRetry={() => void overviewQuery.refetch()}
