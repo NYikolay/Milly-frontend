@@ -127,6 +127,29 @@ export function formatZonedToday(now: Date, timeZone: string): string {
   return formatDate(year, month, day);
 }
 
+export function formatZonedTodayLabel(
+  now: Date,
+  timeZone: string,
+): string {
+  const formatted = new Intl.DateTimeFormat("ru-RU", {
+    timeZone,
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(now);
+
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
+
+export function formatZonedTime(iso: string, timeZone: string): string {
+  return new Intl.DateTimeFormat("ru-RU", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date(iso));
+}
+
 export function getDefaultDue(
   now: Date,
   timeZone: string,

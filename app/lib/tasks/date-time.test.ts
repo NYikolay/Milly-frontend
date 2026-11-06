@@ -5,7 +5,9 @@ import {
   formatDueChip,
   formatDueHint,
   formatMonthTitle,
+  formatZonedTime,
   formatZonedToday,
+  formatZonedTodayLabel,
   getDefaultDue,
   getMonthGrid,
   getZonedNow,
@@ -22,6 +24,37 @@ describe("formatZonedToday", () => {
     expect(
       formatZonedToday(new Date("2026-11-05T22:30:00Z"), "Europe/Moscow"),
     ).toBe("2026-11-06");
+  });
+});
+
+describe("formatZonedTodayLabel", () => {
+  it("formats the weekday, day and month in the user timezone", () => {
+    expect(
+      formatZonedTodayLabel(
+        new Date("2026-11-05T13:07:42Z"),
+        "Europe/Moscow",
+      ),
+    ).toBe("Четверг, 5 ноября");
+  });
+
+  it("uses the user timezone at the UTC day boundary", () => {
+    expect(
+      formatZonedTodayLabel(
+        new Date("2026-11-05T22:30:00Z"),
+        "Europe/Moscow",
+      ),
+    ).toBe("Пятница, 6 ноября");
+  });
+});
+
+describe("formatZonedTime", () => {
+  it("formats an ISO instant in the user timezone", () => {
+    expect(
+      formatZonedTime("2026-11-06T08:00:00.000Z", "Europe/Moscow"),
+    ).toBe("11:00");
+    expect(formatZonedTime("2026-11-06T08:00:00.000Z", "UTC")).toBe(
+      "08:00",
+    );
   });
 });
 
