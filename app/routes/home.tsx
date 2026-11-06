@@ -7,6 +7,7 @@ import { FaqSection } from "~/components/home/faq-section";
 import { HomeHeader } from "~/components/home/home-header";
 import { QuickAddComposer } from "~/components/tasks/quick-add/quick-add-composer";
 import { VoiceRecorderSheet } from "~/components/voice/voice-recorder-sheet";
+import { useBottomNavigation } from "~/hooks/use-bottom-navigation";
 import { ApiError } from "~/lib/api/errors";
 import { throwAppError } from "~/lib/errors/route-error";
 import { getDailyTasksSummary } from "~/lib/tasks/daily-tasks";
@@ -64,6 +65,7 @@ function isTextEntry(target: EventTarget | null): boolean {
 export default function Home({ loaderData }: Route.ComponentProps) {
   const { user: authUser } = useAuth();
   const { haptics, user: telegramUser } = useTelegram();
+  const onSelectTab = useBottomNavigation();
   const [activeModal, setActiveModal] = useState<"voice" | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const { summary } = loaderData;
@@ -116,7 +118,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       <BottomNavigationDock
         active="home"
         hidden={isEditing}
-        onSelect={() => haptics.selection()}
+        onSelect={onSelectTab}
       />
 
       <VoiceRecorderSheet

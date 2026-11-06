@@ -41,11 +41,15 @@ app/
     tasks/quick-add/          # быстрое создание: форма, шаги, календарь, отправка
       quick-add-store.ts      # per-composer vanilla Zustand store черновика
       quick-add-store-provider.tsx  # context, QuickAddStoreProvider, useQuickAddStore
+    tasks/today/              # экран «Задачи на сегодня»
     ui/                       # примитивы, включая bottom-sheet, sheet-header, switch,
                               #   select-field, time-input, option-chip, button,
                               #   card, modal, asset-icon
     voice/                    # UI записи голоса
-  hooks/use-voice-recorder.ts
+  hooks/
+    use-bottom-navigation.ts  # нижние вкладки «Главная» / «Задачи»
+    use-today-tasks.ts        # данные и завершение задач на сегодня
+    use-voice-recorder.ts
   lib/
     api/                      # config, http, auth-aware client, errors, types
     auth/                     # token-store, auth-api, bootstrap, events, failure
@@ -56,6 +60,8 @@ app/
     telegram/                 # client, types, bot-link
     tasks/                    # модель формы, payload, API задач/серий, date-time,
                               #   priority и временный источник данных главного экрана
+      today-tasks.ts          # состояние экрана «Задачи на сегодня»
+      today-tasks-cache.ts    # кэш и оптимистичное завершение задач
     voice/                    # запись и загрузка голоса
     cn.ts                     # склейка классов
     format-date.ts
@@ -66,6 +72,7 @@ app/
   routes/
     _app.tsx                  # pathless layout: AppShell > AuthGate > Outlet
     home.tsx                  # главный экран на /
+    tasks.tsx                 # экран «Задачи на сегодня» на /tasks
   app.css                     # Tailwind theme tokens и базовые стили
   entry.client.tsx            # снятие boot-watchdog перед hydrateRoot
   root.tsx                    # документ, watchdog, telegram-web-app.js, провайдеры, ErrorBoundary
@@ -107,6 +114,11 @@ app/
   инвалидируется после создания и перезапрашивается при `404` или архивном
   `400` с выбранным проектом. Обязательный `AuthUser.timezone`
   используется для расчёта `due_at` и поля `timezone` серии.
+- `/tasks` использует `GET /tasks?date=<today>&status=all&limit=100`,
+  `GET /tasks/today/progress`, `POST /tasks/{id}/complete`,
+  `POST /tasks/{id}/uncomplete`; данные загружаются React Query после
+  `AuthGate`, не в loader. Нижние вкладки «Главная»/«Задачи» навигируют
+  на `/` и `/tasks`.
 - API-слой — `app/lib/api/`. Все запросы идут через `apiRequest` / `requestJson`;
   не разбрасывать `fetch` по компонентам. База API — `VITE_API_BASE_URL`
   (по умолчанию `/api/v1`), ошибки — `ApiError` / `ApiNetworkError`.
@@ -198,6 +210,15 @@ npm run build
 - Для error-экранов проверить `curl -i http://localhost:3000/does-not-exist`: должен вернуться HTTP `404` и тексты 404-экрана с нижней навигацией.
 - DEV preview `?state=429` и `?state=5xx` работает только в dev-режиме (`import.meta.env.DEV`); в production он не активен.
 - Error-экраны вручную проверить на ширине 320 px, в light/dark теме и с учётом safe-area.
+- `/tasks` вручную проверить в light/dark теме, на ширинах 320/412/448 px и
+  с учётом safe-area; активна вкладка «Задачи», переходы «Главная»/«Задачи»
+  работают и сопровождаются haptics.
+- Завершение/возврат задачи, обновление прогресса и откат при ошибке,
+  раскрытие групп «В планах»/«Выполнено» проверить вручную.
+- «Голосом» открывает голосовую шторку, «Интерактивно» ведёт на `/`
+  (проверить вручную).
+- SSR `/tasks` проверить: `curl -s http://localhost:3000/tasks` не должен
+  содержать задачи и защищённый контент.
 - Быстрое создание задачи вручную проверить на ширине 320 px: inline-форма
   между прогрессом и FAQ, счётчик внутри поля, активация кнопки отправки;
   каждый чип открывает свою шторку. Закрытие оверлеем отбрасывает

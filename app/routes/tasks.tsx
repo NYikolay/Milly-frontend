@@ -1,0 +1,122 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
+
+import { BottomNavigationDock } from "~/components/home/bottom-navigation-dock";
+import { TodayTasksError } from "~/components/tasks/today/today-tasks-error";
+import { TodayTasksSkeleton } from "~/components/tasks/today/today-tasks-skeleton";
+import { TodayTasksView } from "~/components/tasks/today/today-tasks-view";
+import { VoiceRecorderSheet } from "~/components/voice/voice-recorder-sheet";
+import { useBottomNavigation } from "~/hooks/use-bottom-navigation";
+import {
+  useTodayTasksData,
+  useToggleTaskCompletion,
+} from "~/hooks/use-today-tasks";
+import { formatZonedToday, formatZonedTodayLabel } from "~/lib/tasks/date-time";
+import { fetchProjects } from "~/lib/projects/projects-api";
+import type { TaskResponse } from "~/lib/tasks/types";
+import { useAuth } from "~/providers/auth-provider";
+import { useTelegram } from "~/providers/telegram-provider";
+import type { Route } from "./+types/tasks";
+
+export function meta({}: Route.MetaArgs) {
+  return [
+    { title: "Задачи — Milly" },
+    { name: "description", content: "Задачи на сегодня в Milly" },
+  ];
+}
+
+export default function Tasks() {
+  const { user } = useAuth();
+  const timeZone = user?.timezone ?? "UTC";
+  const now = new Date();
+  const today = formatZonedToday(now, timeZone);
+  const dateLabel = formatZonedTodayLabel(now, timeZone);
+  const { haptics } = useTelegram();
+  const navigate = useNavigate();
+  const onSelectTab = useBottomNavigation();
+
+  const [expanded, setExpanded] = useState({
+    planned: false,
+    completed: false,
+  });
+  const [activeModal, setActiveModal] = useState<"voice" | null>(null);
+
+  const overviewQuery = useTodayTasksData(timeZone, today);
+  const projectsQuery = useQuery({
+    queryKey: ["projects"],
+    queryFn: ({ signal }) => fetchProjects(signal),
+  });
+  const toggleMutation = useToggleTaskCompletion(timeZone, today);
+
+  const pendingTaskId = toggleMutation.isPending
+    ? (toggleMutation.variables?.taskId ?? null)
+    : null;
+  const completionError = toggleMutation.isError
+    ? "Не удалось обновить задачу. Попробуйте ещё раз."
+    : null;
+  const overview = overviewQuery.data;
+
+  function handleToggleTask(
+    task: TaskResponse,
+    nextCompleted: boolean,
+  ) {
+    toggleMutation.mutate({ taskId: task.id, nextCompleted });
+  }
+
+  return (
+    <main className="flex flex-1 flex-col">
+      <div
+        className="flex flex-1 flex-col gap-2 px-4"
+        style={{
+          paddingBottom:
+            "calc(89px + max(0px, 30px - var(--app-inset-bottom)))",
+        }}
+      >
+        {overviewQuery.isPending ? (
+          <TodayTasksSkeleton />
+        ) : overviewQuery.isError || overview === undefined ? (
+          <TodayTasksError
+            dateLabel={dateLabel}
+            onRetry={() => void overviewQuery.refetch()}
+          />
+        ) : (
+          <TodayTasksView
+            completionError={completionError}
+            expanded={expanded}
+            now={now}
+            onInteractive={() => {
+              haptics.selection();
+              void navigate("/");
+            }}
+            onSearch={() => haptics.selection()}
+            onToggleExpanded={(group) => {
+              haptics.selection();
+              setExpanded((current) => ({
+                ...current,
+                [group]: !current[group],
+              }));
+            }}
+            onToggleTask={handleToggleTask}
+            onVoice={() => {
+              haptics.impact("light");
+              setActiveModal("voice");
+            }}
+            pendingTaskId={pendingTaskId}
+            progress={overview.progress}
+            projects={projectsQuery.data ?? []}
+            tasks={overview.tasks}
+            timeZone={timeZone}
+          />
+        )}
+      </div>
+
+      <BottomNavigationDock active="tasks" onSelect={onSelectTab} />
+
+      <VoiceRecorderSheet
+        open={activeModal === "voice"}
+        onOpenChange={(open) => setActiveModal(open ? "voice" : null)}
+      />
+    </main>
+  );
+}
