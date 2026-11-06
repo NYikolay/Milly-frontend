@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { ReactElement } from "react";
 
 import checkIcon from "~/assets/icons/check.svg";
@@ -72,64 +73,69 @@ export function ProjectStep({
           const isLast = index === rows.length - 1;
 
           return (
-            <button
-              aria-checked={isSelected}
-              className="flex h-[50px] w-full items-center gap-[15px] text-left transition-opacity active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent"
-              key={row.id ?? "no-project"}
-              onClick={() => onChange(row.id)}
-              role="radio"
-              type="button"
-            >
-              {isSelected ? (
-                <AssetIcon className="size-6 text-app-accent" src={checkIcon} />
-              ) : (
-                <span aria-hidden="true" className="size-6 shrink-0" />
-              )}
-              <span
-                className={cn(
-                  "flex h-full min-w-0 flex-1 items-center gap-[5px]",
-                  !isLast && "border-b border-app-stroke",
-                )}
+            <Fragment key={row.id ?? "no-project"}>
+              <button
+                aria-checked={isSelected}
+                className="flex h-[50px] w-full items-center gap-[15px] text-left transition-opacity active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent"
+                onClick={() => onChange(row.id)}
+                role="radio"
+                type="button"
               >
+                {isSelected ? (
+                  <AssetIcon className="size-6 text-app-accent" src={checkIcon} />
+                ) : (
+                  <span aria-hidden="true" className="size-6 shrink-0" />
+                )}
                 <span
                   className={cn(
-                    "shrink-0",
-                    row.colorHex === null && "text-app-text",
+                    "flex h-full min-w-0 flex-1 items-center gap-[5px]",
+                    !isLast && "border-b border-app-stroke",
                   )}
-                  style={
-                    row.colorHex === null ? undefined : { color: row.colorHex }
-                  }
                 >
-                  <AssetIcon className="size-[18px]" src={row.icon} />
+                  <span
+                    className={cn(
+                      "shrink-0",
+                      row.colorHex === null && "text-app-text",
+                    )}
+                    style={
+                      row.colorHex === null
+                        ? undefined
+                        : { color: row.colorHex }
+                    }
+                  >
+                    <AssetIcon className="size-[18px]" src={row.icon} />
+                  </span>
+                  <span className="truncate text-[15px] text-app-text">
+                    {row.name}
+                  </span>
                 </span>
-                <span className="truncate text-[15px] text-app-text">
-                  {row.name}
-                </span>
-              </span>
-            </button>
+              </button>
+              {index === 0 && isLoading ? (
+                <p className={STATUS_CLASSES}>
+                  {getProjectStepMessage("loading")}
+                </p>
+              ) : null}
+              {index === 0 && isError ? (
+                <div
+                  className={cn(
+                    STATUS_CLASSES,
+                    "flex flex-col items-start gap-[10px]",
+                  )}
+                >
+                  <p>{getProjectStepMessage("error")}</p>
+                  <button
+                    className={RETRY_BUTTON_CLASSES}
+                    onClick={onRetry}
+                    type="button"
+                  >
+                    Повторить
+                  </button>
+                </div>
+              ) : null}
+            </Fragment>
           );
         })}
       </div>
-      {isLoading ? (
-        <p className={STATUS_CLASSES}>{getProjectStepMessage("loading")}</p>
-      ) : null}
-      {isError ? (
-        <div
-          className={cn(
-            STATUS_CLASSES,
-            "flex flex-col items-start gap-[10px]",
-          )}
-        >
-          <p>{getProjectStepMessage("error")}</p>
-          <button
-            className={RETRY_BUTTON_CLASSES}
-            onClick={onRetry}
-            type="button"
-          >
-            Повторить
-          </button>
-        </div>
-      ) : null}
       <BottomSheetPrimaryAction
         className="mt-[15px]"
         onClick={() => onApply(selectedId)}

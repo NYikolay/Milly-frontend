@@ -66,9 +66,18 @@ describe("QuickAddChips", () => {
     const html = render({ project: projectFixture });
 
     expect(html).toContain("Личное");
+    expect(html).toContain('aria-label="Проект: Личное"');
     expect(html).toContain("leaf.svg");
     expect(html).toContain("#16A34A");
     expect(html).not.toContain("Без проекта");
+  });
+
+  it("renders the project chip before the priority chip", () => {
+    const html = render({ project: projectFixture });
+
+    expect(html.indexOf('aria-label="Проект: Личное"')).toBeLessThan(
+      html.indexOf('aria-label="Приоритет задачи"'),
+    );
   });
 
   it("uses the home menu spacing and compact icons", () => {

@@ -1,19 +1,22 @@
 import { useEffect, useMemo, useRef } from "react";
 import type { ReactElement, RefObject } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useRevalidator } from "react-router";
 
 import { SectionHeading } from "~/components/home/section-heading";
-import { ApiError } from "~/lib/api/errors";
 import { fetchLabels } from "~/lib/labels/labels-api";
 import { fetchProjects } from "~/lib/projects/projects-api";
-import { describeQuickAddError } from "~/lib/tasks/quick-task-errors";
+import {
+  describeQuickAddError,
+  QUICK_ADD_SELECTION_UNAVAILABLE_COPY,
+} from "~/lib/tasks/quick-task-errors";
 import type { QuickTaskDraft } from "~/lib/tasks/quick-task-schema";
 import { useAuth } from "~/providers/auth-provider";
 import { useTelegram } from "~/providers/telegram-provider";
 
 import { QuickAddDetailSheet } from "./quick-add-detail-sheet";
 import { QuickAddForm } from "./quick-add-form";
+import { reconcileQuickAddSelection } from "./quick-add-reconcile";
 import type { QuickAddStep } from "./quick-add-step";
 import {
   QuickAddStoreProvider,
@@ -49,7 +52,6 @@ function QuickAddComposerContent({
   timeZone,
 }: QuickAddComposerContentProps): ReactElement {
   const { haptics } = useTelegram();
-  const queryClient = useQueryClient();
   const revalidator = useRevalidator();
 
   const draft = useQuickAddStore((state) => state.draft);
@@ -109,6 +111,14 @@ function QuickAddComposerContent({
     queryFn: ({ signal }) => fetchProjects(signal),
   });
 
+  useEffect(() => {
+    if (!projectsQuery.isSuccess) {
+      return;
+    }
+
+    pruneProjectId((projectsQuery.data ?? []).map((project) => project.id));
+  }, [projectsQuery.data, projectsQuery.isSuccess, pruneProjectId]);
+
   const createMutation = useCreateQuickTask({
     onSuccess: (_data, variables) => {
       submittingRef.current = false;
@@ -131,24 +141,17 @@ function QuickAddComposerContent({
       haptics.notification("error");
       setError(describeQuickAddError(mutationError));
 
-      if (mutationError instanceof ApiError && mutationError.status === 404) {
-        void queryClient.invalidateQueries({ queryKey: ["labels"] });
-        void queryClient.invalidateQueries({ queryKey: ["projects"] });
+      const showSelectionUnavailable = await reconcileQuickAddSelection({
+        error: mutationError,
+        selectedProjectId: variables.draft.projectId,
+        refetchLabels: () => labelsQuery.refetch(),
+        refetchProjects: () => projectsQuery.refetch(),
+        pruneLabelIds,
+        pruneProjectId,
+      });
 
-        const [labelsResult, projectsResult] = await Promise.all([
-          labelsQuery.refetch(),
-          projectsQuery.refetch(),
-        ]);
-
-        if (labelsResult.isSuccess) {
-          pruneLabelIds((labelsResult.data ?? []).map((label) => label.id));
-        }
-
-        if (projectsResult.isSuccess) {
-          pruneProjectId(
-            (projectsResult.data ?? []).map((project) => project.id),
-          );
-        }
+      if (showSelectionUnavailable) {
+        setError(QUICK_ADD_SELECTION_UNAVAILABLE_COPY);
       }
     },
   });

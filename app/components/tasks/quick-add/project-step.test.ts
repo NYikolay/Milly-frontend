@@ -59,6 +59,20 @@ describe("ProjectStep", () => {
     expect(error).toContain("Повторить");
   });
 
+  it("renders loading and error status before cached project rows", () => {
+    const loading = render({ projects: [project], isLoading: true });
+
+    expect(loading.indexOf("Загружаем проекты…")).toBeLessThan(
+      loading.indexOf("Личное"),
+    );
+
+    const error = render({ projects: [project], isError: true });
+
+    expect(error.indexOf("Не удалось загрузить проекты")).toBeLessThan(
+      error.indexOf("Личное"),
+    );
+  });
+
   it("exposes the exact project step messages", () => {
     expect(getProjectStepMessage("loading")).toBe("Загружаем проекты…");
     expect(getProjectStepMessage("error")).toBe(

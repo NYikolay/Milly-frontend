@@ -21,7 +21,13 @@ type CapturedLabels = Pick<
 >;
 type CapturedProject = Pick<
   ProjectStepProps,
-  "projects" | "selectedId" | "onChange" | "onApply"
+  | "projects"
+  | "selectedId"
+  | "isLoading"
+  | "isError"
+  | "onRetry"
+  | "onChange"
+  | "onApply"
 >;
 type CapturedPriority = Pick<
   PriorityStepProps,
@@ -102,10 +108,12 @@ function renderSheet(
   draft: QuickTaskDraft,
   amountInput = "1",
   projects: ProjectResponse[] = [],
+  projectStatus: { isLoading?: boolean; isError?: boolean } = {},
 ) {
   const onPatch = vi.fn<(patch: Partial<QuickTaskDraft>) => void>();
   const onApply = vi.fn<(patch: Partial<QuickTaskDraft>) => void>();
   const onAmountInputChange = vi.fn<(value: string) => void>();
+  const onRetryProjects = vi.fn<() => void>();
 
   renderToStaticMarkup(
     createElement(QuickAddDetailSheet, {
@@ -117,9 +125,9 @@ function renderSheet(
       isLabelsError: false,
       onRetryLabels: () => {},
       projects,
-      isProjectsLoading: false,
-      isProjectsError: false,
-      onRetryProjects: () => {},
+      isProjectsLoading: projectStatus.isLoading ?? false,
+      isProjectsError: projectStatus.isError ?? false,
+      onRetryProjects,
       now,
       timeZone: "UTC",
       onClose: () => {},
@@ -129,7 +137,7 @@ function renderSheet(
     }),
   );
 
-  return { onPatch, onApply, onAmountInputChange };
+  return { onPatch, onApply, onAmountInputChange, onRetryProjects };
 }
 
 function capturedStep<T>(value: T | null): T {
@@ -193,6 +201,29 @@ describe("QuickAddDetailSheet step mapping", () => {
 
     step.onApply(null);
     expect(onApply).toHaveBeenLastCalledWith({ projectId: null });
+  });
+
+  it("passes project loading, error and retry props through", () => {
+    renderSheet("project", createValues(), "1", [], { isLoading: true });
+    const loading = capturedStep(captured.project);
+
+    expect(loading.isLoading).toBe(true);
+    expect(loading.isError).toBe(false);
+
+    const { onRetryProjects } = renderSheet(
+      "project",
+      createValues(),
+      "1",
+      [],
+      { isError: true },
+    );
+    const error = capturedStep(captured.project);
+
+    expect(error.isLoading).toBe(false);
+    expect(error.isError).toBe(true);
+
+    error.onRetry();
+    expect(onRetryProjects).toHaveBeenCalledTimes(1);
   });
 
   it("maps priority step props and callbacks to the draft patch", () => {
