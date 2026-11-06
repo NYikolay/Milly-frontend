@@ -5,6 +5,7 @@ import {
   formatDueChip,
   formatDueHint,
   formatMonthTitle,
+  formatZonedToday,
   getDefaultDue,
   getMonthGrid,
   getZonedNow,
@@ -14,6 +15,15 @@ import {
 } from "./date-time";
 
 const now = new Date("2026-11-05T13:07:42Z");
+
+describe("formatZonedToday", () => {
+  it("formats the local date in the user timezone", () => {
+    expect(formatZonedToday(now, "Europe/Moscow")).toBe("2026-11-05");
+    expect(
+      formatZonedToday(new Date("2026-11-05T22:30:00Z"), "Europe/Moscow"),
+    ).toBe("2026-11-06");
+  });
+});
 
 describe("getZonedNow", () => {
   it("returns local parts in the user timezone", () => {

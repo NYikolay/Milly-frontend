@@ -1,23 +1,23 @@
-import { useState } from "react";
 import type { ReactElement } from "react";
 
 import checkIcon from "~/assets/icons/check.svg";
 import { AssetIcon } from "~/components/ui/asset-icon";
 import { BottomSheetPrimaryAction } from "~/components/ui/bottom-sheet";
+import { cn } from "~/lib/cn";
 import { PRIORITY_OPTIONS } from "~/lib/tasks/priority";
 import type { Priority } from "~/lib/tasks/types";
 
 export interface PriorityStepProps {
   value: Priority;
+  onChange: (priority: Priority) => void;
   onApply: (priority: Priority) => void;
 }
 
 export function PriorityStep({
   value,
+  onChange,
   onApply,
 }: PriorityStepProps): ReactElement {
-  const [selected, setSelected] = useState<Priority>(value);
-
   return (
     <div className="flex flex-col">
       <div
@@ -25,15 +25,16 @@ export function PriorityStep({
         className="flex flex-col"
         role="radiogroup"
       >
-        {PRIORITY_OPTIONS.map((option) => {
-          const isSelected = option.value === selected;
+        {PRIORITY_OPTIONS.map((option, index) => {
+          const isSelected = option.value === value;
+          const isLast = index === PRIORITY_OPTIONS.length - 1;
 
           return (
             <button
               aria-checked={isSelected}
-              className="flex h-[50px] w-full items-center gap-[10px] border-b border-app-stroke text-left text-[15px] text-app-text transition-opacity active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent"
+              className="flex h-[50px] w-full items-center gap-[15px] text-left text-[15px] text-app-text transition-opacity active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent"
               key={option.value}
-              onClick={() => setSelected(option.value)}
+              onClick={() => onChange(option.value)}
               role="radio"
               type="button"
             >
@@ -42,14 +43,21 @@ export function PriorityStep({
               ) : (
                 <span aria-hidden="true" className="size-6 shrink-0" />
               )}
-              <span className="min-w-0 flex-1 truncate">{option.label}</span>
+              <span
+                className={cn(
+                  "flex h-full min-w-0 flex-1 items-center",
+                  !isLast && "border-b border-app-stroke",
+                )}
+              >
+                <span className="truncate">{option.label}</span>
+              </span>
             </button>
           );
         })}
       </div>
       <BottomSheetPrimaryAction
         className="mt-[15px]"
-        onClick={() => onApply(selected)}
+        onClick={() => onApply(value)}
       >
         Применить
       </BottomSheetPrimaryAction>

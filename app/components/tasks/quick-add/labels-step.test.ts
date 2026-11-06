@@ -20,6 +20,7 @@ function render(overrides: Record<string, unknown> = {}) {
       isError: false,
       selectedIds: [],
       onRetry: () => {},
+      onChange: () => {},
       onApply: () => {},
       ...overrides,
     }),
@@ -43,6 +44,14 @@ describe("LabelsStep", () => {
     expect(html).toContain("#16A34A");
     expect(html).toContain('aria-checked="true"');
     expect(html).toContain("Применить");
+  });
+
+  it("renders the selection from the controlled selectedIds", () => {
+    const html = render({ labels: [label], selectedIds: [3] });
+    expect(html).toContain('aria-checked="true"');
+
+    const empty = render({ labels: [label], selectedIds: [] });
+    expect(empty).toContain('aria-checked="false"');
   });
 
   it("renders loading and retry states", () => {

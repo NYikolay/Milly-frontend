@@ -1,37 +1,22 @@
-import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import type { UseFormReturn } from "react-hook-form";
 
-import {
-  createQuickTaskDefaults,
-  quickTaskResolver,
-} from "~/lib/tasks/quick-task-schema";
+import { quickTaskResolver } from "~/lib/tasks/quick-task-schema";
 import type { QuickTaskDraft } from "~/lib/tasks/quick-task-schema";
 
 export interface UseQuickTaskFormOptions {
-  now: Date;
-  timeZone: string;
+  draft: QuickTaskDraft;
 }
 
-export interface QuickTaskFormApi extends UseFormReturn<QuickTaskDraft> {
-  resetToDefaults: () => void;
-}
+export type QuickTaskFormApi = UseFormReturn<QuickTaskDraft>;
 
 export function useQuickTaskForm({
-  now,
-  timeZone,
+  draft,
 }: UseQuickTaskFormOptions): QuickTaskFormApi {
-  const form = useForm<QuickTaskDraft>({
-    defaultValues: createQuickTaskDefaults(now, timeZone),
+  return useForm<QuickTaskDraft>({
+    defaultValues: draft,
+    values: draft,
     resolver: quickTaskResolver,
     mode: "onChange",
   });
-
-  const { reset } = form;
-
-  const resetToDefaults = useCallback(() => {
-    reset(createQuickTaskDefaults(new Date(), timeZone));
-  }, [reset, timeZone]);
-
-  return { ...form, resetToDefaults };
 }

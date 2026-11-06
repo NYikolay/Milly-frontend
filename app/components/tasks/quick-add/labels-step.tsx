@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { ReactElement } from "react";
 
 import tagIcon from "~/assets/icons/tag.svg";
@@ -31,6 +30,7 @@ export interface LabelsStepProps {
   isError: boolean;
   selectedIds: number[];
   onRetry: () => void;
+  onChange: (ids: number[]) => void;
   onApply: (ids: number[]) => void;
 }
 
@@ -58,35 +58,27 @@ export function LabelsStep({
   isError,
   selectedIds,
   onRetry,
+  onChange,
   onApply,
 }: LabelsStepProps): ReactElement {
-  const [selected, setSelected] = useState<number[]>(() =>
-    uniqueLabelIds(selectedIds),
-  );
-
   const items = uniqueLabels(labels);
   const visibleIds = new Set(items.map((label) => label.id));
   const isReady = !isLoading && !isError;
   const visibleSelected = isReady
-    ? selected.filter((id) => visibleIds.has(id))
-    : selected;
+    ? selectedIds.filter((id) => visibleIds.has(id))
+    : selectedIds;
 
   function toggleLabel(id: number) {
-    setSelected((current) => {
-      const base = isReady
-        ? current.filter((selectedId) => visibleIds.has(selectedId))
-        : current;
+    if (visibleSelected.includes(id)) {
+      onChange(visibleSelected.filter((selectedId) => selectedId !== id));
+      return;
+    }
 
-      if (base.includes(id)) {
-        return base.filter((selectedId) => selectedId !== id);
-      }
+    if (visibleSelected.length >= MAX_LABEL_COUNT) {
+      return;
+    }
 
-      if (base.length >= MAX_LABEL_COUNT) {
-        return base;
-      }
-
-      return [...base, id];
-    });
+    onChange([...visibleSelected, id]);
   }
 
   let content: ReactElement;

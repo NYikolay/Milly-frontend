@@ -3,19 +3,23 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { DueStep } from "./due-step";
+import type { DueStepValue } from "./due-step";
 
 const now = new Date("2026-11-05T13:07:42Z");
 
-function render(overrides: Record<string, unknown> = {}) {
+function render(overrides: Partial<DueStepValue> = {}) {
   return renderToStaticMarkup(
     createElement(DueStep, {
-      date: "2026-11-05",
-      time: "16:00",
-      isRecurring: false,
+      value: {
+        date: "2026-11-05",
+        time: "16:00",
+        isRecurring: false,
+        ...overrides,
+      },
       timeZone: "Europe/Moscow",
       now,
+      onChange: () => {},
       onApply: () => {},
-      ...overrides,
     }),
   );
 }
@@ -51,6 +55,13 @@ describe("DueStep", () => {
     const html = render({ date: "2026-11-11" });
 
     expect(html).toContain("На 11.11.2026, 16:00");
+  });
+
+  it("clamps a past date to today", () => {
+    const html = render({ date: "2020-01-01" });
+
+    expect(html).toContain("Сегодня, 16:00");
+    expect(html).not.toContain("01.01.2020");
   });
 
   it("disables apply and shows the helper when the time is empty", () => {

@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { normalizeReminderDraft, RemindersStep } from "./reminders-step";
+import type { ReminderDraft } from "./reminders-step";
 
 const defaults = {
   remindersEnabled: true,
@@ -14,12 +15,19 @@ const defaults = {
   scheduledTime: "14:00",
 };
 
-function render(overrides: Record<string, unknown> = {}) {
+function render(
+  overrides: {
+    value?: Partial<ReminderDraft>;
+    amountInput?: string;
+  } = {},
+) {
   return renderToStaticMarkup(
     createElement(RemindersStep, {
-      value: defaults,
+      value: { ...defaults, ...overrides.value },
+      amountInput: overrides.amountInput ?? "1",
+      onChange: () => {},
+      onAmountInputChange: () => {},
       onApply: () => {},
-      ...overrides,
     }),
   );
 }
@@ -46,7 +54,7 @@ describe("RemindersStep", () => {
 
   it("animates the scheduled block with its own collapsible", () => {
     const html = render({
-      value: { ...defaults, scheduledEnabled: true },
+      value: { scheduledEnabled: true },
     });
 
     expect(html.match(/overflow-hidden/g)).toHaveLength(3);
@@ -54,7 +62,7 @@ describe("RemindersStep", () => {
 
   it("keeps focus rings visible on the amount and time pills", () => {
     const html = render({
-      value: { ...defaults, scheduledEnabled: true },
+      value: { scheduledEnabled: true },
     });
 
     expect(html.match(/focus-visible:outline-solid/g)).toHaveLength(2);
@@ -62,7 +70,7 @@ describe("RemindersStep", () => {
 
   it("shows scheduled controls when the scheduled rule is on", () => {
     const html = render({
-      value: { ...defaults, scheduledEnabled: true },
+      value: { scheduledEnabled: true },
     });
 
     expect(html).toContain("По расписанию");
@@ -72,7 +80,7 @@ describe("RemindersStep", () => {
 
   it("hides settings when the master switch is off", () => {
     const html = render({
-      value: { ...defaults, remindersEnabled: false },
+      value: { remindersEnabled: false },
     });
 
     expect(html).toContain("Автонапоминания");
@@ -81,7 +89,7 @@ describe("RemindersStep", () => {
 
   it("disables apply and shows the helper when the scheduled time is empty", () => {
     const html = render({
-      value: { ...defaults, scheduledEnabled: true, scheduledTime: "" },
+      value: { scheduledEnabled: true, scheduledTime: "" },
     });
 
     expect(html).toContain("Укажите время");
@@ -90,13 +98,20 @@ describe("RemindersStep", () => {
 
   it("keeps apply enabled when the scheduled time is valid", () => {
     const html = render({
-      value: { ...defaults, scheduledEnabled: true, scheduledTime: "09:30" },
+      value: { scheduledEnabled: true, scheduledTime: "09:30" },
     });
 
     expect(html).not.toContain("Укажите время");
     expect(html).not.toMatch(
       /<button[^>]*disabled=""[^>]*>Применить<\/button>/,
     );
+  });
+
+  it("keeps an empty amount input empty and disables apply", () => {
+    const html = render({ amountInput: "" });
+
+    expect(html).toContain('value=""');
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Применить<\/button>/);
   });
 });
 

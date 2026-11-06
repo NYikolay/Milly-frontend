@@ -3,21 +3,19 @@ import type { ReactElement } from "react";
 import { BottomSheet, BottomSheetAction } from "~/components/ui/bottom-sheet";
 import type { LabelResponse } from "~/lib/labels/types";
 import type { QuickTaskDraft } from "~/lib/tasks/quick-task-schema";
-import type { Priority } from "~/lib/tasks/types";
 import { useTelegram } from "~/providers/telegram-provider";
 
 import { DueStep } from "./due-step";
-import type { DueStepValue } from "./due-step";
 import { LabelsStep } from "./labels-step";
 import { PriorityStep } from "./priority-step";
 import { getQuickAddHeader } from "./quick-add-step";
 import type { QuickAddStep } from "./quick-add-step";
 import { RemindersStep } from "./reminders-step";
-import type { ReminderDraft } from "./reminders-step";
 
 export interface QuickAddDetailSheetProps {
   step: QuickAddStep | null;
   values: QuickTaskDraft;
+  amountInput: string;
   labels: LabelResponse[];
   isLabelsLoading: boolean;
   isLabelsError: boolean;
@@ -25,15 +23,15 @@ export interface QuickAddDetailSheetProps {
   now: Date;
   timeZone: string;
   onClose: () => void;
-  onApplyLabels: (ids: number[]) => void;
-  onApplyPriority: (priority: Priority) => void;
-  onApplyDue: (value: DueStepValue) => void;
-  onApplyReminders: (value: ReminderDraft) => void;
+  onPatch: (patch: Partial<QuickTaskDraft>) => void;
+  onAmountInputChange: (value: string) => void;
+  onApply: (patch: Partial<QuickTaskDraft>) => void;
 }
 
 export function QuickAddDetailSheet({
   step,
   values,
+  amountInput,
   labels,
   isLabelsLoading,
   isLabelsError,
@@ -41,10 +39,9 @@ export function QuickAddDetailSheet({
   now,
   timeZone,
   onClose,
-  onApplyLabels,
-  onApplyPriority,
-  onApplyDue,
-  onApplyReminders,
+  onPatch,
+  onAmountInputChange,
+  onApply,
 }: QuickAddDetailSheetProps): ReactElement {
   const { haptics } = useTelegram();
 
@@ -52,7 +49,6 @@ export function QuickAddDetailSheet({
     <BottomSheet
       bodyClassName="p-[15px]"
       footer={<BottomSheetAction onClick={onClose}>Закрыть</BottomSheetAction>}
-      onBack={onClose}
       onOpenChange={(open) => {
         if (!open) {
           onClose();
@@ -67,28 +63,53 @@ export function QuickAddDetailSheet({
           isError={isLabelsError}
           isLoading={isLabelsLoading}
           labels={labels}
-          onApply={onApplyLabels}
+          onChange={(ids) => onPatch({ labelIds: ids })}
+          onApply={(ids) => onApply({ labelIds: ids })}
           onRetry={onRetryLabels}
           selectedIds={values.labelIds}
         />
       ) : null}
       {step === "priority" ? (
-        <PriorityStep onApply={onApplyPriority} value={values.priority} />
+        <PriorityStep
+          onChange={(priority) => onPatch({ priority })}
+          onApply={(priority) => onApply({ priority })}
+          value={values.priority}
+        />
       ) : null}
       {step === "due" ? (
         <DueStep
-          date={values.dueDate}
-          isRecurring={values.isRecurring}
           now={now}
-          onApply={onApplyDue}
+          onChange={(patch) =>
+            onPatch({
+              ...(patch.date !== undefined ? { dueDate: patch.date } : {}),
+              ...(patch.time !== undefined ? { dueTime: patch.time } : {}),
+              ...(patch.isRecurring !== undefined
+                ? { isRecurring: patch.isRecurring }
+                : {}),
+            })
+          }
+          onApply={(next) =>
+            onApply({
+              dueDate: next.date,
+              dueTime: next.time,
+              isRecurring: next.isRecurring,
+            })
+          }
           onToggleHaptic={() => haptics.selection()}
-          time={values.dueTime}
           timeZone={timeZone}
+          value={{
+            date: values.dueDate,
+            time: values.dueTime,
+            isRecurring: values.isRecurring,
+          }}
         />
       ) : null}
       {step === "reminders" ? (
         <RemindersStep
-          onApply={onApplyReminders}
+          amountInput={amountInput}
+          onChange={(patch) => onPatch(patch)}
+          onAmountInputChange={onAmountInputChange}
+          onApply={(next) => onApply(next)}
           onToggleHaptic={() => haptics.selection()}
           value={{
             remindersEnabled: values.remindersEnabled,

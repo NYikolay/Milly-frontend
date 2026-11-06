@@ -121,6 +121,12 @@ export function getZonedNow(now: Date, timeZone: string): ZonedNow {
   return { year, month, day, hour, minute };
 }
 
+export function formatZonedToday(now: Date, timeZone: string): string {
+  const { year, month, day } = getZonedNow(now, timeZone);
+
+  return formatDate(year, month, day);
+}
+
 export function getDefaultDue(
   now: Date,
   timeZone: string,

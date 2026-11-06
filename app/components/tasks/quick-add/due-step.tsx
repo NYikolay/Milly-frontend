@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { ReactElement } from "react";
 import { AnimatePresence, motion } from "motion/react";
 
@@ -6,7 +5,11 @@ import { Calendar } from "~/components/tasks/quick-add/calendar";
 import { BottomSheetPrimaryAction } from "~/components/ui/bottom-sheet";
 import { Switch } from "~/components/ui/switch";
 import { TimeInput } from "~/components/ui/time-input";
-import { formatDueHint, getZonedNow, isValidTime } from "~/lib/tasks/date-time";
+import {
+  formatDueHint,
+  formatZonedToday,
+  isValidTime,
+} from "~/lib/tasks/date-time";
 
 const MAX_DATE = "2100-12-31";
 const HINT_TRANSITION = { duration: 0.18, ease: "easeOut" } as const;
@@ -18,53 +21,37 @@ export interface DueStepValue {
 }
 
 export interface DueStepProps {
-  date: string;
-  time: string;
-  isRecurring: boolean;
+  value: DueStepValue;
   timeZone: string;
   now: Date;
+  onChange: (patch: Partial<DueStepValue>) => void;
   onApply: (value: DueStepValue) => void;
   onToggleHaptic?: () => void;
 }
 
-function formatZonedToday(now: Date, timeZone: string): string {
-  const { year, month, day } = getZonedNow(now, timeZone);
-
-  return [
-    String(year).padStart(4, "0"),
-    String(month).padStart(2, "0"),
-    String(day).padStart(2, "0"),
-  ].join("-");
-}
-
 export function DueStep({
-  date,
-  time,
-  isRecurring,
+  value,
   timeZone,
   now,
+  onChange,
   onApply,
   onToggleHaptic,
 }: DueStepProps): ReactElement {
   const today = formatZonedToday(now, timeZone);
-  const [selectedDate, setSelectedDate] = useState(() =>
-    date < today ? today : date,
-  );
-  const [selectedTime, setSelectedTime] = useState(time);
-  const [recurring, setRecurring] = useState(isRecurring);
+  const selectedDate = value.date < today ? today : value.date;
 
   const hint = formatDueHint(
     selectedDate,
-    selectedTime,
+    value.time,
     timeZone,
     now,
-    recurring,
+    value.isRecurring,
   );
-  const hintKey = recurring ? "recurring" : hint;
-  const isTimeValid = isValidTime(selectedTime);
+  const hintKey = value.isRecurring ? "recurring" : hint;
+  const isTimeValid = isValidTime(value.time);
 
   function handleRecurringChange(checked: boolean) {
-    setRecurring(checked);
+    onChange({ isRecurring: checked });
     onToggleHaptic?.();
   }
 
@@ -73,14 +60,17 @@ export function DueStep({
       <Calendar
         maxDate={MAX_DATE}
         minDate={today}
-        onSelect={setSelectedDate}
+        onSelect={(date) => onChange({ date })}
         today={today}
         value={selectedDate}
       />
       <div className="mt-[15px] border-t border-app-stroke pt-[17px]">
         <div className="flex min-h-11 items-center justify-between gap-[15px]">
           <span className="text-[16px] text-app-text">Время</span>
-          <TimeInput onChange={setSelectedTime} value={selectedTime} />
+          <TimeInput
+            onChange={(time) => onChange({ time })}
+            value={value.time}
+          />
         </div>
         {isTimeValid ? null : (
           <p className="pt-[5px] text-[13px] leading-[1.4] text-app-text-secondary">
@@ -91,7 +81,7 @@ export function DueStep({
       <div className="mt-[15px] flex min-h-[50px] items-center justify-between gap-[15px]">
         <span className="text-[16px] text-app-text">Регулярная задача</span>
         <Switch
-          checked={recurring}
+          checked={value.isRecurring}
           label="Регулярная задача"
           onCheckedChange={handleRecurringChange}
         />
@@ -118,8 +108,8 @@ export function DueStep({
         onClick={() =>
           onApply({
             date: selectedDate,
-            time: selectedTime,
-            isRecurring: recurring,
+            time: value.time,
+            isRecurring: value.isRecurring,
           })
         }
       >

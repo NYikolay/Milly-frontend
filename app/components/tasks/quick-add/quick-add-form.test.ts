@@ -8,24 +8,31 @@ import type { QuickTaskDraft } from "~/lib/tasks/quick-task-schema";
 
 import { QuickAddForm } from "./quick-add-form";
 
-function Harness() {
-  const form = useForm<QuickTaskDraft>({
-    defaultValues: createQuickTaskDefaults(
+function Harness({ title = "" }: { title?: string }) {
+  const draft = {
+    ...createQuickTaskDefaults(
       new Date("2026-11-05T13:07:42Z"),
       "Europe/Moscow",
     ),
+    title,
+  };
+  const form = useForm<QuickTaskDraft>({
+    defaultValues: draft,
+    values: draft,
   });
 
   return createElement(QuickAddForm, {
+    draft,
+    error: null,
     form,
+    isPending: false,
     labels: [],
     now: new Date("2026-11-05T13:07:42Z"),
-    timeZone: "Europe/Moscow",
     onOpenStep: () => {},
     onSubmit: () => {},
+    onTitleChange: () => {},
     onVoice: () => {},
-    isPending: false,
-    error: null,
+    timeZone: "Europe/Moscow",
   });
 }
 
@@ -43,5 +50,12 @@ describe("QuickAddForm", () => {
     expect(html).not.toContain(">Название<");
     expect(html).toContain("h-[104px]");
     expect(html).toContain("focus-within:outline-2");
+  });
+
+  it("renders the title and counter from the draft", () => {
+    const html = renderToStaticMarkup(createElement(Harness, { title: "Тест" }));
+
+    expect(html).toContain("Тест");
+    expect(html).toContain("4/120");
   });
 });

@@ -1,5 +1,4 @@
-import { useState } from "react";
-import type { ChangeEvent, ReactElement } from "react";
+import type { ReactElement } from "react";
 
 import { BottomSheetPrimaryAction } from "~/components/ui/bottom-sheet";
 import { Collapsible } from "~/components/ui/collapsible";
@@ -38,6 +37,9 @@ export interface ReminderDraft {
 
 export interface RemindersStepProps {
   value: ReminderDraft;
+  amountInput: string;
+  onChange: (patch: Partial<ReminderDraft>) => void;
+  onAmountInputChange: (value: string) => void;
   onApply: (value: ReminderDraft) => void;
   onToggleHaptic?: () => void;
 }
@@ -62,52 +64,31 @@ function parseAmount(input: string): number | null {
 
 export function RemindersStep({
   value,
+  amountInput,
+  onChange,
+  onAmountInputChange,
   onApply,
   onToggleHaptic,
 }: RemindersStepProps): ReactElement {
-  const [remindersEnabled, setRemindersEnabled] = useState(
-    value.remindersEnabled,
-  );
-  const [beforeDueEnabled, setBeforeDueEnabled] = useState(
-    value.beforeDueEnabled,
-  );
-  const [beforeDueAmountInput, setBeforeDueAmountInput] = useState(() =>
-    String(value.beforeDueAmount),
-  );
-  const [beforeDueUnit, setBeforeDueUnit] = useState<DueUnit>(
-    value.beforeDueUnit,
-  );
-  const [scheduledEnabled, setScheduledEnabled] = useState(
-    value.scheduledEnabled,
-  );
-  const [scheduledIntervalDays, setScheduledIntervalDays] = useState(
-    value.scheduledIntervalDays,
-  );
-  const [scheduledTime, setScheduledTime] = useState(value.scheduledTime);
-
-  const parsedAmount = parseAmount(beforeDueAmountInput);
-  const isScheduledTimeValid = isValidTime(scheduledTime);
+  const parsedAmount = parseAmount(amountInput);
+  const isScheduledTimeValid = isValidTime(value.scheduledTime);
   const isApplyDisabled =
-    (remindersEnabled && beforeDueEnabled && parsedAmount === null) ||
-    (remindersEnabled && scheduledEnabled && !isScheduledTimeValid);
+    (value.remindersEnabled && value.beforeDueEnabled && parsedAmount === null) ||
+    (value.remindersEnabled && value.scheduledEnabled && !isScheduledTimeValid);
 
   function handleRemindersEnabledChange(checked: boolean) {
-    setRemindersEnabled(checked);
+    onChange({ remindersEnabled: checked });
     onToggleHaptic?.();
   }
 
   function handleBeforeDueEnabledChange(checked: boolean) {
-    setBeforeDueEnabled(checked);
+    onChange({ beforeDueEnabled: checked });
     onToggleHaptic?.();
   }
 
   function handleScheduledEnabledChange(checked: boolean) {
-    setScheduledEnabled(checked);
+    onChange({ scheduledEnabled: checked });
     onToggleHaptic?.();
-  }
-
-  function handleAmountChange(event: ChangeEvent<HTMLInputElement>) {
-    setBeforeDueAmountInput(event.target.value.replace(/\D/g, ""));
   }
 
   function handleApply() {
@@ -117,13 +98,8 @@ export function RemindersStep({
 
     onApply(
       normalizeReminderDraft({
-        remindersEnabled,
-        beforeDueEnabled,
+        ...value,
         beforeDueAmount: parsedAmount ?? 1,
-        beforeDueUnit,
-        scheduledEnabled,
-        scheduledIntervalDays,
-        scheduledTime,
       }),
     );
   }
@@ -133,12 +109,12 @@ export function RemindersStep({
       <div className="flex h-[59px] items-center justify-between gap-[15px]">
         <span className="text-[16px] text-app-text">Автонапоминания</span>
         <Switch
-          checked={remindersEnabled}
+          checked={value.remindersEnabled}
           label="Автонапоминания"
           onCheckedChange={handleRemindersEnabledChange}
         />
       </div>
-      <Collapsible open={remindersEnabled}>
+      <Collapsible open={value.remindersEnabled}>
         <div className="flex flex-col gap-[5px] pt-[15px]">
           <p className="text-[13px] uppercase text-app-text-secondary">
             НАСТРОЙКИ
@@ -150,13 +126,13 @@ export function RemindersStep({
                   До срока задачи
                 </span>
                 <Switch
-                  checked={beforeDueEnabled}
+                  checked={value.beforeDueEnabled}
                   className="-my-2"
                   label="До срока задачи"
                   onCheckedChange={handleBeforeDueEnabledChange}
                 />
               </div>
-              <Collapsible open={beforeDueEnabled}>
+              <Collapsible open={value.beforeDueEnabled}>
                 <div className="flex flex-col gap-[5px] pt-[10px]">
                   <p className="px-[15px] text-[13px] leading-[1.4] text-app-text-secondary">
                     За сколько до завершения задачи напомнить
@@ -166,16 +142,22 @@ export function RemindersStep({
                       aria-label="За сколько до завершения задачи напомнить"
                       className="h-12 w-[114px] shrink-0 rounded-[28px] bg-app-track p-0 text-center text-[15px] font-semibold text-app-accent outline-none focus-visible:outline-solid focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent"
                       inputMode="numeric"
-                      onChange={handleAmountChange}
+                      onChange={(event) =>
+                        onAmountInputChange(
+                          event.target.value.replace(/\D/g, ""),
+                        )
+                      }
                       type="text"
-                      value={beforeDueAmountInput}
+                      value={amountInput}
                     />
                     <div className="w-[215px] max-w-full shrink-0">
                       <SelectField
                         ariaLabel="Единица времени"
-                        onChange={setBeforeDueUnit}
+                        onChange={(beforeDueUnit) =>
+                          onChange({ beforeDueUnit })
+                        }
                         options={REMINDER_UNIT_OPTIONS}
-                        value={beforeDueUnit}
+                        value={value.beforeDueUnit}
                       />
                     </div>
                   </div>
@@ -192,13 +174,13 @@ export function RemindersStep({
                   По расписанию
                 </span>
                 <Switch
-                  checked={scheduledEnabled}
+                  checked={value.scheduledEnabled}
                   className="-my-2"
                   label="По расписанию"
                   onCheckedChange={handleScheduledEnabledChange}
                 />
               </div>
-              <Collapsible open={scheduledEnabled}>
+              <Collapsible open={value.scheduledEnabled}>
                 <div className="flex flex-col gap-[5px] pt-[10px]">
                   <div className="flex flex-wrap items-end gap-[15px]">
                     <div className="flex w-[215px] max-w-full shrink-0 flex-col gap-[5px]">
@@ -207,9 +189,11 @@ export function RemindersStep({
                       </span>
                       <SelectField
                         ariaLabel="Повторять"
-                        onChange={setScheduledIntervalDays}
+                        onChange={(scheduledIntervalDays) =>
+                          onChange({ scheduledIntervalDays })
+                        }
                         options={REMINDER_INTERVAL_OPTIONS}
-                        value={scheduledIntervalDays}
+                        value={value.scheduledIntervalDays}
                       />
                     </div>
                     <div className="flex w-[114px] shrink-0 flex-col gap-[5px]">
@@ -218,9 +202,11 @@ export function RemindersStep({
                       </span>
                       <TimeInput
                         ariaLabel="Время"
-                        onChange={setScheduledTime}
+                        onChange={(scheduledTime) =>
+                          onChange({ scheduledTime })
+                        }
                         size="compact"
-                        value={scheduledTime}
+                        value={value.scheduledTime}
                       />
                     </div>
                   </div>

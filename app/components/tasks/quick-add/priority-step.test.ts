@@ -9,6 +9,7 @@ describe("PriorityStep", () => {
     const html = renderToStaticMarkup(
       createElement(PriorityStep, {
         value: "important_not_urgent",
+        onChange: () => {},
         onApply: () => {},
       }),
     );
@@ -19,5 +20,33 @@ describe("PriorityStep", () => {
     expect(html).toContain("Не срочные и не важные");
     expect(html.match(/aria-checked="true"/g)).toHaveLength(1);
     expect(html).toContain("Применить");
+  });
+
+  it("uses a 15px gap and draws dividers only under the text", () => {
+    const html = renderToStaticMarkup(
+      createElement(PriorityStep, {
+        value: "important_not_urgent",
+        onChange: () => {},
+        onApply: () => {},
+      }),
+    );
+
+    expect(html).toContain("gap-[15px]");
+    expect(html).not.toContain("gap-[10px]");
+    expect(html).not.toMatch(/<button[^>]*border-b/);
+    expect(html.match(/border-b border-app-stroke/g)).toHaveLength(3);
+  });
+
+  it("marks the controlled value as selected", () => {
+    const html = renderToStaticMarkup(
+      createElement(PriorityStep, {
+        value: "urgent_important",
+        onChange: () => {},
+        onApply: () => {},
+      }),
+    );
+
+    expect(html.match(/aria-checked="true"/g)).toHaveLength(1);
+    expect(html).toContain("Срочные и важные");
   });
 });

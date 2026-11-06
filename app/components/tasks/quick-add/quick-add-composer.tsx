@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { ReactElement, RefObject } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRevalidator } from "react-router";
@@ -6,17 +6,18 @@ import { useRevalidator } from "react-router";
 import { SectionHeading } from "~/components/home/section-heading";
 import { ApiError } from "~/lib/api/errors";
 import { fetchLabels } from "~/lib/labels/labels-api";
-import { pruneMissingLabelIds } from "~/lib/labels/labels-selection";
 import { describeQuickAddError } from "~/lib/tasks/quick-task-errors";
-import type { Priority } from "~/lib/tasks/types";
+import type { QuickTaskDraft } from "~/lib/tasks/quick-task-schema";
 import { useAuth } from "~/providers/auth-provider";
 import { useTelegram } from "~/providers/telegram-provider";
 
-import type { DueStepValue } from "./due-step";
 import { QuickAddDetailSheet } from "./quick-add-detail-sheet";
 import { QuickAddForm } from "./quick-add-form";
 import type { QuickAddStep } from "./quick-add-step";
-import type { ReminderDraft } from "./reminders-step";
+import {
+  QuickAddStoreProvider,
+  useQuickAddStore,
+} from "./quick-add-store-provider";
 import { useCreateQuickTask } from "./use-create-quick-task";
 import { useQuickTaskForm } from "./use-quick-task-form";
 
@@ -28,14 +29,47 @@ export function QuickAddComposer({
   onVoice,
 }: QuickAddComposerProps): ReactElement {
   const { user } = useAuth();
+  const timeZone = user?.timezone ?? "UTC";
+
+  return (
+    <QuickAddStoreProvider timeZone={timeZone}>
+      <QuickAddComposerContent onVoice={onVoice} timeZone={timeZone} />
+    </QuickAddStoreProvider>
+  );
+}
+
+interface QuickAddComposerContentProps {
+  onVoice: () => void;
+  timeZone: string;
+}
+
+function QuickAddComposerContent({
+  onVoice,
+  timeZone,
+}: QuickAddComposerContentProps): ReactElement {
   const { haptics } = useTelegram();
   const queryClient = useQueryClient();
   const revalidator = useRevalidator();
-  const timeZone = user?.timezone ?? "UTC";
 
-  const [activeDetail, setActiveDetail] = useState<QuickAddStep | null>(null);
-  const [now, setNow] = useState(() => new Date());
-  const [error, setError] = useState<string | null>(null);
+  const draft = useQuickAddStore((state) => state.draft);
+  const activeStep = useQuickAddStore((state) => state.activeStep);
+  const now = useQuickAddStore((state) => state.now);
+  const error = useQuickAddStore((state) => state.error);
+  const patchDraft = useQuickAddStore((state) => state.patchDraft);
+  const pruneLabelIds = useQuickAddStore((state) => state.pruneLabelIds);
+  const resetDraft = useQuickAddStore((state) => state.resetDraft);
+  const setError = useQuickAddStore((state) => state.setError);
+  const openStep = useQuickAddStore((state) => state.openStep);
+  const closeStep = useQuickAddStore((state) => state.closeStep);
+  const stepDraft = useQuickAddStore((state) => state.stepDraft);
+  const patchStepDraft = useQuickAddStore((state) => state.patchStepDraft);
+  const applyStep = useQuickAddStore((state) => state.applyStep);
+  const remindersAmountInput = useQuickAddStore(
+    (state) => state.remindersAmountInput,
+  );
+  const setRemindersAmountInput = useQuickAddStore(
+    (state) => state.setRemindersAmountInput,
+  );
 
   const abortRef = useRef<AbortController | null>(null);
   const submittingRef = useRef(false);
@@ -58,16 +92,13 @@ export function QuickAddComposer({
     [],
   );
 
-  const form = useQuickTaskForm({ now, timeZone });
-  const values = form.watch();
+  const form = useQuickTaskForm({ draft });
 
   const labelsQuery = useQuery({
     queryKey: ["labels"],
     queryFn: ({ signal }) => fetchLabels(signal),
     enabled: true,
   });
-
-  const { resetToDefaults } = form;
 
   const createMutation = useCreateQuickTask({
     onSuccess: (_data, variables) => {
@@ -78,10 +109,7 @@ export function QuickAddComposer({
       }
 
       haptics.notification("success");
-      resetToDefaults();
-      setError(null);
-      setNow(new Date());
-      setActiveDetail(null);
+      resetDraft();
       void revalidator.revalidate();
     },
     onError: async (mutationError, variables) => {
@@ -102,11 +130,7 @@ export function QuickAddComposer({
           return;
         }
 
-        form.setValue(
-          "labelIds",
-          pruneMissingLabelIds(form.getValues("labelIds"), result.data ?? []),
-          { shouldDirty: true, shouldValidate: true },
-        );
+        pruneLabelIds((result.data ?? []).map((label) => label.id));
       }
     },
   });
@@ -118,7 +142,7 @@ export function QuickAddComposer({
   }, []);
 
   useEffect(() => {
-    if (activeDetail !== null) {
+    if (activeStep !== null) {
       return;
     }
 
@@ -134,7 +158,7 @@ export function QuickAddComposer({
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [activeDetail, chipRefs]);
+  }, [activeStep, chipRefs]);
 
   function blurActiveElement() {
     if (document.activeElement instanceof HTMLElement) {
@@ -146,64 +170,20 @@ export function QuickAddComposer({
     haptics.selection();
     blurActiveElement();
     pendingChipFocusRef.current = nextStep;
-
-    if (nextStep === "due") {
-      setNow(new Date());
-    }
-
-    setActiveDetail(nextStep);
+    openStep(nextStep);
   }
 
   function closeDetail() {
     haptics.selection();
-    setActiveDetail(null);
+    closeStep();
   }
 
-  function handleLabelsApply(labelIds: number[]) {
-    form.setValue("labelIds", labelIds, { shouldDirty: true });
+  function handleApplyStep(patch: Partial<QuickTaskDraft>) {
+    applyStep(patch);
     haptics.selection();
-    setActiveDetail(null);
   }
 
-  function handlePriorityApply(priority: Priority) {
-    form.setValue("priority", priority, { shouldDirty: true });
-    haptics.selection();
-    setActiveDetail(null);
-  }
-
-  function handleDueApply(value: DueStepValue) {
-    form.setValue("dueDate", value.date, { shouldDirty: true });
-    form.setValue("dueTime", value.time, { shouldDirty: true });
-    form.setValue("isRecurring", value.isRecurring, { shouldDirty: true });
-    haptics.selection();
-    setActiveDetail(null);
-  }
-
-  function handleRemindersApply(value: ReminderDraft) {
-    form.setValue("remindersEnabled", value.remindersEnabled, {
-      shouldDirty: true,
-    });
-    form.setValue("beforeDueEnabled", value.beforeDueEnabled, {
-      shouldDirty: true,
-    });
-    form.setValue("beforeDueAmount", value.beforeDueAmount, {
-      shouldDirty: true,
-    });
-    form.setValue("beforeDueUnit", value.beforeDueUnit, { shouldDirty: true });
-    form.setValue("scheduledEnabled", value.scheduledEnabled, {
-      shouldDirty: true,
-    });
-    form.setValue("scheduledIntervalDays", value.scheduledIntervalDays, {
-      shouldDirty: true,
-    });
-    form.setValue("scheduledTime", value.scheduledTime, {
-      shouldDirty: true,
-    });
-    haptics.selection();
-    setActiveDetail(null);
-  }
-
-  const handleSubmit = form.handleSubmit(() => {
+  const handleSubmit = form.handleSubmit((validDraft) => {
     if (createMutation.isPending || submittingRef.current) {
       return;
     }
@@ -216,7 +196,7 @@ export function QuickAddComposer({
     submittingRef.current = true;
 
     createMutation.mutate({
-      draft: form.getValues(),
+      draft: validDraft,
       timeZone,
       signal: controller.signal,
     });
@@ -234,6 +214,7 @@ export function QuickAddComposer({
       </SectionHeading>
       <QuickAddForm
         chipRefs={chipRefs}
+        draft={draft}
         error={error}
         form={form}
         isPending={createMutation.isPending}
@@ -241,25 +222,26 @@ export function QuickAddComposer({
         now={now}
         onOpenStep={handleOpenDetail}
         onSubmit={handleSubmit}
+        onTitleChange={(title) => patchDraft({ title })}
         onVoice={onVoice}
         timeZone={timeZone}
       />
       <QuickAddDetailSheet
+        amountInput={remindersAmountInput}
         isLabelsError={labelsQuery.isError}
         isLabelsLoading={labelsQuery.isLoading}
         labels={labels}
         now={now}
-        onApplyDue={handleDueApply}
-        onApplyLabels={handleLabelsApply}
-        onApplyPriority={handlePriorityApply}
-        onApplyReminders={handleRemindersApply}
+        onAmountInputChange={setRemindersAmountInput}
+        onApply={handleApplyStep}
         onClose={closeDetail}
+        onPatch={patchStepDraft}
         onRetryLabels={() => {
           void labelsQuery.refetch();
         }}
-        step={activeDetail}
+        step={activeStep}
         timeZone={timeZone}
-        values={values}
+        values={stepDraft ?? draft}
       />
     </section>
   );
