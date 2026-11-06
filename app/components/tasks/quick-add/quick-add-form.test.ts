@@ -23,20 +23,25 @@ function Harness() {
     timeZone: "Europe/Moscow",
     onOpenStep: () => {},
     onSubmit: () => {},
+    onVoice: () => {},
     isPending: false,
     error: null,
   });
 }
 
 describe("QuickAddForm", () => {
-  it("uses Figma label insets, field gap and inset focus ring", () => {
+  it("renders the inline Figma form with counter, mic and no description", () => {
     const html = renderToStaticMarkup(createElement(Harness));
 
-    expect(html).toContain('class="flex flex-col gap-[5px]"');
-    expect(html).toContain(
-      'class="flex items-center justify-between gap-[10px] px-[15px] text-[15px]"',
-    );
-    expect(html).toMatch(/<textarea[^>]*class="[^"]*-outline-offset-2/);
+    expect(html).toContain('class="flex flex-col gap-[10px]"');
+    expect(html).toContain("0/120");
+    expect(html).toContain("Запись к стоматологу завтра в 10 утра");
+    expect(html).toContain('aria-label="Название задачи"');
+    expect(html).toContain('aria-label="Записать голосом"');
     expect(html).toContain("Добавить задачу");
+    expect(html).not.toContain("Введите быструю задачу");
+    expect(html).not.toContain(">Название<");
+    expect(html).toContain("h-[104px]");
+    expect(html).toContain("focus-within:outline-2");
   });
 });

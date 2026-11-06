@@ -1,28 +1,21 @@
 import { describe, expect, it } from "vitest";
 
-import { getQuickAddHeader } from "./quick-add-step";
+import { QUICK_ADD_DETAIL_STEPS, getQuickAddHeader } from "./quick-add-step";
 
-describe("getQuickAddHeader", () => {
-  it("uses the exact titles and back visibility", () => {
-    expect(getQuickAddHeader("form")).toEqual({
-      title: "Добавление задачи",
-      showBack: false,
-    });
-    expect(getQuickAddHeader("labels")).toEqual({
-      title: "Метки",
-      showBack: true,
-    });
-    expect(getQuickAddHeader("priority")).toEqual({
-      title: "Приоритет задачи",
-      showBack: true,
-    });
-    expect(getQuickAddHeader("due")).toEqual({
-      title: "Дата и время задачи",
-      showBack: true,
-    });
-    expect(getQuickAddHeader("reminders")).toEqual({
-      title: "Автонапоминания",
-      showBack: true,
-    });
+describe("quick add details", () => {
+  it("contains only the four detail steps", () => {
+    expect(QUICK_ADD_DETAIL_STEPS).toEqual([
+      "labels",
+      "priority",
+      "due",
+      "reminders",
+    ]);
+  });
+
+  it("keeps the exact detail titles", () => {
+    expect(getQuickAddHeader("labels").title).toBe("Метки");
+    expect(getQuickAddHeader("priority").title).toBe("Приоритет задачи");
+    expect(getQuickAddHeader("due").title).toBe("Дата и время задачи");
+    expect(getQuickAddHeader("reminders").title).toBe("Автонапоминания");
   });
 });

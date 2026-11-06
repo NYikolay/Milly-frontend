@@ -13,7 +13,7 @@ import type { Priority } from "~/lib/tasks/types";
 
 import type { QuickAddStep } from "./quick-add-step";
 
-export type QuickAddChipStep = Exclude<QuickAddStep, "form">;
+export type QuickAddChipStep = QuickAddStep;
 
 export type QuickAddChipRefs = Partial<
   Record<QuickAddChipStep, Ref<HTMLButtonElement>>
@@ -64,22 +64,24 @@ export function QuickAddChips({
       className="inline-flex"
       style={{ color: firstSelectedLabel.color.hex }}
     >
-      <AssetIcon className="size-6" src={tagIcon} />
+      <AssetIcon className="size-[18px]" src={tagIcon} />
     </span>
   ) : (
     <AssetIcon className="size-6" src={tagPlusIcon} />
   );
 
   return (
-    <div className="flex gap-[10px] overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex gap-[5px] overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <OptionChip
         active
         ariaLabel="Дата и время задачи"
         buttonRef={chipRefs?.due}
         endIcon={
-          isRecurring ? <AssetIcon className="size-6" src={repeatIcon} /> : null
+          isRecurring ? (
+            <AssetIcon className="size-[15px]" src={repeatIcon} />
+          ) : null
         }
-        icon={<AssetIcon className="size-6" src={calendarIcon} />}
+        icon={<AssetIcon className="size-[18px]" src={calendarIcon} />}
         iconGap="tight"
         label={formatDueChip(dueDate, dueTime, timeZone, now)}
         onClick={() => onOpenStep("due")}

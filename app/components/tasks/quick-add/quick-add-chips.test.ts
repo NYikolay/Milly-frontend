@@ -3,8 +3,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { QuickAddChips } from "./quick-add-chips";
+import type { QuickAddChipsProps } from "./quick-add-chips";
 
-function render() {
+function render(overrides: Partial<QuickAddChipsProps> = {}) {
   return renderToStaticMarkup(
     createElement(QuickAddChips, {
       labels: [],
@@ -19,6 +20,7 @@ function render() {
       beforeDueEnabled: true,
       scheduledEnabled: false,
       onOpenStep: () => {},
+      ...overrides,
     }),
   );
 }
@@ -33,5 +35,19 @@ describe("QuickAddChips", () => {
     expect(html).toContain("calendar.svg");
     expect(html).not.toContain("flag.svg");
     expect(html).not.toContain("clock.svg");
+  });
+
+  it("uses the home menu spacing and compact icons", () => {
+    const html = render();
+
+    expect(html).toContain("gap-[5px]");
+    expect(html).toContain("size-[18px]");
+    expect(html).toContain("size-6");
+  });
+
+  it("uses the compact repeat icon when recurring", () => {
+    const html = render({ isRecurring: true });
+
+    expect(html).toContain("size-[15px]");
   });
 });

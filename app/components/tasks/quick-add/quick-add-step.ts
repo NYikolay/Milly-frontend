@@ -1,21 +1,21 @@
-export type QuickAddStep =
-  | "form"
-  | "labels"
-  | "priority"
-  | "due"
-  | "reminders";
+export type QuickAddStep = "labels" | "priority" | "due" | "reminders";
+
+export const QUICK_ADD_DETAIL_STEPS: readonly QuickAddStep[] = [
+  "labels",
+  "priority",
+  "due",
+  "reminders",
+];
 
 export interface QuickAddHeader {
   title: string;
-  showBack: boolean;
 }
 
 const STEP_HEADERS: Record<QuickAddStep, QuickAddHeader> = {
-  form: { title: "Добавление задачи", showBack: false },
-  labels: { title: "Метки", showBack: true },
-  priority: { title: "Приоритет задачи", showBack: true },
-  due: { title: "Дата и время задачи", showBack: true },
-  reminders: { title: "Автонапоминания", showBack: true },
+  labels: { title: "Метки" },
+  priority: { title: "Приоритет задачи" },
+  due: { title: "Дата и время задачи" },
+  reminders: { title: "Автонапоминания" },
 };
 
 export function getQuickAddHeader(step: QuickAddStep): QuickAddHeader {

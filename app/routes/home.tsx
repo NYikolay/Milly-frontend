@@ -4,8 +4,7 @@ import { BottomNavigation } from "~/components/home/bottom-navigation";
 import { DailyProgressCard } from "~/components/home/daily-progress-card";
 import { FaqSection } from "~/components/home/faq-section";
 import { HomeHeader } from "~/components/home/home-header";
-import { QuickAccessSection } from "~/components/home/quick-access-section";
-import { QuickAddSheet } from "~/components/tasks/quick-add/quick-add-sheet";
+import { QuickAddComposer } from "~/components/tasks/quick-add/quick-add-composer";
 import { VoiceRecorderSheet } from "~/components/voice/voice-recorder-sheet";
 import { ApiError } from "~/lib/api/errors";
 import { throwAppError } from "~/lib/errors/route-error";
@@ -59,9 +58,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function Home({ loaderData }: Route.ComponentProps) {
   const { haptics } = useTelegram();
-  const [activeModal, setActiveModal] = useState<
-    "voice" | "quick-add" | null
-  >(null);
+  const [activeModal, setActiveModal] = useState<"voice" | null>(null);
   const { summary, dateLabel } = loaderData;
   const isEmpty = summary.total === 0;
   const title = isEmpty ? "Задач на сегодня нет 😴" : "Задачи на сегодня";
@@ -81,19 +78,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           total={summary.total}
           onOpen={() => haptics.selection()}
         />
-        <QuickAccessSection
-          showSearch={!isEmpty}
-          onAction={(id) => {
+        <QuickAddComposer
+          onVoice={() => {
             haptics.impact("light");
-
-            if (id === "voice") {
-              setActiveModal("voice");
-              return;
-            }
-
-            if (id === "interactive") {
-              setActiveModal("quick-add");
-            }
+            setActiveModal("voice");
           }}
         />
         <FaqSection onAction={() => haptics.selection()} />
@@ -118,10 +106,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       <VoiceRecorderSheet
         open={activeModal === "voice"}
         onOpenChange={(open) => setActiveModal(open ? "voice" : null)}
-      />
-      <QuickAddSheet
-        open={activeModal === "quick-add"}
-        onOpenChange={(open) => setActiveModal(open ? "quick-add" : null)}
       />
     </main>
   );
