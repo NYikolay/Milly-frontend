@@ -18,6 +18,7 @@
   --color-app-icon: var(--app-icon);
   --color-app-chip: var(--app-chip);
   --color-app-track: var(--app-track);
+  --color-app-progress-track: var(--app-progress-track);
   --color-app-tab-active: var(--app-tab-active);
   --color-app-tab-inactive: var(--app-tab-inactive);
   --color-app-tab-accent: var(--app-tab-accent);
@@ -75,6 +76,7 @@
   --app-icon: #212121;
   --app-chip: var(--app-accent-soft);
   --app-track: #f2f2f7;
+  --app-progress-track: #f2f2f7;
   --app-tab-active: rgba(60, 60, 67, 0.08);
   --app-tab-inactive: #323234;
   --app-tab-accent: var(--app-accent);
@@ -127,6 +129,7 @@
   --app-icon: #efeff4;
   --app-chip: var(--app-accent-soft);
   --app-track: #303033;
+  --app-progress-track: #7a7d83;
   --app-tab-active: rgba(255, 255, 255, 0.08);
   --app-tab-inactive: rgba(235, 235, 245, 0.88);
   --app-tab-accent: var(--app-accent);
