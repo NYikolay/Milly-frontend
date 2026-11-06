@@ -78,6 +78,26 @@ export interface TaskResponse {
   updated_at: string;
 }
 
+export type TaskListStatus = "all" | "open" | "completed" | "overdue";
+
+export interface TaskListQuery {
+  date?: string;
+  status?: TaskListStatus;
+  limit?: number;
+  cursor?: string;
+}
+
+export interface TaskListResponse {
+  items: TaskResponse[];
+  next_cursor: string | null;
+}
+
+export interface TodayProgressResponse {
+  total: number;
+  completed: number;
+  remaining: number;
+}
+
 export interface SeriesResponse {
   id: number;
   title: string;

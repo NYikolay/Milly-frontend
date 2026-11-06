@@ -4,7 +4,10 @@ import type {
   SeriesCreateInput,
   SeriesResponse,
   TaskCreateInput,
+  TaskListQuery,
+  TaskListResponse,
   TaskResponse,
+  TodayProgressResponse,
 } from "./types";
 
 export function createTask(
@@ -25,6 +28,56 @@ export function createSeries(
   return apiRequest<SeriesResponse>("/task-series", {
     method: "POST",
     body: input,
+    signal,
+  });
+}
+
+function buildTaskListPath(query: TaskListQuery): string {
+  const params = new URLSearchParams();
+
+  if (query.date !== undefined) params.set("date", query.date);
+  if (query.status !== undefined) params.set("status", query.status);
+  if (query.limit !== undefined) params.set("limit", String(query.limit));
+  if (query.cursor !== undefined) params.set("cursor", query.cursor);
+
+  const search = params.toString();
+
+  return search === "" ? "/tasks" : `/tasks?${search}`;
+}
+
+export function fetchTasks(
+  query: TaskListQuery = {},
+  signal?: AbortSignal,
+): Promise<TaskListResponse> {
+  return apiRequest<TaskListResponse>(buildTaskListPath(query), {
+    signal,
+  });
+}
+
+export function fetchTodayProgress(
+  signal?: AbortSignal,
+): Promise<TodayProgressResponse> {
+  return apiRequest<TodayProgressResponse>("/tasks/today/progress", {
+    signal,
+  });
+}
+
+export function completeTask(
+  taskId: number,
+  signal?: AbortSignal,
+): Promise<TaskResponse> {
+  return apiRequest<TaskResponse>(`/tasks/${taskId}/complete`, {
+    method: "POST",
+    signal,
+  });
+}
+
+export function uncompleteTask(
+  taskId: number,
+  signal?: AbortSignal,
+): Promise<TaskResponse> {
+  return apiRequest<TaskResponse>(`/tasks/${taskId}/uncomplete`, {
+    method: "POST",
     signal,
   });
 }
