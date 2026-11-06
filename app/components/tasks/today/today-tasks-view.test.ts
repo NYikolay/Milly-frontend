@@ -155,6 +155,21 @@ describe("TodayTasksView", () => {
     expect(html).toContain("text-app-destructive");
   });
 
+  it("renders the project name and icon when the project resolves", () => {
+    const html = renderView({
+      tasks: [
+        task({ id: 1, project_id: 10, title: "Запуск сайта" }),
+      ],
+      progress: progress(1, 0),
+      projects: [project()],
+    });
+
+    expect(html).toContain("Запуск сайта");
+    expect(html).toContain("запуск сайта");
+    expect(html).toContain("leaf.svg");
+    expect(html).toContain("#16A34A");
+  });
+
   it("falls back to the no-project row when the project is missing", () => {
     const html = renderView({
       tasks: [task({ id: 1, project_id: 10 })],
@@ -205,6 +220,7 @@ describe("TodayTasksError", () => {
     expect(html).toContain("Задачи на сегодня");
     expect(html).toContain("Четверг, 5 ноября");
     expect(html).toContain("Не удалось загрузить задачи");
+    expect(html).toContain('role="alert"');
     expect(html).toContain("Повторить");
     expect(html).toContain("rounded-[25px] bg-app-card p-[15px]");
     expect(html).toContain("text-[15px] font-semibold text-app-accent");

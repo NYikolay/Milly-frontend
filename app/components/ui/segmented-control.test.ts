@@ -25,6 +25,23 @@ describe("SegmentedControl", () => {
     expect(html).toContain('aria-selected="true"');
     expect(html).toContain("bg-app-track");
     expect(html).toContain("text-app-accent");
+    expect(html).toContain("gap-[2px]");
+  });
+
+  it("emits the shared focus-visible styles and non-wrapping labels", () => {
+    const html = renderToStaticMarkup(
+      createElement(SegmentedControl, {
+        ariaLabel: "Разделы задач",
+        options,
+        value: "today",
+      }),
+    );
+
+    expect(html).toContain("focus-visible:outline-2");
+    expect(html).toContain("focus-visible:-outline-offset-2");
+    expect(html).toContain("focus-visible:outline-app-accent");
+    expect(html).toContain("min-w-0 whitespace-nowrap");
+    expect(html).not.toContain("truncate");
   });
 
   it("marks search and projects as disabled and unfocusable", () => {

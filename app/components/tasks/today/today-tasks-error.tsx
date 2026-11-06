@@ -25,7 +25,10 @@ export function TodayTasksError({
       </div>
       <div className="flex flex-col gap-2">
         <TodayHeader dateLabel={dateLabel} title="Задачи на сегодня" />
-        <div className="flex flex-col gap-[10px] rounded-[25px] bg-app-card p-[15px]">
+        <div
+          className="flex flex-col gap-[10px] rounded-[25px] bg-app-card p-[15px]"
+          role="alert"
+        >
           <p className="text-[17px] font-semibold leading-[1.4] text-app-text">
             Не удалось загрузить задачи
           </p>

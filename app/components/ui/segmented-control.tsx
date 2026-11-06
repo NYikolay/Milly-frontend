@@ -29,7 +29,7 @@ export function SegmentedControl({
     <div
       aria-label={ariaLabel}
       className={cn(
-        "flex h-[50px] items-stretch rounded-[36px] bg-app-card p-[5px]",
+        "flex h-[50px] items-stretch gap-[2px] rounded-[36px] bg-app-card p-[5px]",
         className,
       )}
       role="tablist"
@@ -43,7 +43,7 @@ export function SegmentedControl({
             aria-disabled={option.disabled || undefined}
             aria-selected={active}
             className={cn(
-              "flex min-w-0 flex-1 items-center justify-center gap-[2px] rounded-[25px] text-[13px] leading-[1.4] transition-colors",
+              "flex min-w-0 flex-1 items-center justify-center gap-[2px] rounded-[25px] text-[13px] leading-[1.4] transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent",
               active ? "bg-app-track text-app-accent" : "text-app-text",
             )}
             onClick={() => {
@@ -59,7 +59,7 @@ export function SegmentedControl({
               className="size-5 max-[359px]:hidden"
               src={option.iconSrc}
             />
-            <span className="min-w-0 truncate">{option.label}</span>
+            <span className="min-w-0 whitespace-nowrap">{option.label}</span>
           </button>
         );
       })}

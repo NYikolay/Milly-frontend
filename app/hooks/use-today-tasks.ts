@@ -2,6 +2,8 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  type QueryClient,
+  type QueryKey,
 } from "@tanstack/react-query";
 
 import {
@@ -15,6 +17,8 @@ import {
   fetchTodayProgress,
   uncompleteTask,
 } from "~/lib/tasks/tasks-api";
+import type { TaskResponse } from "~/lib/tasks/types";
+import type { TelegramHaptics } from "~/providers/telegram-provider";
 import { useTelegram } from "~/providers/telegram-provider";
 
 async function fetchTodayTasks(
@@ -41,13 +45,39 @@ export interface ToggleTaskCompletionVariables {
   nextCompleted: boolean;
 }
 
-export function useToggleTaskCompletion(timeZone: string, date: string) {
-  const queryClient = useQueryClient();
-  const { haptics } = useTelegram();
-  const queryKey = todayTasksQueryKey(timeZone, date);
+export interface ToggleTaskMutationContext {
+  previous: TodayTasksData | undefined;
+}
 
-  return useMutation({
-    mutationFn: ({ taskId, nextCompleted }: ToggleTaskCompletionVariables) =>
+export interface ToggleTaskMutationOptions {
+  mutationFn: (
+    variables: ToggleTaskCompletionVariables,
+  ) => Promise<TaskResponse>;
+  onMutate: (
+    variables: ToggleTaskCompletionVariables,
+  ) => Promise<ToggleTaskMutationContext>;
+  onError: (
+    error: Error,
+    variables: ToggleTaskCompletionVariables,
+    context: ToggleTaskMutationContext | undefined,
+  ) => void;
+  onSuccess: (updatedTask: TaskResponse) => void;
+  onSettled: () => void;
+}
+
+export interface CreateToggleTaskMutationOptionsParams {
+  queryClient: QueryClient;
+  haptics: TelegramHaptics;
+  queryKey: QueryKey;
+}
+
+export function createToggleTaskMutationOptions({
+  queryClient,
+  haptics,
+  queryKey,
+}: CreateToggleTaskMutationOptionsParams): ToggleTaskMutationOptions {
+  return {
+    mutationFn: ({ taskId, nextCompleted }) =>
       nextCompleted ? completeTask(taskId) : uncompleteTask(taskId),
     onMutate: async ({ taskId, nextCompleted }) => {
       haptics.selection();
@@ -87,5 +117,15 @@ export function useToggleTaskCompletion(timeZone: string, date: string) {
       void queryClient.invalidateQueries({ queryKey: ["tasks"] });
       void queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
-  });
+  };
+}
+
+export function useToggleTaskCompletion(timeZone: string, date: string) {
+  const queryClient = useQueryClient();
+  const { haptics } = useTelegram();
+  const queryKey = todayTasksQueryKey(timeZone, date);
+
+  return useMutation(
+    createToggleTaskMutationOptions({ queryClient, haptics, queryKey }),
+  );
 }

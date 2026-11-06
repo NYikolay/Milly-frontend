@@ -32,7 +32,7 @@ export function CreateTaskSection({
       <div className="grid grid-cols-2 gap-[10px]">
         <button className={cardClassName} onClick={onVoice} type="button">
           <span className="flex size-[50px] items-center justify-center rounded-full bg-app-accent-soft">
-            <span className="flex size-[40px] items-center justify-center rounded-full bg-app-accent shadow-[0_8px_20px_rgba(0,122,255,0.15)]">
+            <span className="flex size-[40px] items-center justify-center rounded-full bg-app-accent shadow-[0_8px_20px] shadow-app-accent/15">
               <MicIcon className="size-[25px] text-white" />
             </span>
           </span>

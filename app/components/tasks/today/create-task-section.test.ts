@@ -40,6 +40,8 @@ describe("CreateTaskSection", () => {
     expect(html).toContain("grid grid-cols-2 gap-[10px]");
     expect(html).toContain("rounded-[25px] bg-app-card");
     expect(html).toContain("focus-visible:outline-app-accent");
+    expect(html).toContain("shadow-app-accent/15");
+    expect(html).not.toContain("rgba(0,122,255,0.15)");
   });
 
   it("hides the search card when showSearchCard is false", () => {
