@@ -5,6 +5,7 @@ import type { UseFormReturn } from "react-hook-form";
 import { BottomSheetPrimaryAction } from "~/components/ui/bottom-sheet";
 import { MicIcon } from "~/components/voice/mic-icon";
 import type { LabelResponse } from "~/lib/labels/types";
+import type { ProjectResponse } from "~/lib/projects/types";
 import { isQuickTaskSubmittable } from "~/lib/tasks/quick-task-schema";
 import type { QuickTaskDraft } from "~/lib/tasks/quick-task-schema";
 
@@ -17,6 +18,7 @@ export interface QuickAddFormProps {
   form: UseFormReturn<QuickTaskDraft>;
   draft: QuickTaskDraft;
   labels: LabelResponse[];
+  project?: ProjectResponse;
   now: Date;
   timeZone: string;
   onOpenStep: (step: QuickAddChipStep) => void;
@@ -32,6 +34,7 @@ export function QuickAddForm({
   form,
   draft,
   labels,
+  project,
   now,
   timeZone,
   onOpenStep,
@@ -80,6 +83,7 @@ export function QuickAddForm({
         now={now}
         onOpenStep={onOpenStep}
         priority={draft.priority}
+        project={project}
         remindersEnabled={draft.remindersEnabled}
         scheduledEnabled={draft.scheduledEnabled}
         selectedLabelIds={draft.labelIds}

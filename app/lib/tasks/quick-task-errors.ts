@@ -3,7 +3,8 @@ import { ApiError, ApiNetworkError } from "~/lib/api/errors";
 const NETWORK_COPY =
   "Не удалось подключиться. Проверьте сеть и попробуйте ещё раз.";
 const VALIDATION_COPY = "Проверьте заполнение формы и попробуйте ещё раз.";
-const LABELS_UNAVAILABLE_COPY = "Метки больше недоступны. Обновите список.";
+const LABELS_OR_PROJECT_UNAVAILABLE_COPY =
+  "Метки или проект больше недоступны. Обновите список.";
 const RATE_LIMITED_COPY = "Слишком много запросов. Попробуйте позже.";
 const SERVICE_UNAVAILABLE_COPY =
   "Сервис временно недоступен. Попробуйте ещё раз.";
@@ -20,7 +21,7 @@ export function describeQuickAddError(error: unknown): string {
     }
 
     if (error.status === 404) {
-      return LABELS_UNAVAILABLE_COPY;
+      return LABELS_OR_PROJECT_UNAVAILABLE_COPY;
     }
 
     if (error.status === 429) {

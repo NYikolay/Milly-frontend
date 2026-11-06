@@ -45,6 +45,7 @@ export function useCreateQuickTask({
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: ["tasks"] });
       void queryClient.invalidateQueries({ queryKey: ["task-series"] });
+      void queryClient.invalidateQueries({ queryKey: ["projects"] });
       onSuccess?.(data, variables);
     },
     onError: (error, variables) => {

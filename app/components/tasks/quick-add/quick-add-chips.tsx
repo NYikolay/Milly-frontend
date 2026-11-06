@@ -7,6 +7,8 @@ import tagIcon from "~/assets/icons/tag.svg";
 import { AssetIcon } from "~/components/ui/asset-icon";
 import { OptionChip } from "~/components/ui/option-chip";
 import type { LabelResponse } from "~/lib/labels/types";
+import { getProjectIcon } from "~/lib/projects/project-icons";
+import type { ProjectResponse } from "~/lib/projects/types";
 import { formatDueChip } from "~/lib/tasks/date-time";
 import { priorityShortLabel } from "~/lib/tasks/priority";
 import type { Priority } from "~/lib/tasks/types";
@@ -21,6 +23,7 @@ export type QuickAddChipRefs = Partial<
 
 export interface QuickAddChipsProps {
   labels: LabelResponse[];
+  project?: ProjectResponse;
   now: Date;
   timeZone: string;
   selectedLabelIds: number[];
@@ -37,6 +40,7 @@ export interface QuickAddChipsProps {
 
 export function QuickAddChips({
   labels,
+  project,
   now,
   timeZone,
   selectedLabelIds,
@@ -92,6 +96,20 @@ export function QuickAddChips({
         icon={labelsIcon}
         label={labelsText}
         onClick={() => onOpenStep("labels")}
+      />
+      <OptionChip
+        ariaLabel={project ? `Проект: ${project.name}` : "Выбрать проект"}
+        buttonRef={chipRefs?.project}
+        icon={
+          <span style={project ? { color: project.color.hex } : undefined}>
+            <AssetIcon
+              className="size-[18px]"
+              src={getProjectIcon(project?.icon ?? null)}
+            />
+          </span>
+        }
+        label={project?.name ?? "Без проекта"}
+        onClick={() => onOpenStep("project")}
       />
       <OptionChip
         ariaLabel="Приоритет задачи"

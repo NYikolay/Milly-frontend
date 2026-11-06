@@ -6,6 +6,7 @@ import { useRevalidator } from "react-router";
 import { SectionHeading } from "~/components/home/section-heading";
 import { ApiError } from "~/lib/api/errors";
 import { fetchLabels } from "~/lib/labels/labels-api";
+import { fetchProjects } from "~/lib/projects/projects-api";
 import { describeQuickAddError } from "~/lib/tasks/quick-task-errors";
 import type { QuickTaskDraft } from "~/lib/tasks/quick-task-schema";
 import { useAuth } from "~/providers/auth-provider";
@@ -57,6 +58,7 @@ function QuickAddComposerContent({
   const error = useQuickAddStore((state) => state.error);
   const patchDraft = useQuickAddStore((state) => state.patchDraft);
   const pruneLabelIds = useQuickAddStore((state) => state.pruneLabelIds);
+  const pruneProjectId = useQuickAddStore((state) => state.pruneProjectId);
   const resetDraft = useQuickAddStore((state) => state.resetDraft);
   const setError = useQuickAddStore((state) => state.setError);
   const openStep = useQuickAddStore((state) => state.openStep);
@@ -76,6 +78,7 @@ function QuickAddComposerContent({
   const pendingChipFocusRef = useRef<QuickAddStep | null>(null);
 
   const labelsChipRef = useRef<HTMLButtonElement>(null);
+  const projectChipRef = useRef<HTMLButtonElement>(null);
   const priorityChipRef = useRef<HTMLButtonElement>(null);
   const dueChipRef = useRef<HTMLButtonElement>(null);
   const remindersChipRef = useRef<HTMLButtonElement>(null);
@@ -85,6 +88,7 @@ function QuickAddComposerContent({
   >(
     () => ({
       labels: labelsChipRef,
+      project: projectChipRef,
       priority: priorityChipRef,
       due: dueChipRef,
       reminders: remindersChipRef,
@@ -98,6 +102,11 @@ function QuickAddComposerContent({
     queryKey: ["labels"],
     queryFn: ({ signal }) => fetchLabels(signal),
     enabled: true,
+  });
+
+  const projectsQuery = useQuery({
+    queryKey: ["projects"],
+    queryFn: ({ signal }) => fetchProjects(signal),
   });
 
   const createMutation = useCreateQuickTask({
@@ -124,13 +133,22 @@ function QuickAddComposerContent({
 
       if (mutationError instanceof ApiError && mutationError.status === 404) {
         void queryClient.invalidateQueries({ queryKey: ["labels"] });
-        const result = await labelsQuery.refetch();
+        void queryClient.invalidateQueries({ queryKey: ["projects"] });
 
-        if (!result.isSuccess) {
-          return;
+        const [labelsResult, projectsResult] = await Promise.all([
+          labelsQuery.refetch(),
+          projectsQuery.refetch(),
+        ]);
+
+        if (labelsResult.isSuccess) {
+          pruneLabelIds((labelsResult.data ?? []).map((label) => label.id));
         }
 
-        pruneLabelIds((result.data ?? []).map((label) => label.id));
+        if (projectsResult.isSuccess) {
+          pruneProjectId(
+            (projectsResult.data ?? []).map((project) => project.id),
+          );
+        }
       }
     },
   });
@@ -203,6 +221,11 @@ function QuickAddComposerContent({
   });
 
   const labels = labelsQuery.data ?? [];
+  const projects = projectsQuery.data ?? [];
+  const selectedProject =
+    draft.projectId === null
+      ? undefined
+      : projects.find((project) => project.id === draft.projectId);
 
   return (
     <section
@@ -221,6 +244,7 @@ function QuickAddComposerContent({
         labels={labels}
         now={now}
         onOpenStep={handleOpenDetail}
+        project={selectedProject}
         onSubmit={handleSubmit}
         onTitleChange={(title) => patchDraft({ title })}
         onVoice={onVoice}
@@ -230,6 +254,8 @@ function QuickAddComposerContent({
         amountInput={remindersAmountInput}
         isLabelsError={labelsQuery.isError}
         isLabelsLoading={labelsQuery.isLoading}
+        isProjectsError={projectsQuery.isError}
+        isProjectsLoading={projectsQuery.isLoading}
         labels={labels}
         now={now}
         onAmountInputChange={setRemindersAmountInput}
@@ -239,6 +265,10 @@ function QuickAddComposerContent({
         onRetryLabels={() => {
           void labelsQuery.refetch();
         }}
+        onRetryProjects={() => {
+          void projectsQuery.refetch();
+        }}
+        projects={projects}
         step={activeStep}
         timeZone={timeZone}
         values={stepDraft ?? draft}

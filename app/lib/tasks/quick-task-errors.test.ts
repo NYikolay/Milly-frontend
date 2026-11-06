@@ -18,7 +18,7 @@ describe("describeQuickAddError", () => {
       "Проверьте заполнение формы и попробуйте ещё раз.",
     );
     expect(describeQuickAddError(error(404))).toBe(
-      "Метки больше недоступны. Обновите список.",
+      "Метки или проект больше недоступны. Обновите список.",
     );
     expect(describeQuickAddError(error(429))).toBe(
       "Слишком много запросов. Попробуйте позже.",
