@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 
 import { BottomSheet, BottomSheetAction } from "~/components/ui/bottom-sheet";
 import type { LabelResponse } from "~/lib/labels/types";
+import type { ProjectResponse } from "~/lib/projects/types";
 import type { QuickTaskDraft } from "~/lib/tasks/quick-task-schema";
 import { useTelegram } from "~/providers/telegram-provider";
 
@@ -10,6 +11,7 @@ import { LabelsStep } from "./labels-step";
 import { PriorityStep } from "./priority-step";
 import { getQuickAddHeader } from "./quick-add-step";
 import type { QuickAddStep } from "./quick-add-step";
+import { ProjectStep } from "./project-step";
 import { RemindersStep } from "./reminders-step";
 
 export interface QuickAddDetailSheetProps {
@@ -20,6 +22,10 @@ export interface QuickAddDetailSheetProps {
   isLabelsLoading: boolean;
   isLabelsError: boolean;
   onRetryLabels: () => void;
+  projects: ProjectResponse[];
+  isProjectsLoading: boolean;
+  isProjectsError: boolean;
+  onRetryProjects: () => void;
   now: Date;
   timeZone: string;
   onClose: () => void;
@@ -36,6 +42,10 @@ export function QuickAddDetailSheet({
   isLabelsLoading,
   isLabelsError,
   onRetryLabels,
+  projects,
+  isProjectsLoading,
+  isProjectsError,
+  onRetryProjects,
   now,
   timeZone,
   onClose,
@@ -67,6 +77,17 @@ export function QuickAddDetailSheet({
           onApply={(ids) => onApply({ labelIds: ids })}
           onRetry={onRetryLabels}
           selectedIds={values.labelIds}
+        />
+      ) : null}
+      {step === "project" ? (
+        <ProjectStep
+          isError={isProjectsError}
+          isLoading={isProjectsLoading}
+          onChange={(projectId) => onPatch({ projectId })}
+          onApply={(projectId) => onApply({ projectId })}
+          onRetry={onRetryProjects}
+          projects={projects}
+          selectedId={values.projectId}
         />
       ) : null}
       {step === "priority" ? (

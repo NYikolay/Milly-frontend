@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { ProjectResponse } from "~/lib/projects/types";
 import { createQuickTaskDefaults } from "~/lib/tasks/quick-task-schema";
 import type { QuickTaskDraft } from "~/lib/tasks/quick-task-schema";
 
@@ -11,11 +12,16 @@ import type { QuickAddStep } from "./quick-add-step";
 import type { DueStepProps } from "./due-step";
 import type { LabelsStepProps } from "./labels-step";
 import type { PriorityStepProps } from "./priority-step";
+import type { ProjectStepProps } from "./project-step";
 import type { RemindersStepProps } from "./reminders-step";
 
 type CapturedLabels = Pick<
   LabelsStepProps,
   "selectedIds" | "onChange" | "onApply"
+>;
+type CapturedProject = Pick<
+  ProjectStepProps,
+  "projects" | "selectedId" | "onChange" | "onApply"
 >;
 type CapturedPriority = Pick<
   PriorityStepProps,
@@ -29,6 +35,7 @@ type CapturedReminders = Pick<
 
 const captured = vi.hoisted(() => ({
   labels: null as CapturedLabels | null,
+  project: null as CapturedProject | null,
   priority: null as CapturedPriority | null,
   due: null as CapturedDue | null,
   reminders: null as CapturedReminders | null,
@@ -50,6 +57,13 @@ vi.mock("~/providers/telegram-provider", () => ({
 vi.mock("./labels-step", () => ({
   LabelsStep: (props: LabelsStepProps) => {
     captured.labels = props;
+    return null;
+  },
+}));
+
+vi.mock("./project-step", () => ({
+  ProjectStep: (props: ProjectStepProps) => {
+    captured.project = props;
     return null;
   },
 }));
@@ -87,6 +101,7 @@ function renderSheet(
   step: QuickAddStep,
   draft: QuickTaskDraft,
   amountInput = "1",
+  projects: ProjectResponse[] = [],
 ) {
   const onPatch = vi.fn<(patch: Partial<QuickTaskDraft>) => void>();
   const onApply = vi.fn<(patch: Partial<QuickTaskDraft>) => void>();
@@ -101,6 +116,10 @@ function renderSheet(
       isLabelsLoading: false,
       isLabelsError: false,
       onRetryLabels: () => {},
+      projects,
+      isProjectsLoading: false,
+      isProjectsError: false,
+      onRetryProjects: () => {},
       now,
       timeZone: "UTC",
       onClose: () => {},
@@ -123,6 +142,7 @@ function capturedStep<T>(value: T | null): T {
 
 beforeEach(() => {
   captured.labels = null;
+  captured.project = null;
   captured.priority = null;
   captured.due = null;
   captured.reminders = null;
@@ -143,6 +163,36 @@ describe("QuickAddDetailSheet step mapping", () => {
 
     labels.onApply([5]);
     expect(onApply).toHaveBeenLastCalledWith({ labelIds: [5] });
+  });
+
+  it("maps project step props and callbacks to the draft patch", () => {
+    const project: ProjectResponse = {
+      id: 10,
+      name: "Личное",
+      description: null,
+      icon: "leaf",
+      color: { id: 4, slug: "green", name: "Зелёный", hex: "#16A34A" },
+      progress: { total: 0, completed: 0, remaining: 0 },
+      archived_at: null,
+      created_at: "2026-11-06T09:00:00Z",
+      updated_at: "2026-11-06T09:00:00Z",
+    };
+    const { onPatch, onApply } = renderSheet(
+      "project",
+      createValues({ projectId: 10 }),
+      "1",
+      [project],
+    );
+    const step = capturedStep(captured.project);
+
+    expect(step.selectedId).toBe(10);
+    expect(step.projects).toEqual([project]);
+
+    step.onChange(11);
+    expect(onPatch).toHaveBeenLastCalledWith({ projectId: 11 });
+
+    step.onApply(null);
+    expect(onApply).toHaveBeenLastCalledWith({ projectId: null });
   });
 
   it("maps priority step props and callbacks to the draft patch", () => {
