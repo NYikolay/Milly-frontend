@@ -1,6 +1,7 @@
 import { useState } from "react";
+import type { FocusEvent } from "react";
 
-import { BottomNavigation } from "~/components/home/bottom-navigation";
+import { BottomNavigationDock } from "~/components/home/bottom-navigation-dock";
 import { DailyProgressCard } from "~/components/home/daily-progress-card";
 import { FaqSection } from "~/components/home/faq-section";
 import { HomeHeader } from "~/components/home/home-header";
@@ -8,8 +9,8 @@ import { QuickAddComposer } from "~/components/tasks/quick-add/quick-add-compose
 import { VoiceRecorderSheet } from "~/components/voice/voice-recorder-sheet";
 import { ApiError } from "~/lib/api/errors";
 import { throwAppError } from "~/lib/errors/route-error";
-import { formatTodayLabel } from "~/lib/format-date";
 import { getDailyTasksSummary } from "~/lib/tasks/daily-tasks";
+import { useAuth } from "~/providers/auth-provider";
 import { useTelegram } from "~/providers/telegram-provider";
 import type { Route } from "./+types/home";
 
@@ -50,32 +51,57 @@ export async function loader({ request }: Route.LoaderArgs) {
     ? { total: 0, completed: 0 }
     : await getDailyTasksSummary();
 
-  return {
-    summary,
-    dateLabel: formatTodayLabel(),
-  };
+  return { summary };
+}
+
+function isTextEntry(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement
+  );
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { haptics } = useTelegram();
+  const { user: authUser } = useAuth();
+  const { haptics, user: telegramUser } = useTelegram();
   const [activeModal, setActiveModal] = useState<"voice" | null>(null);
-  const { summary, dateLabel } = loaderData;
-  const isEmpty = summary.total === 0;
-  const title = isEmpty ? "Задач на сегодня нет 😴" : "Задачи на сегодня";
+  const [isEditing, setIsEditing] = useState(false);
+  const { summary } = loaderData;
+  const profile = authUser?.telegram_profile;
+  const firstName = profile?.first_name || telegramUser?.first_name;
+  const photoUrl = profile?.photo_url || telegramUser?.photo_url || null;
+  const greeting = firstName ? `Привет, ${firstName}!` : "Привет!";
+
+  function handleFocus(event: FocusEvent<HTMLDivElement>) {
+    if (isTextEntry(event.target)) {
+      setIsEditing(true);
+    }
+  }
+
+  function handleBlur(event: FocusEvent<HTMLDivElement>) {
+    if (!isTextEntry(event.target) || isTextEntry(event.relatedTarget)) {
+      return;
+    }
+
+    setIsEditing(false);
+  }
 
   return (
     <main className="flex flex-1 flex-col">
       <div
         className="flex flex-1 flex-col gap-2 px-[15px]"
+        onBlur={handleBlur}
+        onFocus={handleFocus}
         style={{
           paddingBottom:
             "calc(89px + max(0px, 30px - var(--app-inset-bottom)))",
         }}
       >
-        <HomeHeader title={title} dateLabel={dateLabel} />
+        <HomeHeader greeting={greeting} />
         <DailyProgressCard
           completed={summary.completed}
           total={summary.total}
+          photoUrl={photoUrl}
           onOpen={() => haptics.selection()}
         />
         <QuickAddComposer
@@ -87,21 +113,11 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <FaqSection onAction={() => haptics.selection()} />
       </div>
 
-      <div
-        className="fixed inset-x-0 bottom-0 z-20"
-        style={{
-          paddingBottom: "max(30px, var(--app-inset-bottom))",
-          paddingLeft: "var(--app-inset-left)",
-          paddingRight: "var(--app-inset-right)",
-        }}
-      >
-        <div className="mx-auto w-full max-w-md px-4">
-          <BottomNavigation
-            active="home"
-            onSelect={() => haptics.selection()}
-          />
-        </div>
-      </div>
+      <BottomNavigationDock
+        active="home"
+        hidden={isEditing}
+        onSelect={() => haptics.selection()}
+      />
 
       <VoiceRecorderSheet
         open={activeModal === "voice"}

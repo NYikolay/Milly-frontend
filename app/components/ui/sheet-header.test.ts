@@ -18,6 +18,7 @@ describe("SheetHeader", () => {
     expect(html).toContain("Добавление задачи");
     expect(html).toContain("border-b");
     expect(html).toContain("left-1/2");
+    expect(html).toContain("-translate-x-1/2");
     expect(html).not.toContain('aria-label="Закрыть"');
     expect(html).not.toContain('aria-label="Назад"');
   });

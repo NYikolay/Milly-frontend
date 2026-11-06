@@ -5,12 +5,14 @@ import { AssetIcon } from "~/components/ui/asset-icon";
 export interface DailyProgressCardProps {
   completed: number;
   total: number;
+  photoUrl?: string | null;
   onOpen?: () => void;
 }
 
 export function DailyProgressCard({
   completed,
   total,
+  photoUrl,
   onOpen,
 }: DailyProgressCardProps) {
   const normalizedCompleted =
@@ -26,11 +28,18 @@ export function DailyProgressCard({
   return (
     <div className="flex w-full flex-col gap-[10px] rounded-[25px] bg-app-card p-[15px]">
       <button
-        className="flex w-full items-center justify-between gap-2 text-left active:opacity-70"
+        className="flex w-full items-center gap-[10px] text-left active:opacity-70"
         onClick={onOpen}
         type="button"
       >
-        <span className="min-w-0 flex flex-col">
+        {photoUrl ? (
+          <img
+            alt=""
+            className="size-[30px] shrink-0 rounded-full object-cover"
+            src={photoUrl}
+          />
+        ) : null}
+        <span className="min-w-0 flex flex-1 flex-col">
           <span className="text-[17px] font-semibold leading-[1.4] text-app-text">
             {title}
           </span>
