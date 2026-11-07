@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 
@@ -19,7 +19,7 @@ import {
 import { useTaskSegmentNavigation } from "~/hooks/use-task-segment-navigation";
 import { fetchProjects } from "~/lib/projects/projects-api";
 import { formatZonedToday } from "~/lib/tasks/date-time";
-import type { TaskResponse } from "~/lib/tasks/types";
+import type { TaskListResponse, TaskResponse } from "~/lib/tasks/types";
 import { useAuth } from "~/providers/auth-provider";
 import { useTelegram } from "~/providers/telegram-provider";
 import type { Route } from "./+types/task-search";
@@ -37,6 +37,13 @@ export function loader({ request }: Route.LoaderArgs) {
   return { activeFilterPreview: import.meta.env.DEV && state === "filter" };
 }
 
+export function resolveSearchResults(
+  current: TaskListResponse | undefined,
+  previous: TaskListResponse | undefined,
+): TaskListResponse | undefined {
+  return current ?? previous;
+}
+
 export default function TaskSearch({ loaderData }: Route.ComponentProps) {
   const { user } = useAuth();
   const timeZone = user?.timezone ?? "UTC";
@@ -50,6 +57,18 @@ export default function TaskSearch({ loaderData }: Route.ComponentProps) {
   const onSelectSegment = useTaskSegmentNavigation();
 
   const searchQuery = useSearchTasksData(timeZone, today, query);
+  const lastResultsRef = useRef<TaskListResponse | undefined>(undefined);
+
+  useEffect(() => {
+    if (searchQuery.data !== undefined) {
+      lastResultsRef.current = searchQuery.data;
+    }
+  }, [searchQuery.data]);
+
+  const results = resolveSearchResults(
+    searchQuery.data,
+    lastResultsRef.current,
+  );
   const projectsQuery = useQuery({
     queryKey: ["projects"],
     queryFn: ({ signal }) => fetchProjects(signal),
@@ -99,14 +118,14 @@ export default function TaskSearch({ loaderData }: Route.ComponentProps) {
           activeFilterCount={activeFilterCount}
           activeChip={activeChip}
         />
-        {searchQuery.isPending ? (
+        {results === undefined && searchQuery.isPending ? (
           <SearchTasksSkeleton />
-        ) : searchQuery.data === undefined ? (
+        ) : results === undefined ? (
           <SearchTasksError onRetry={() => void searchQuery.refetch()} />
         ) : (
           <SearchResults
             date={today}
-            tasks={searchQuery.data.items}
+            tasks={results.items}
             projects={projectsQuery.data ?? []}
             timeZone={timeZone}
             pendingTaskId={pendingTaskId}

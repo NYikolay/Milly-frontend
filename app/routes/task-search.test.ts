@@ -117,7 +117,9 @@ vi.mock("~/components/home/bottom-navigation-dock", () => ({
   BottomNavigationDock: () => null,
 }));
 
-import TaskSearch, { loader } from "./task-search";
+import type { TaskListResponse } from "~/lib/tasks/types";
+
+import TaskSearch, { loader, resolveSearchResults } from "./task-search";
 
 function render(activeFilterPreview = false): string {
   return renderToStaticMarkup(
@@ -159,7 +161,12 @@ describe("TaskSearch route", () => {
       refetch: () => undefined,
     };
 
-    expect(render()).toContain("SKELETON");
+    const html = render();
+
+    expect(html).toContain("SKELETON");
+    expect(html).toContain("SEGMENTS:search");
+    expect(html).toContain("HEADER");
+    expect(html).toContain("FILTERS:0:none");
   });
 
   it("shows the error when a request fails without cached data", () => {
@@ -169,7 +176,12 @@ describe("TaskSearch route", () => {
       refetch: () => undefined,
     };
 
-    expect(render()).toContain("ERROR");
+    const html = render();
+
+    expect(html).toContain("ERROR");
+    expect(html).toContain("SEGMENTS:search");
+    expect(html).toContain("HEADER");
+    expect(html).toContain("FILTERS:0:none");
   });
 
   it("passes the completion error to the results", () => {
@@ -185,6 +197,23 @@ describe("TaskSearch route", () => {
     const html = render(true);
 
     expect(html).toContain("FILTERS:1:project");
+  });
+});
+
+describe("resolveSearchResults", () => {
+  const current: TaskListResponse = { items: [], next_cursor: "current" };
+  const previous: TaskListResponse = { items: [], next_cursor: "previous" };
+
+  it("prefers the current response when defined", () => {
+    expect(resolveSearchResults(current, previous)).toBe(current);
+  });
+
+  it("falls back to the previous response when the current is undefined", () => {
+    expect(resolveSearchResults(undefined, previous)).toBe(previous);
+  });
+
+  it("returns undefined when both responses are undefined", () => {
+    expect(resolveSearchResults(undefined, undefined)).toBeUndefined();
   });
 });
 
