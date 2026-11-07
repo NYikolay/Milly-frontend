@@ -1,27 +1,25 @@
 import type { ReactElement } from "react";
 
-import { SegmentedControl } from "~/components/ui/segmented-control";
+import { TaskSegments } from "~/components/tasks/task-segments";
+import type { TaskSegmentId } from "~/components/tasks/task-segments";
 
 import { TodayHeader } from "./today-header";
-import { TODAY_SEGMENTS } from "./today-tasks-view";
 
 export interface TodayTasksErrorProps {
   dateLabel: string;
   onRetry: () => void;
+  onSelectSegment: (id: TaskSegmentId) => void;
 }
 
 export function TodayTasksError({
   dateLabel,
   onRetry,
+  onSelectSegment,
 }: TodayTasksErrorProps): ReactElement {
   return (
     <div className="flex flex-1 flex-col gap-2">
       <div className="pb-[15px] pt-[15px]">
-        <SegmentedControl
-          ariaLabel="Разделы задач"
-          options={TODAY_SEGMENTS}
-          value="today"
-        />
+        <TaskSegments onSelect={onSelectSegment} value="today" />
       </div>
       <div className="flex flex-col gap-2">
         <TodayHeader dateLabel={dateLabel} title="Задачи на сегодня" />

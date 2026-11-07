@@ -49,6 +49,10 @@ vi.mock("~/hooks/use-bottom-navigation", () => ({
   useBottomNavigation: () => () => undefined,
 }));
 
+vi.mock("~/hooks/use-task-segment-navigation", () => ({
+  useTaskSegmentNavigation: () => () => undefined,
+}));
+
 vi.mock("~/providers/auth-provider", () => ({
   useAuth: () => ({ user: { timezone: "UTC" } }),
 }));

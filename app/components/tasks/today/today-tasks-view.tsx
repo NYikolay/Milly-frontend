@@ -1,10 +1,7 @@
 import type { ReactElement } from "react";
 
-import circleCheckIcon from "~/assets/icons/circle-check.svg";
-import dashboardIcon from "~/assets/icons/dashboard.svg";
-import searchIcon from "~/assets/icons/search.svg";
-
-import { SegmentedControl } from "~/components/ui/segmented-control";
+import { TaskSegments } from "~/components/tasks/task-segments";
+import type { TaskSegmentId } from "~/components/tasks/task-segments";
 import type { ProjectResponse } from "~/lib/projects/types";
 import { formatZonedTodayLabel } from "~/lib/tasks/date-time";
 import {
@@ -19,12 +16,6 @@ import { TodayHeader } from "./today-header";
 import { TodayProgressCard } from "./today-progress-card";
 import { TodayTaskGroup } from "./today-task-group";
 
-export const TODAY_SEGMENTS = [
-  { id: "today", label: "Сегодня", iconSrc: circleCheckIcon },
-  { id: "search", label: "Поиск задач", iconSrc: searchIcon, disabled: true },
-  { id: "projects", label: "Проекты", iconSrc: dashboardIcon, disabled: true },
-] as const;
-
 export interface TodayTasksViewProps {
   now: Date;
   timeZone: string;
@@ -36,6 +27,7 @@ export interface TodayTasksViewProps {
   pendingTaskId: number | null;
   completionError: string | null;
   onToggleTask: (task: TaskResponse, nextCompleted: boolean) => void;
+  onSelectSegment: (id: TaskSegmentId) => void;
 }
 
 export function TodayTasksView({
@@ -49,6 +41,7 @@ export function TodayTasksView({
   pendingTaskId,
   completionError,
   onToggleTask,
+  onSelectSegment,
 }: TodayTasksViewProps): ReactElement {
   const { planned, completed } = splitTodayTasks(tasks);
   const state = getTodayTasksState(progress.total, progress.completed);
@@ -63,11 +56,7 @@ export function TodayTasksView({
   return (
     <div className="flex flex-1 flex-col gap-2">
       <div className="pb-[15px] pt-[15px]">
-        <SegmentedControl
-          ariaLabel="Разделы задач"
-          options={TODAY_SEGMENTS}
-          value="today"
-        />
+        <TaskSegments onSelect={onSelectSegment} value="today" />
       </div>
       <div className="flex flex-col gap-2">
         <TodayHeader dateLabel={dateLabel} title={title} />

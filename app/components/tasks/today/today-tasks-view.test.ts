@@ -85,6 +85,7 @@ function renderView(
       pendingTaskId: null,
       completionError: null,
       onToggleTask: () => {},
+      onSelectSegment: () => {},
       ...overrides,
     }),
   );
@@ -108,6 +109,7 @@ describe("TodayTasksView", () => {
     expect(html).not.toContain("Интерактивно");
     expect(html).toContain('aria-label="Разделы задач"');
     expect(html).toContain("Сегодня");
+    expect(html.match(/aria-disabled="true"/g)?.length).toBe(1);
     expect(html).not.toContain("🔍");
     expect(html).not.toContain(
       "Ищите, фильтруйте и сортируйте ваши задачи",
@@ -218,6 +220,7 @@ describe("TodayTasksError", () => {
       createElement(TodayTasksError, {
         dateLabel: "Четверг, 5 ноября",
         onRetry: () => {},
+        onSelectSegment: () => {},
       }),
     );
 

@@ -8,6 +8,7 @@ import { TodayTasksError } from "~/components/tasks/today/today-tasks-error";
 import { TodayTasksSkeleton } from "~/components/tasks/today/today-tasks-skeleton";
 import { TodayTasksView } from "~/components/tasks/today/today-tasks-view";
 import { useBottomNavigation } from "~/hooks/use-bottom-navigation";
+import { useTaskSegmentNavigation } from "~/hooks/use-task-segment-navigation";
 import {
   useTodayTasksData,
   useToggleTaskCompletion,
@@ -35,6 +36,7 @@ export default function Tasks() {
   const { haptics } = useTelegram();
   const navigate = useNavigate();
   const onSelectTab = useBottomNavigation();
+  const onSelectSegment = useTaskSegmentNavigation();
 
   const [expanded, setExpanded] = useState({
     planned: false,
@@ -83,6 +85,7 @@ export default function Tasks() {
           <TodayTasksError
             dateLabel={dateLabel}
             onRetry={() => void overviewQuery.refetch()}
+            onSelectSegment={onSelectSegment}
           />
         ) : (
           <TodayTasksView
@@ -97,6 +100,7 @@ export default function Tasks() {
               }));
             }}
             onToggleTask={handleToggleTask}
+            onSelectSegment={onSelectSegment}
             pendingTaskId={pendingTaskId}
             progress={overview.progress}
             projects={projectsQuery.data ?? []}
