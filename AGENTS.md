@@ -43,6 +43,7 @@ app/
       quick-add-store-provider.tsx  # context, QuickAddStoreProvider, useQuickAddStore
       project-icon-badge.tsx  # круглый бейдж проекта 28×28 с белой иконкой
       search-filter.ts        # matchesSearchQuery для поиска в шторках меток и проектов
+    tasks/search/             # экран «Поиск задач»
     tasks/today/              # экран «Задачи на сегодня»
     ui/                       # примитивы, включая bottom-sheet, sheet-header, switch,
                               #   select-field, time-input, option-chip, button,
@@ -50,6 +51,8 @@ app/
     voice/                    # UI записи голоса
   hooks/
     use-bottom-navigation.ts  # нижние вкладки «Главная» / «Задачи»
+    use-search-tasks.ts       # данные и оптимистичное завершение задач поиска
+    use-task-segment-navigation.ts  # навигация «Сегодня»/«Поиск задач»
     use-today-tasks.ts        # данные и завершение задач на сегодня
     use-voice-recorder.ts
   lib/
@@ -64,6 +67,7 @@ app/
                               #   priority и временный источник данных главного экрана
       today-tasks.ts          # состояние экрана «Задачи на сегодня»
       today-tasks-cache.ts    # кэш и оптимистичное завершение задач
+      search-tasks-cache.ts   # кэш и оптимистичное завершение задач поиска
     voice/                    # запись и загрузка голоса
     cn.ts                     # склейка классов
     format-date.ts
@@ -75,6 +79,7 @@ app/
     _app.tsx                  # pathless layout: AppShell > AuthGate > Outlet
     home.tsx                  # главный экран на /
     tasks.tsx                 # экран «Задачи на сегодня» на /tasks
+    task-search.tsx           # экран «Поиск задач» на /tasks/search
   app.css                     # Tailwind theme tokens и базовые стили
   entry.client.tsx            # снятие boot-watchdog перед hydrateRoot
   root.tsx                    # документ, watchdog, telegram-web-app.js, провайдеры, ErrorBoundary
@@ -127,6 +132,15 @@ app/
   на `/` и `/tasks`. Кнопка добавления задачи закреплена над нижней
   навигацией справа (fixed, как navbar) и ведёт на `/` к быстрому
   созданию; блоков «Голосом»/«Интерактивно» на `/tasks` больше нет.
+- `/tasks/search` использует `GET /tasks?date=<today>&status=all&limit=100&q=<query>`
+  и `GET /projects?limit=100`; данные загружаются React Query после `AuthGate`.
+  Поиск серверный по `title`/`description`, выполняется при каждом изменении поля
+  (`q.trim()`, пустой `q` не отправляется); предыдущие результаты остаются до
+  ответа нового запроса. Завершение задачи оптимистично обновляет кэш поиска и
+  инвалидирует `["tasks"]` и `["projects"]`. Пагинация не реализована
+  (`limit=100`, `next_cursor` игнорируется). Кнопки и чипы фильтров — визуальные
+  заглушки, шторки фильтров вне scope. Dev-preview `?state=filter` показывает
+  бейдж «1» и активный чип «Проект» только в dev-режиме.
 - API-слой — `app/lib/api/`. Все запросы идут через `apiRequest` / `requestJson`;
   не разбрасывать `fetch` по компонентам. База API — `VITE_API_BASE_URL`
   (по умолчанию `/api/v1`), ошибки — `ApiError` / `ApiNetworkError`.
@@ -206,6 +220,12 @@ app/
   `tag.svg`/`tag-plus.svg`; список меток имеет `mt-[15px]`, `px-[15px]` и
   `gap-[10px]`, список проектов — полную ширину без зазора от поиска.
 - Каркас мобильный: контент ограничен `max-w-md`, отступы безопасных зон уже учтены в `AppShell`.
+- Экран «Поиск задач» повторяет каркас `/tasks`: сегменты «Сегодня/Поиск задач/
+  Проекты», заголовок «Поиск задач», поисковое поле `SearchField`
+  с `variant="stroke"`, горизонтальная панель фильтров и карточка результатов
+  на `TodayTaskRow`. Заголовок и подзаголовок показываются всегда; заголовок
+  списка — `Задачи на DD.MM.YYYY (N)`, включая `(0)`. Только токены `app-*`;
+  ширины `320 / 412 / 448px`, light/dark и safe-area не ломаются.
 - Внешний вид главного экрана зафиксирован в `docs/specs/2026-11-02-home-dashboard/spec.md`; остальные экраны и продуктовые тексты — нет. Не выдумывать продуктовые сценарии.
 
 ## 6. Код и ограничения
@@ -279,4 +299,14 @@ npm run build
 - Для изменений bootstrap/watchdog вручную проверить блокировку JS-бандла и `telegram-web-app.js` (DevTools → Network → Block request URL): через 5 секунд должен появиться статический fallback с «Повторить», а при нормальной загрузке — не появляться.
 - Если менялись Telegram-интеграция или тема, проверить экран в браузере и в Telegram: светлая/тёмная тема, safe-area, клавиатура, fullscreen.
 - Локальный запуск в Telegram: HTTPS-туннель на `http://localhost:5173` (`cloudflared tunnel --url ...` или `ngrok http 5173`) и URL в BotFather через `/setmenubutton` или `/newapp`. Quick-туннель меняет URL после перезапуска.
+- `/tasks/search` вручную проверить в light/dark, на ширинах 320/412/448 px
+  и с safe-area: сегмент «Поиск задач» активен, «Сегодня» возвращает на `/tasks`,
+  «Проекты» недоступен; нижняя вкладка «Задачи», FAB ведёт на `/`. Поиск
+  фильтрует задачи на сегодня; пустой запрос возвращает весь список; пустое
+  состояние показывает 😔 и «К сожалению задач не найдено»; количество в
+  заголовке `(N)`/`(0)`; завершение и возврат задачи оптимистичны, ошибка
+  откатывается и показывает alert; фильтры — заглушки с `aria-disabled`.
+  Dev `?state=filter` показывает бейдж «1» и активный чип «Проект».
+  SSR `curl -s http://localhost:3000/tasks/search` не содержит защищённых
+  данных задач.
 - Новые тесты — Vitest, `*.test.ts` рядом с модулем; следовать TDD. `npm test` обязателен перед завершением.
