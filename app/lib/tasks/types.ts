@@ -85,6 +85,7 @@ export interface TaskListQuery {
   status?: TaskListStatus;
   limit?: number;
   cursor?: string;
+  q?: string;
 }
 
 export interface TaskListResponse {

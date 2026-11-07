@@ -67,7 +67,7 @@ function parseTime(time: string): TimeParts {
   return { hour, minute };
 }
 
-function formatNumericDate(date: string): string {
+export function formatNumericDate(date: string): string {
   const { year, month, day } = parseDate(date);
 
   return `${pad(day)}.${pad(month)}.${String(year).padStart(4, "0")}`;

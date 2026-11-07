@@ -39,6 +39,7 @@ function buildTaskListPath(query: TaskListQuery): string {
   if (query.status !== undefined) params.set("status", query.status);
   if (query.limit !== undefined) params.set("limit", String(query.limit));
   if (query.cursor !== undefined) params.set("cursor", query.cursor);
+  if (query.q !== undefined && query.q !== "") params.set("q", query.q);
 
   const search = params.toString();
 

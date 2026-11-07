@@ -5,6 +5,7 @@ import {
   formatDueChip,
   formatDueHint,
   formatMonthTitle,
+  formatNumericDate,
   formatZonedTime,
   formatZonedToday,
   formatZonedTodayLabel,
@@ -197,5 +198,11 @@ describe("isDateInRange with custom bounds", () => {
     expect(isDateInRange("2026-11-04", "2026-11-05", "2100-12-31")).toBe(false);
     expect(isDateInRange("2026-11-05", "2026-11-05", "2100-12-31")).toBe(true);
     expect(isDateInRange("2101-01-01", "2026-11-05", "2100-12-31")).toBe(false);
+  });
+});
+
+describe("formatNumericDate", () => {
+  it("formats an ISO date as DD.MM.YYYY", () => {
+    expect(formatNumericDate("2026-10-29")).toBe("29.10.2026");
   });
 });

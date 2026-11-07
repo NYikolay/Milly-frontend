@@ -101,6 +101,32 @@ describe("tasks list API", () => {
       { signal: undefined },
     );
   });
+
+  it("fetches tasks with a search query", async () => {
+    apiRequestMock.mockResolvedValue({ items: [], next_cursor: null });
+
+    await fetchTasks({
+      date: "2026-11-06",
+      status: "all",
+      limit: 100,
+      q: "report",
+    });
+
+    expect(apiRequestMock).toHaveBeenCalledWith(
+      "/tasks?date=2026-11-06&status=all&limit=100&q=report",
+      { signal: undefined },
+    );
+  });
+
+  it("omits an empty search query", async () => {
+    apiRequestMock.mockResolvedValue({ items: [], next_cursor: null });
+
+    await fetchTasks({ q: "" });
+
+    expect(apiRequestMock).toHaveBeenCalledWith("/tasks", {
+      signal: undefined,
+    });
+  });
 });
 
 describe("tasks completion API", () => {
