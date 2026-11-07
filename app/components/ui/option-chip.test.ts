@@ -88,4 +88,19 @@ describe("OptionChip", () => {
     expect(html).toContain("gap-[2px]");
     expect(html).not.toContain("gap-[5px]");
   });
+
+  it("marks a disabled placeholder and removes dialog semantics", () => {
+    const html = renderToStaticMarkup(
+      createElement(OptionChip, {
+        disabled: true,
+        label: "Проект",
+        onClick: () => {},
+        ariaLabel: "Фильтр по проекту",
+      }),
+    );
+
+    expect(html).toContain('aria-disabled="true"');
+    expect(html).toContain('tabindex="-1"');
+    expect(html).not.toContain("aria-haspopup");
+  });
 });

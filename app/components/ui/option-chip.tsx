@@ -8,6 +8,7 @@ export interface OptionChipProps {
   label?: string;
   endIcon?: ReactNode;
   active?: boolean;
+  disabled?: boolean;
   onClick: () => void;
   ariaLabel: string;
   className?: string;
@@ -20,6 +21,7 @@ export function OptionChip({
   label,
   endIcon,
   active = false,
+  disabled = false,
   onClick,
   ariaLabel,
   className,
@@ -28,7 +30,8 @@ export function OptionChip({
   return (
     <button
       ref={buttonRef}
-      aria-haspopup="dialog"
+      aria-disabled={disabled ? true : undefined}
+      aria-haspopup={disabled ? undefined : "dialog"}
       aria-label={ariaLabel}
       className={cn(
         "inline-flex h-[45px] max-w-[200px] shrink-0 items-center whitespace-nowrap rounded-[50px] border bg-app-card text-[13px] transition-colors active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent",
@@ -39,7 +42,8 @@ export function OptionChip({
           : "border-app-stroke text-app-text",
         className,
       )}
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
+      tabIndex={disabled ? -1 : undefined}
       type="button"
     >
       {icon}

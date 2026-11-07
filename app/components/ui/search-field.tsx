@@ -10,6 +10,7 @@ export interface SearchFieldProps {
   onChange: (value: string) => void;
   ariaLabel: string;
   placeholder?: string;
+  variant?: "track" | "stroke";
   className?: string;
 }
 
@@ -18,12 +19,17 @@ export function SearchField({
   onChange,
   ariaLabel,
   placeholder = "Поиск",
+  variant = "track",
   className,
 }: SearchFieldProps): ReactElement {
+  const surfaceClassName =
+    variant === "stroke" ? "bg-app-stroke" : "bg-app-track";
+
   return (
     <div
       className={cn(
-        "flex h-[45px] w-full items-center gap-[10px] rounded-[25px] bg-app-track px-[15px] focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-app-accent",
+        "flex h-[45px] w-full items-center gap-[10px] rounded-[25px] px-[15px] focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-app-accent",
+        surfaceClassName,
         className,
       )}
     >
