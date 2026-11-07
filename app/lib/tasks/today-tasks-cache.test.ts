@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { applyTaskCompletion } from "./today-tasks-cache";
+import {
+  applyTaskCompletion,
+  todayProgressQueryKey,
+} from "./today-tasks-cache";
 import type { TodayTasksData } from "./today-tasks-cache";
 import type { TaskResponse } from "./types";
 
@@ -31,6 +34,21 @@ const data: TodayTasksData = {
   ],
   progress: { total: 2, completed: 1, remaining: 1 },
 };
+
+describe("todayProgressQueryKey", () => {
+  it("stays under the tasks query prefix so invalidations refresh the card", () => {
+    const key = todayProgressQueryKey("Europe/Moscow", "2026-11-06");
+
+    expect(key.slice(0, 2)).toEqual(["tasks", "today"]);
+    expect(key).toEqual([
+      "tasks",
+      "today",
+      "progress",
+      "Europe/Moscow",
+      "2026-11-06",
+    ]);
+  });
+});
 
 describe("applyTaskCompletion", () => {
   it("completes a task and increments progress", () => {

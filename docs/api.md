@@ -92,6 +92,7 @@ curl -fsS http://localhost:8000/openapi.json -o openapi.json
 | `tasks-complete_task` | `POST /api/v1/tasks/{task_id}/complete` |
 | `tasks-uncomplete_task` | `POST /api/v1/tasks/{task_id}/uncomplete` |
 | `tasks-delete_task` | `DELETE /api/v1/tasks/{task_id}` |
+| `tasks-read_today_progress` | `GET /api/v1/tasks/today/progress` |
 | `task-series-list_series` | `GET /api/v1/task-series` |
 | `task-series-create_series` | `POST /api/v1/task-series` |
 | `task-series-read_series` | `GET /api/v1/task-series/{series_id}` |
@@ -342,8 +343,8 @@ POST /api/v1/auth/telegram ──► access_token (в память) + refresh co
 
 ### 5.2. `POST /api/v1/auth/telegram`
 
-**operationId:** `auth-telegram_login`  
-**Auth:** нет  
+**operationId:** `auth-telegram_login`
+**Auth:** нет
 **Назначение:** вход по подписанным данным запуска Telegram Mini App.
 
 Тело:
@@ -407,8 +408,8 @@ POST /api/v1/auth/telegram ──► access_token (в память) + refresh co
 
 ### 5.3. `POST /api/v1/auth/refresh`
 
-**operationId:** `auth-refresh_tokens`  
-**Auth:** refresh-cookie  
+**operationId:** `auth-refresh_tokens`
+**Auth:** refresh-cookie
 **Тело:** нет.
 
 Ответ `200`:
@@ -439,9 +440,9 @@ Cookie refresh-токена ротируется и перезаписывает
 
 ### 5.4. `POST /api/v1/auth/logout`
 
-**operationId:** `auth-logout`  
-**Auth:** refresh-cookie (необязательно)  
-**Тело:** нет.  
+**operationId:** `auth-logout`
+**Auth:** refresh-cookie (необязательно)
+**Тело:** нет.
 **Ответ:** `204 No Content`.
 
 Поведение:
@@ -457,8 +458,8 @@ Cookie refresh-токена ротируется и перезаписывает
 
 ### 5.5. `GET /api/v1/auth/me`
 
-**operationId:** `auth-read_current_user`  
-**Auth:** Bearer  
+**operationId:** `auth-read_current_user`
+**Auth:** Bearer
 **Ответ `200`:** `UserResponse` (как `user` из логина).
 
 Ошибки:
@@ -469,8 +470,8 @@ Cookie refresh-токена ротируется и перезаписывает
 
 ### 5.6. `PATCH /api/v1/auth/me/timezone`
 
-**operationId:** `auth-update_timezone`  
-**Auth:** Bearer  
+**operationId:** `auth-update_timezone`
+**Auth:** Bearer
 **Назначение:** сохранить IANA-часовой пояс пользователя.
 
 Тело:
@@ -505,8 +506,8 @@ Cookie refresh-токена ротируется и перезаписывает
 
 ### 6.1. `GET /api/v1/color-palette`
 
-**operationId:** `color-palette-read_color_palette`  
-**Auth:** Bearer  
+**operationId:** `color-palette-read_color_palette`
+**Auth:** Bearer
 **Назначение:** список активных цветов для выбора проекта/метки.
 
 Ответ `200`:
@@ -582,8 +583,8 @@ Cookie refresh-токена ротируется и перезаписывает
 
 ### 7.2. `GET /api/v1/projects`
 
-**operationId:** `projects-list_projects`  
-**Auth:** Bearer  
+**operationId:** `projects-list_projects`
+**Auth:** Bearer
 **Назначение:** страница проектов с прогрессом и цветом.
 
 Query-параметры:
@@ -645,8 +646,8 @@ Query-параметры:
 
 ### 7.3. `POST /api/v1/projects`
 
-**operationId:** `projects-create_project`  
-**Auth:** Bearer  
+**operationId:** `projects-create_project`
+**Auth:** Bearer
 **Ответ:** `201 Created`, `ProjectResponse`.
 
 Тело:
@@ -685,8 +686,8 @@ Query-параметры:
 
 ### 7.4. `GET /api/v1/projects/{project_id}`
 
-**operationId:** `projects-read_project`  
-**Auth:** Bearer  
+**operationId:** `projects-read_project`
+**Auth:** Bearer
 **Ответ:** `200`, `ProjectResponse`.
 
 Ошибки:
@@ -697,8 +698,8 @@ Query-параметры:
 
 ### 7.5. `PATCH /api/v1/projects/{project_id}`
 
-**operationId:** `projects-update_project`  
-**Auth:** Bearer  
+**operationId:** `projects-update_project`
+**Auth:** Bearer
 **Ответ:** `200`, `ProjectResponse`.
 
 Тело — любое подмножество полей:
@@ -731,9 +732,9 @@ Query-параметры:
 
 ### 7.6. `POST /api/v1/projects/{project_id}/archive`
 
-**operationId:** `projects-archive_project`  
-**Auth:** Bearer  
-**Тело:** нет.  
+**operationId:** `projects-archive_project`
+**Auth:** Bearer
+**Тело:** нет.
 **Ответ:** `200`, `ProjectResponse` с `archived_at != null`.
 
 Поведение:
@@ -754,9 +755,9 @@ Query-параметры:
 
 ### 7.7. `POST /api/v1/projects/{project_id}/unarchive`
 
-**operationId:** `projects-unarchive_project`  
-**Auth:** Bearer  
-**Тело:** нет.  
+**operationId:** `projects-unarchive_project`
+**Auth:** Bearer
+**Тело:** нет.
 **Ответ:** `200`, `ProjectResponse` с `archived_at = null`.
 
 Поведение:
@@ -775,8 +776,8 @@ Query-параметры:
 
 ### 7.8. `DELETE /api/v1/projects/{project_id}`
 
-**operationId:** `projects-delete_project`  
-**Auth:** Bearer  
+**operationId:** `projects-delete_project`
+**Auth:** Bearer
 **Ответ:** `204 No Content`.
 
 Поведение:
@@ -819,8 +820,8 @@ Query-параметры:
 
 ### 8.2. `GET /api/v1/labels`
 
-**operationId:** `labels-list_labels`  
-**Auth:** Bearer  
+**operationId:** `labels-list_labels`
+**Auth:** Bearer
 **Ответ:** `200`.
 
 ```json
@@ -855,8 +856,8 @@ Query-параметры:
 
 ### 8.3. `POST /api/v1/labels`
 
-**operationId:** `labels-create_label`  
-**Auth:** Bearer  
+**operationId:** `labels-create_label`
+**Auth:** Bearer
 **Ответ:** `201 Created`, `LabelResponse`.
 
 Тело:
@@ -883,8 +884,8 @@ Query-параметры:
 
 ### 8.4. `PATCH /api/v1/labels/{label_id}`
 
-**operationId:** `labels-update_label`  
-**Auth:** Bearer  
+**operationId:** `labels-update_label`
+**Auth:** Bearer
 **Ответ:** `200`, `LabelResponse`.
 
 Тело — любое подмножество:
@@ -914,8 +915,8 @@ Query-параметры:
 
 ### 8.5. `DELETE /api/v1/labels/{label_id}`
 
-**operationId:** `labels-delete_label`  
-**Auth:** Bearer  
+**operationId:** `labels-delete_label`
+**Auth:** Bearer
 **Ответ:** `204 No Content`.
 
 Поведение:
@@ -989,8 +990,8 @@ Query-параметры:
 
 ### 9.2. `GET /api/v1/tasks`
 
-**operationId:** `tasks-list_tasks`  
-**Auth:** Bearer  
+**operationId:** `tasks-list_tasks`
+**Auth:** Bearer
 **Назначение:** страница задач с фильтрами, метками и напоминаниями.
 
 Query-параметры:
@@ -1075,9 +1076,9 @@ Query-параметры:
 
 ### 9.3. `POST /api/v1/tasks`
 
-**operationId:** `tasks-create_task`  
-**Auth:** Bearer  
-**Назначение:** создать **разовую** задачу.  
+**operationId:** `tasks-create_task`
+**Auth:** Bearer
+**Назначение:** создать **разовую** задачу.
 **Ответ:** `201 Created`, `TaskResponse`.
 
 Тело:
@@ -1153,8 +1154,8 @@ Query-параметры:
 
 ### 9.4. `GET /api/v1/tasks/{task_id}`
 
-**operationId:** `tasks-read_task`  
-**Auth:** Bearer  
+**operationId:** `tasks-read_task`
+**Auth:** Bearer
 **Ответ:** `200`, `TaskResponse`.
 
 Ошибки:
@@ -1165,9 +1166,9 @@ Query-параметры:
 
 ### 9.5. `PATCH /api/v1/tasks/{task_id}`
 
-**operationId:** `tasks-update_task`  
-**Auth:** Bearer  
-**Назначение:** частичное обновление задачи и/или переключение повторяемости.  
+**operationId:** `tasks-update_task`
+**Auth:** Bearer
+**Назначение:** частичное обновление задачи и/или переключение повторяемости.
 **Ответ:** `200`, `TaskResponse`.
 
 Тело — любое подмножество полей:
@@ -1264,9 +1265,9 @@ Query-параметры:
 
 ### 9.6. `POST /api/v1/tasks/{task_id}/complete`
 
-**operationId:** `tasks-complete_task`  
-**Auth:** Bearer  
-**Тело:** нет.  
+**operationId:** `tasks-complete_task`
+**Auth:** Bearer
+**Тело:** нет.
 **Ответ:** `200`, `TaskResponse` с `completed_at != null`.
 
 Поведение:
@@ -1284,9 +1285,9 @@ Query-параметры:
 
 ### 9.7. `POST /api/v1/tasks/{task_id}/uncomplete`
 
-**operationId:** `tasks-uncomplete_task`  
-**Auth:** Bearer  
-**Тело:** нет.  
+**operationId:** `tasks-uncomplete_task`
+**Auth:** Bearer
+**Тело:** нет.
 **Ответ:** `200`, `TaskResponse` с `completed_at = null`.
 
 Поведение:
@@ -1303,8 +1304,8 @@ Query-параметры:
 
 ### 9.8. `DELETE /api/v1/tasks/{task_id}`
 
-**operationId:** `tasks-delete_task`  
-**Auth:** Bearer  
+**operationId:** `tasks-delete_task`
+**Auth:** Bearer
 **Ответ:** `204 No Content`.
 
 Матрица поведения:
@@ -1325,6 +1326,37 @@ Query-параметры:
 
 - `401 unauthorized`.
 - `404 not_found` — задача или её серия не найдены.
+
+### 9.9. `GET /api/v1/tasks/today/progress`
+
+**operationId:** `tasks-read_today_progress`
+**Auth:** Bearer
+**Назначение:** количество задач на сегодня и выполненных из них.
+
+Ответ `200`:
+
+```json
+{
+  "total": 5,
+  "completed": 2,
+  "remaining": 3
+}
+```
+
+Семантика:
+
+- `total` — число неудалённых задач, у которых `due_at` попадает в локальный
+  день пользователя `[00:00, следующие 00:00)`; границы дня переводятся в UTC.
+- `completed` — подмножество этих задач с `completed_at != null`; учитывается
+  только факт завершения, а не его момент.
+- `remaining` — `total - completed`.
+- Если часовой пояс пользователя не задан, используется UTC.
+- Soft-deleted задачи не учитываются.
+
+Ошибки:
+
+- `400 bad_request` — невалидный сохранённый часовой пояс пользователя.
+- `401 unauthorized`.
 
 ---
 
@@ -1405,8 +1437,8 @@ Query-параметры:
 
 ### 10.3. `GET /api/v1/task-series`
 
-**operationId:** `task-series-list_series`  
-**Auth:** Bearer  
+**operationId:** `task-series-list_series`
+**Auth:** Bearer
 **Ответ:** `200`.
 
 ```json
@@ -1446,10 +1478,10 @@ Query-параметры:
 
 ### 10.4. `POST /api/v1/task-series`
 
-**operationId:** `task-series-create_series`  
-**Auth:** Bearer  
+**operationId:** `task-series-create_series`
+**Auth:** Bearer
 **Назначение:** создать daily- или periodic-серию и сгенерировать первые
-экземпляры.  
+экземпляры.
 **Ответ:** `201 Created`, `SeriesResponse`.
 
 Тело:
@@ -1517,8 +1549,8 @@ Query-параметры:
 
 ### 10.5. `GET /api/v1/task-series/{series_id}`
 
-**operationId:** `task-series-read_series`  
-**Auth:** Bearer  
+**operationId:** `task-series-read_series`
+**Auth:** Bearer
 **Ответ:** `200`, `SeriesResponse`.
 
 Ошибки:
@@ -1529,10 +1561,10 @@ Query-параметры:
 
 ### 10.6. `PATCH /api/v1/task-series/{series_id}`
 
-**operationId:** `task-series-update_series`  
-**Auth:** Bearer  
+**operationId:** `task-series-update_series`
+**Auth:** Bearer
 **Назначение:** частично обновить серию и пересоздать будущие экземпляры при
-изменении расписания.  
+изменении расписания.
 **Ответ:** `200`, `SeriesResponse`.
 
 Тело — любое подмножество:
@@ -1599,8 +1631,8 @@ Query-параметры:
 
 ### 10.7. `DELETE /api/v1/task-series/{series_id}`
 
-**operationId:** `task-series-delete_series`  
-**Auth:** Bearer  
+**operationId:** `task-series-delete_series`
+**Auth:** Bearer
 **Ответ:** `204 No Content`.
 
 Поведение:
@@ -1623,15 +1655,15 @@ Query-параметры:
 
 ### 11.1. `GET /health/live`
 
-**operationId:** `health-live`  
-**Auth:** нет.  
+**operationId:** `health-live`
+**Auth:** нет.
 **Ответ:** `200 {"status": "ok"}`.
 
 Не обращается к БД и внешним сервисам.
 
 ### 11.2. `GET /health/ready`
 
-**operationId:** `health-ready`  
+**operationId:** `health-ready`
 **Auth:** нет.
 
 Успех `200`:

@@ -19,7 +19,7 @@ export function PriorityStep({
   onApply,
 }: PriorityStepProps): ReactElement {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-1 flex-col">
       <div
         aria-label="Приоритет задачи"
         className="flex flex-col"
@@ -55,12 +55,11 @@ export function PriorityStep({
           );
         })}
       </div>
-      <BottomSheetPrimaryAction
-        className="mt-[15px]"
-        onClick={() => onApply(value)}
-      >
-        Применить
-      </BottomSheetPrimaryAction>
+      <div className="mt-auto pt-[15px]">
+        <BottomSheetPrimaryAction onClick={() => onApply(value)}>
+          Применить
+        </BottomSheetPrimaryAction>
+      </div>
     </div>
   );
 }

@@ -7,7 +7,6 @@ import {
   getTodayProgressCopy,
   getTodayTasksState,
   getVisibleTasks,
-  shouldShowSearchCard,
   splitTodayTasks,
 } from "./today-tasks";
 
@@ -81,9 +80,9 @@ describe("getTodayProgressCopy", () => {
 });
 
 describe("preview helpers", () => {
-  it("uses 3 planned and 2 completed previews", () => {
-    expect(PLANNED_PREVIEW_LIMIT).toBe(3);
-    expect(COMPLETED_PREVIEW_LIMIT).toBe(2);
+  it("uses 4 planned and 4 completed previews", () => {
+    expect(PLANNED_PREVIEW_LIMIT).toBe(4);
+    expect(COMPLETED_PREVIEW_LIMIT).toBe(4);
   });
 
   it("cuts the list when collapsed and keeps it when expanded", () => {
@@ -91,10 +90,5 @@ describe("preview helpers", () => {
 
     expect(getVisibleTasks(tasks, 2, false)).toEqual(tasks.slice(0, 2));
     expect(getVisibleTasks(tasks, 2, true)).toBe(tasks);
-  });
-
-  it("shows the search card only when there are no planned tasks", () => {
-    expect(shouldShowSearchCard(0)).toBe(true);
-    expect(shouldShowSearchCard(3)).toBe(false);
   });
 });

@@ -1,6 +1,7 @@
-import type { ReactElement } from "react";
+import type { PointerEventHandler, ReactElement } from "react";
 
 import chevronLeftIcon from "~/assets/icons/chevron-left.svg";
+import closeIcon from "~/assets/icons/x.svg";
 import { AssetIcon } from "~/components/ui/asset-icon";
 
 export interface SheetHeaderProps {
@@ -8,6 +9,9 @@ export interface SheetHeaderProps {
   title: string;
   onBack?: () => void;
   backLabel?: string;
+  onClose?: () => void;
+  closeLabel?: string;
+  onPointerDown?: PointerEventHandler<HTMLDivElement>;
 }
 
 const ICON_BUTTON_CLASSES =
@@ -18,9 +22,16 @@ export function SheetHeader({
   title,
   onBack,
   backLabel = "Назад",
+  onClose,
+  closeLabel = "Закрыть",
+  onPointerDown,
 }: SheetHeaderProps): ReactElement {
   return (
-    <div className="relative flex h-[54px] shrink-0 items-center justify-between border-b border-app-stroke px-[15px]">
+    <div
+      className="relative flex h-[54px] shrink-0 items-center justify-between border-b border-app-stroke px-[15px]"
+      onPointerDown={onPointerDown}
+      style={onPointerDown ? { touchAction: "none" } : undefined}
+    >
       {onBack ? (
         <button
           aria-label={backLabel}
@@ -39,6 +50,16 @@ export function SheetHeader({
       >
         {title}
       </h2>
+      {onClose ? (
+        <button
+          aria-label={closeLabel}
+          className={ICON_BUTTON_CLASSES}
+          onClick={onClose}
+          type="button"
+        >
+          <AssetIcon className="size-6" src={closeIcon} />
+        </button>
+      ) : null}
     </div>
   );
 }

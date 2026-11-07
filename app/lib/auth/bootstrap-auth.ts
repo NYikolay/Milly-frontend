@@ -8,16 +8,23 @@ import type { AuthFailure, AuthFailureReason } from "./types";
 
 export type { BootstrapRequestOptions } from "./timeouts";
 
+const TIMEZONE_SYNC_TIMEOUT_MS = 3000;
+
 export interface BootstrapAuthOptions {
   initData: string;
   budgetMs: number;
   requestTimeoutMs?: number;
+  timeZone?: string;
   login: (
     initData: string,
     options: BootstrapRequestOptions,
   ) => Promise<AuthResponse>;
   refresh: (options: BootstrapRequestOptions) => Promise<TokenResponse>;
   fetchMe: (options: BootstrapRequestOptions) => Promise<AuthUser>;
+  updateTimezone?: (
+    timezone: string,
+    options: BootstrapRequestOptions,
+  ) => Promise<AuthUser>;
 }
 
 export type BootstrapAuthResult =
@@ -96,12 +103,49 @@ export async function bootstrapAuth(
     };
   };
 
+  const syncRequestOptions = (): BootstrapRequestOptions => {
+    const request = requestOptions();
+
+    return {
+      ...request,
+      timeoutMs: Math.min(
+        request.timeoutMs ?? TIMEZONE_SYNC_TIMEOUT_MS,
+        TIMEZONE_SYNC_TIMEOUT_MS,
+      ),
+    };
+  };
+
+  const syncTimeZone = async (user: AuthUser): Promise<AuthUser> => {
+    const { timeZone, updateTimezone } = options;
+
+    if (!timeZone || !updateTimezone || timeZone === user.timezone) {
+      return user;
+    }
+
+    if (deadline - Date.now() <= TIMEZONE_SYNC_TIMEOUT_MS) {
+      return user;
+    }
+
+    try {
+      return await updateTimezone(timeZone, syncRequestOptions());
+    } catch (error) {
+      if (isAbortError(error)) {
+        throw error;
+      }
+
+      return user;
+    }
+  };
+
   const workflow = async (): Promise<BootstrapAuthResult> => {
     if (loginAttempted) {
       try {
         const response = await options.login(initData, requestOptions());
 
-        return { status: "authenticated", user: response.user };
+        return {
+          status: "authenticated",
+          user: await syncTimeZone(response.user),
+        };
       } catch (error) {
         if (!isUnauthorized(error)) {
           return toResult(error, "session_expired");
@@ -124,7 +168,7 @@ export async function bootstrapAuth(
     try {
       const user = await options.fetchMe(requestOptions());
 
-      return { status: "authenticated", user };
+      return { status: "authenticated", user: await syncTimeZone(user) };
     } catch (error) {
       return toResult(error, "session_expired");
     }

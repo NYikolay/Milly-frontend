@@ -105,7 +105,7 @@ export function RemindersStep({
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-1 flex-col">
       <div className="flex h-[59px] items-center justify-between gap-[15px]">
         <span className="text-[16px] text-app-text">Автонапоминания</span>
         <Switch
@@ -225,13 +225,14 @@ export function RemindersStep({
           </div>
         </div>
       </Collapsible>
-      <BottomSheetPrimaryAction
-        className="mt-[15px]"
-        disabled={isApplyDisabled}
-        onClick={handleApply}
-      >
-        Применить
-      </BottomSheetPrimaryAction>
+      <div className="mt-auto pt-[15px]">
+        <BottomSheetPrimaryAction
+          disabled={isApplyDisabled}
+          onClick={handleApply}
+        >
+          Применить
+        </BottomSheetPrimaryAction>
+      </div>
     </div>
   );
 }

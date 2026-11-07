@@ -33,7 +33,7 @@ export function TodayTaskGroup({
 }: TodayTaskGroupProps): ReactElement {
   return (
     <section aria-labelledby={`${id}-title`} className="flex flex-col gap-2 pt-4">
-      <div className="flex items-center gap-[5px] px-[15px]">
+      <div className="flex items-center justify-between gap-[5px] px-[15px]">
         <h2
           className="text-[15px] font-semibold leading-[18px] text-app-text-secondary"
           id={`${id}-title`}

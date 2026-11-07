@@ -70,6 +70,9 @@ function createMocks() {
     refresh:
       vi.fn<(options: BootstrapRequestOptions) => Promise<TokenResponse>>(),
     fetchMe: vi.fn<(options: BootstrapRequestOptions) => Promise<AuthUser>>(),
+    updateTimezone: vi.fn<
+      (timezone: string, options: BootstrapRequestOptions) => Promise<AuthUser>
+    >(),
   };
 }
 
@@ -406,6 +409,110 @@ describe("bootstrapAuth fetchMe failures", () => {
     const result = await bootstrapAuth(createOptions(mocks, ""));
 
     expect(result).toEqual({ status: "connection-error", reason: "server" });
+  });
+});
+
+describe("bootstrapAuth timezone sync", () => {
+  it("updates a stale timezone after login and returns the updated user", async () => {
+    const mocks = createMocks();
+    const updatedUser: AuthUser = { ...user, timezone: "Europe/Moscow" };
+    mocks.login.mockResolvedValue(authResponse);
+    mocks.updateTimezone.mockResolvedValue(updatedUser);
+
+    const result = await bootstrapAuth({
+      ...createOptions(mocks, "raw-init-data"),
+      timeZone: "Europe/Moscow",
+    });
+
+    expect(result).toEqual({ status: "authenticated", user: updatedUser });
+    expect(mocks.updateTimezone).toHaveBeenCalledTimes(1);
+    expect(mocks.updateTimezone).toHaveBeenCalledWith(
+      "Europe/Moscow",
+      expect.objectContaining({ timeoutMs: 3000 }),
+    );
+  });
+
+  it("updates a stale timezone after refresh and fetchMe", async () => {
+    const mocks = createMocks();
+    const updatedUser: AuthUser = { ...user, timezone: "Asia/Tokyo" };
+    mocks.refresh.mockResolvedValue(tokenResponse);
+    mocks.fetchMe.mockResolvedValue(user);
+    mocks.updateTimezone.mockResolvedValue(updatedUser);
+
+    const result = await bootstrapAuth({
+      ...createOptions(mocks, ""),
+      timeZone: "Asia/Tokyo",
+    });
+
+    expect(result).toEqual({ status: "authenticated", user: updatedUser });
+    expect(mocks.updateTimezone).toHaveBeenCalledWith(
+      "Asia/Tokyo",
+      expect.anything(),
+    );
+    expect(mocks.updateTimezone.mock.calls[0]?.[1].signal).toBe(
+      mocks.fetchMe.mock.calls[0]?.[0].signal,
+    );
+  });
+
+  it("does not update the timezone when it already matches", async () => {
+    const mocks = createMocks();
+    mocks.login.mockResolvedValue(authResponse);
+
+    const result = await bootstrapAuth({
+      ...createOptions(mocks, "raw-init-data"),
+      timeZone: "UTC",
+    });
+
+    expect(result).toEqual({ status: "authenticated", user });
+    expect(mocks.updateTimezone).not.toHaveBeenCalled();
+  });
+
+  it("does not update the timezone without a resolved device zone", async () => {
+    const mocks = createMocks();
+    mocks.login.mockResolvedValue(authResponse);
+
+    const result = await bootstrapAuth(createOptions(mocks, "raw-init-data"));
+
+    expect(result).toEqual({ status: "authenticated", user });
+    expect(mocks.updateTimezone).not.toHaveBeenCalled();
+  });
+
+  it("skips the timezone update when the remaining budget is too short", async () => {
+    const mocks = createMocks();
+    let resolveLogin!: (response: AuthResponse) => void;
+    mocks.login.mockImplementation(
+      () =>
+        new Promise<AuthResponse>((resolve) => {
+          resolveLogin = resolve;
+        }),
+    );
+
+    const promise = bootstrapAuth({
+      ...createOptions(mocks, "raw-init-data", {
+        budgetMs: 5000,
+        requestTimeoutMs: 5000,
+      }),
+      timeZone: "Europe/Moscow",
+    });
+
+    await vi.advanceTimersByTimeAsync(2000);
+    resolveLogin(authResponse);
+
+    await expect(promise).resolves.toEqual({ status: "authenticated", user });
+    expect(mocks.updateTimezone).not.toHaveBeenCalled();
+  });
+
+  it("keeps the authenticated user when the timezone update fails", async () => {
+    const mocks = createMocks();
+    mocks.login.mockResolvedValue(authResponse);
+    mocks.updateTimezone.mockRejectedValue(new ApiNetworkError("offline"));
+
+    const result = await bootstrapAuth({
+      ...createOptions(mocks, "raw-init-data"),
+      timeZone: "Europe/Moscow",
+    });
+
+    expect(result).toEqual({ status: "authenticated", user });
   });
 });
 

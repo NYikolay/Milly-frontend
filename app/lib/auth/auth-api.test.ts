@@ -12,6 +12,7 @@ import {
   loginFromTelegram,
   loginWithInitData,
   refreshAccessToken,
+  updateUserTimezone,
 } from "./auth-api";
 import { EmptyInitDataError } from "./errors";
 import {
@@ -435,6 +436,55 @@ describe("fetchCurrentUser", () => {
 
     expect(requestOptions()).toEqual({
       method: "GET",
+      token: "access-1",
+      signal: controller.signal,
+      timeoutMs: 1500,
+    });
+  });
+});
+
+describe("updateUserTimezone", () => {
+  it("patches /auth/me/timezone with the current bearer token", async () => {
+    const updatedUser = { ...user, timezone: "Europe/Moscow" };
+    setAccessToken("access-1");
+    requestJsonMock.mockResolvedValue(updatedUser);
+
+    await expect(updateUserTimezone("Europe/Moscow")).resolves.toEqual(
+      updatedUser,
+    );
+
+    expect(requestJsonMock).toHaveBeenCalledTimes(1);
+    expect(requestJsonMock.mock.calls[0]?.[0]).toBe("/auth/me/timezone");
+    expect(requestOptions()).toEqual({
+      method: "PATCH",
+      body: { timezone: "Europe/Moscow" },
+      token: "access-1",
+    });
+  });
+
+  it("rejects with ApiError 401 without HTTP when there is no access token", async () => {
+    await expect(updateUserTimezone("Europe/Moscow")).rejects.toMatchObject({
+      status: 401,
+    });
+
+    expect(requestJsonMock).not.toHaveBeenCalled();
+  });
+
+  it("forwards the abort signal and timeout to /auth/me/timezone", async () => {
+    const controller = new AbortController();
+    setAccessToken("access-1");
+    requestJsonMock.mockResolvedValue(user);
+
+    await expect(
+      updateUserTimezone("Europe/Moscow", {
+        signal: controller.signal,
+        timeoutMs: 1500,
+      }),
+    ).resolves.toEqual(user);
+
+    expect(requestOptions()).toEqual({
+      method: "PATCH",
+      body: { timezone: "Europe/Moscow" },
       token: "access-1",
       signal: controller.signal,
       timeoutMs: 1500,

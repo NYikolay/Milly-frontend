@@ -155,6 +155,31 @@ export function fetchCurrentUser(
   });
 }
 
+export function updateUserTimezone(
+  timezone: string,
+  options?: AuthRequestOptions,
+): Promise<AuthUser> {
+  const token = getAccessToken();
+
+  if (!token) {
+    return Promise.reject(
+      new ApiError("Access token is missing", {
+        status: 401,
+        code: "unauthorized",
+        requestId: "",
+      }),
+    );
+  }
+
+  return requestJson<AuthUser>("/auth/me/timezone", {
+    method: "PATCH",
+    body: { timezone },
+    token,
+    signal: options?.signal,
+    timeoutMs: options?.timeoutMs,
+  });
+}
+
 export function loginFromTelegram(
   options?: AuthRequestOptions,
 ): Promise<AuthResponse> {

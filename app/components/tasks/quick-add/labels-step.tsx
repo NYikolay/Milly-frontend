@@ -1,10 +1,14 @@
+import { useState } from "react";
 import type { ReactElement } from "react";
 
-import tagIcon from "~/assets/icons/tag.svg";
+import tagIcon from "~/assets/icons/tag-raw.svg?no-inline";
 import { AssetIcon } from "~/components/ui/asset-icon";
 import { BottomSheetPrimaryAction } from "~/components/ui/bottom-sheet";
+import { SearchField } from "~/components/ui/search-field";
 import { cn } from "~/lib/cn";
 import type { LabelResponse } from "~/lib/labels/types";
+
+import { matchesSearchQuery } from "./search-filter";
 
 const MAX_LABEL_COUNT = 100;
 const STATUS_CLASSES =
@@ -22,6 +26,13 @@ const LABELS_STEP_MESSAGES: Record<LabelsStepState, string> = {
 
 export function getLabelsStepMessage(state: LabelsStepState): string {
   return LABELS_STEP_MESSAGES[state];
+}
+
+export function filterLabelList(
+  labels: LabelResponse[],
+  query: string,
+): LabelResponse[] {
+  return labels.filter((label) => matchesSearchQuery(label.name, query));
 }
 
 export interface LabelsStepProps {
@@ -62,8 +73,13 @@ export function LabelsStep({
   onApply,
 }: LabelsStepProps): ReactElement {
   const items = uniqueLabels(labels);
+  const [query, setQuery] = useState("");
   const visibleIds = new Set(items.map((label) => label.id));
   const isReady = !isLoading && !isError;
+  const filteredItems = filterLabelList(items, query);
+  const hasSearchQuery = query.trim().length > 0;
+  const hasNoMatches =
+    isReady && hasSearchQuery && items.length > 0 && filteredItems.length === 0;
   const visibleSelected = isReady
     ? selectedIds.filter((id) => visibleIds.has(id))
     : selectedIds;
@@ -102,17 +118,19 @@ export function LabelsStep({
     );
   } else if (items.length === 0) {
     content = <p className={STATUS_CLASSES}>{getLabelsStepMessage("empty")}</p>;
+  } else if (hasNoMatches) {
+    content = <p className={STATUS_CLASSES}>Ничего не найдено</p>;
   } else {
     content = (
-      <ul className="flex flex-col">
-        {items.map((label) => {
+      <ul className="flex flex-col gap-[10px] px-[15px]">
+        {filteredItems.map((label) => {
           const isSelected = visibleSelected.includes(label.id);
 
           return (
-            <li className="border-b border-app-stroke" key={label.id}>
+            <li key={label.id}>
               <button
                 aria-checked={isSelected}
-                className="flex h-[47px] w-full items-center gap-[10px] text-left transition-opacity active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent"
+                className="flex h-[50px] w-full items-center gap-[15px] text-left transition-opacity active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent"
                 onClick={() => toggleLabel(label.id)}
                 role="checkbox"
                 type="button"
@@ -121,24 +139,25 @@ export function LabelsStep({
                   aria-hidden="true"
                   className={cn(
                     "flex size-5 shrink-0 items-center justify-center rounded-full border",
-                    isSelected ? "border-app-accent" : "border-app-stroke",
+                    isSelected
+                      ? "border-app-accent"
+                      : "border-app-text-secondary/55",
                   )}
                 >
                   {isSelected ? (
-                    <span className="size-2.5 rounded-full bg-app-accent" />
+                    <span className="size-[15px] rounded-full bg-app-accent" />
                   ) : null}
                 </span>
-                <span
-                  className="shrink-0"
-                  style={{ color: label.color.hex }}
-                >
-                  <AssetIcon className="size-6" src={tagIcon} />
-                </span>
-                <span
-                  className="min-w-0 flex-1 truncate text-[15px]"
-                  style={{ color: label.color.hex }}
-                >
-                  {label.name}
+                <span className="flex h-full min-w-0 flex-1 items-center gap-[5px] border-b border-app-stroke">
+                  <span className="shrink-0" style={{ color: label.color.hex }}>
+                    <AssetIcon className="size-[18px]" src={tagIcon} />
+                  </span>
+                  <span
+                    className="min-w-0 flex-1 truncate text-[15px] leading-[1.3]"
+                    style={{ color: label.color.hex }}
+                  >
+                    {label.name}
+                  </span>
                 </span>
               </button>
             </li>
@@ -149,14 +168,16 @@ export function LabelsStep({
   }
 
   return (
-    <div className="flex flex-col">
-      {content}
-      <BottomSheetPrimaryAction
-        className="mt-[15px]"
-        onClick={() => onApply(uniqueLabelIds(visibleSelected))}
-      >
-        Применить
-      </BottomSheetPrimaryAction>
+    <div className="flex flex-1 flex-col">
+      <SearchField ariaLabel="Поиск меток" onChange={setQuery} value={query} />
+      <div className="mt-[15px]">{content}</div>
+      <div className="mt-auto pt-[15px]">
+        <BottomSheetPrimaryAction
+          onClick={() => onApply(uniqueLabelIds(visibleSelected))}
+        >
+          Готово
+        </BottomSheetPrimaryAction>
+      </div>
     </div>
   );
 }

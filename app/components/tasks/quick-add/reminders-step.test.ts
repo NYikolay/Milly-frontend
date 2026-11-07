@@ -43,6 +43,13 @@ describe("RemindersStep", () => {
     expect(html).not.toContain("Каждый день");
   });
 
+  it("fills the expanded sheet and pins the apply action to the bottom", () => {
+    const html = render();
+
+    expect(html).toContain("flex flex-1 flex-col");
+    expect(html).toContain("mt-auto pt-[15px]");
+  });
+
   it("uses the compact pill sizes and indented helpers", () => {
     const html = render();
 

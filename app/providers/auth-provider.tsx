@@ -15,7 +15,9 @@ import {
   fetchCurrentUser,
   loginWithInitData,
   refreshAccessToken,
+  updateUserTimezone,
 } from "~/lib/auth/auth-api";
+import { getDeviceTimeZone } from "~/lib/auth/device-timezone";
 import {
   resetAuthFailureNotification,
   setAuthFailureListener,
@@ -140,10 +142,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
         const result = await bootstrapAuth({
           initData: initDataRef.current,
           budgetMs,
+          timeZone: getDeviceTimeZone(),
           login: (initData, options) =>
             loginWithInitData(initData, options),
           refresh: (options) => refreshAccessToken(options),
           fetchMe: (options) => fetchCurrentUser(options),
+          updateTimezone: (timeZone, options) =>
+            updateUserTimezone(timeZone, options),
         });
 
         if (!mountedRef.current || attempt !== bootstrapAttemptRef.current) {

@@ -56,7 +56,7 @@ export function DueStep({
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-1 flex-col">
       <Calendar
         maxDate={MAX_DATE}
         minDate={today}
@@ -102,19 +102,20 @@ export function DueStep({
           </motion.p>
         </AnimatePresence>
       </div>
-      <BottomSheetPrimaryAction
-        className="mt-[15px]"
-        disabled={!isTimeValid}
-        onClick={() =>
-          onApply({
-            date: selectedDate,
-            time: value.time,
-            isRecurring: value.isRecurring,
-          })
-        }
-      >
-        Готово
-      </BottomSheetPrimaryAction>
+      <div className="mt-auto pt-[15px]">
+        <BottomSheetPrimaryAction
+          disabled={!isTimeValid}
+          onClick={() =>
+            onApply({
+              date: selectedDate,
+              time: value.time,
+              isRecurring: value.isRecurring,
+            })
+          }
+        >
+          Готово
+        </BottomSheetPrimaryAction>
+      </div>
     </div>
   );
 }

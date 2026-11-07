@@ -84,6 +84,12 @@ describe("TodayTaskGroup", () => {
     expect(countCheckboxes(html)).toBe(2);
   });
 
+  it("pushes the expand control to the opposite edge from the title", () => {
+    const html = render();
+
+    expect(html).toContain("justify-between");
+  });
+
   it("renders the list as a rounded card with inner padding", () => {
     const html = render();
 

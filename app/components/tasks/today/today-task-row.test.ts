@@ -32,7 +32,7 @@ function project(overrides: Partial<ProjectResponse> = {}): ProjectResponse {
     id: 10,
     name: "запуск сайта",
     description: null,
-    icon: "leaf",
+    icon: "book",
     color: { id: 1, slug: "green", name: "Зелёный", hex: "#16A34A" },
     progress: { total: 0, completed: 0, remaining: 0 },
     archived_at: null,
@@ -66,7 +66,7 @@ describe("TodayTaskRow", () => {
         title: "Обсудить макет",
         project_id: 10,
         priority: "important_not_urgent",
-        recurrence: "regular",
+        series_id: 55,
       }),
       project: project(),
     });
@@ -76,7 +76,7 @@ describe("TodayTaskRow", () => {
     expect(html).toContain(
       'aria-label="Обсудить макет: отметить выполненной"',
     );
-    expect(html).toContain("leaf.svg");
+    expect(html).toContain("book.svg");
     expect(html).toContain("#16A34A");
     expect(html).toContain("запуск сайта");
     expect(html).toContain("· 11:00");
@@ -90,7 +90,7 @@ describe("TodayTaskRow", () => {
     expect(html).not.toContain("check.svg");
   });
 
-  it("renders a completed task without flag and project icon", () => {
+  it("renders a completed task without flag and with project icon", () => {
     const html = render({
       task: task({
         title: "Обсудить макет",
@@ -110,7 +110,8 @@ describe("TodayTaskRow", () => {
     expect(html).toContain("text-white");
     expect(html).toContain("text-app-text-secondary\">Обсудить макет");
     expect(html).not.toContain("flag.svg");
-    expect(html).not.toContain("leaf.svg");
+    expect(html).toContain("book.svg");
+    expect(html).toContain("#16A34A");
     expect(html).toContain("запуск сайта");
     expect(html).toContain("text-app-text-secondary\">· 11:00");
   });
@@ -118,7 +119,7 @@ describe("TodayTaskRow", () => {
   it("renders the no-project fallback", () => {
     const html = render();
 
-    expect(html).toContain("no-project.svg");
+    expect(html).toContain("file.svg");
     expect(html).toContain("Без проекта");
   });
 
@@ -137,5 +138,21 @@ describe("TodayTaskRow", () => {
     expect(bordered).toMatch(/border-b(?!-)/);
     expect(last).toContain("border-b-0");
     expect(last).not.toMatch(/border-b(?!-)/);
+  });
+
+  it("renders the recurring label based on series_id", () => {
+    const withSeries = render({ task: task({ series_id: 55 }) });
+    const withoutSeries = render({
+      task: task({ series_id: null, recurrence: "regular" }),
+    });
+
+    expect(withSeries).toContain("· Регулярные");
+    expect(withoutSeries).not.toContain("· Регулярные");
+  });
+
+  it("stretches the divider to the bottom of the row", () => {
+    const html = render();
+
+    expect(html).toContain("self-stretch");
   });
 });

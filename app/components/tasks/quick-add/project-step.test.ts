@@ -2,13 +2,17 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { ProjectStep, getProjectStepMessage } from "./project-step";
+import {
+  ProjectStep,
+  filterProjectList,
+  getProjectStepMessage,
+} from "./project-step";
 
 const project = {
   id: 10,
   name: "Личное",
   description: null,
-  icon: "leaf",
+  icon: "book",
   color: { id: 4, slug: "green", name: "Зелёный", hex: "#16A34A" },
   progress: { total: 0, completed: 0, remaining: 0 },
   archived_at: null,
@@ -37,17 +41,41 @@ describe("ProjectStep", () => {
 
     expect(html).toContain("Без проекта");
     expect(html).toContain("no-project.svg");
-    expect(html).toContain("Применить");
+    expect(html).toContain("bg-app-track");
+    expect(html).toContain("text-app-text");
+    expect(html).toContain("Готово");
     expect(html).not.toContain("Загружаем проекты…");
   });
 
-  it("renders projects with icon color and selected check", () => {
+  it("fills the expanded sheet and pins the apply action to the bottom", () => {
+    const html = render();
+
+    expect(html).toContain("flex flex-1 flex-col");
+    expect(html).toContain("mt-auto pt-[15px]");
+  });
+
+  it("renders projects with a badge and selected check", () => {
     const html = render({ projects: [project], selectedId: 10 });
 
     expect(html).toContain("Личное");
-    expect(html).toContain("leaf.svg");
-    expect(html).toContain("#16A34A");
+    expect(html).toContain("book.svg");
+    expect(html).toContain("size-7");
+    expect(html).toContain("p-[5px]");
+    expect(html).toContain("text-white");
+    expect(html).toContain("background-color:#16A34A");
+    expect(html).toContain(
+      "truncate text-[15px] leading-[1.3] text-app-text",
+    );
     expect(html).toContain('aria-checked="true"');
+    expect(html).toContain("h-[59px]");
+  });
+
+  it("renders the project search field", () => {
+    const html = render();
+
+    expect(html).toContain('placeholder="Поиск"');
+    expect(html).toContain('aria-label="Поиск проектов"');
+    expect(html).toContain("h-[45px]");
   });
 
   it("renders loading and error states", () => {
@@ -95,11 +123,19 @@ describe("ProjectStep", () => {
     expect(html).toContain("Без проекта");
   });
 
-  it("draws dividers between rows but not after the last row", () => {
-    expect(render()).not.toContain("border-b border-app-stroke");
+  it("draws a divider after every row", () => {
+    expect(render().match(/border-b border-app-stroke/g)).toHaveLength(1);
 
     const html = render({ projects: [project] });
 
-    expect(html.match(/border-b border-app-stroke/g)).toHaveLength(1);
+    expect(html.match(/border-b border-app-stroke/g)).toHaveLength(2);
+  });
+
+  it("filters real projects by name but never filters the no-project row", () => {
+    expect(filterProjectList([project], "лич")).toHaveLength(1);
+    expect(filterProjectList([project], "ЛИЧ")).toHaveLength(1);
+    expect(filterProjectList([project], "дом")).toHaveLength(0);
+    expect(filterProjectList([project], "  ")).toHaveLength(1);
+    expect(render()).toContain("Без проекта");
   });
 });

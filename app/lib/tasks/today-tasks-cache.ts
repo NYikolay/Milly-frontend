@@ -9,6 +9,10 @@ export function todayTasksQueryKey(timeZone: string, date: string) {
   return ["tasks", "today", timeZone, date] as const;
 }
 
+export function todayProgressQueryKey(timeZone: string, date: string) {
+  return ["tasks", "today", "progress", timeZone, date] as const;
+}
+
 export function applyTaskCompletion(
   data: TodayTasksData | undefined,
   taskId: number,

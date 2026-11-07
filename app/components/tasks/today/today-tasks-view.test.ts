@@ -60,7 +60,7 @@ function project(overrides: Partial<ProjectResponse> = {}): ProjectResponse {
     id: 10,
     name: "запуск сайта",
     description: null,
-    icon: "leaf",
+    icon: "book",
     color: { id: 1, slug: "green", name: "Зелёный", hex: "#16A34A" },
     progress: { total: 0, completed: 0, remaining: 0 },
     archived_at: null,
@@ -85,16 +85,13 @@ function renderView(
       pendingTaskId: null,
       completionError: null,
       onToggleTask: () => {},
-      onVoice: () => {},
-      onInteractive: () => {},
-      onSearch: () => {},
       ...overrides,
     }),
   );
 }
 
 describe("TodayTasksView", () => {
-  it("renders the default state with both groups and no search card", () => {
+  it("renders the default state with both groups and no quick access blocks", () => {
     const html = renderView({
       tasks: [...plannedTasks(3), ...completedTasks(2)],
       progress: progress(5, 2),
@@ -106,9 +103,9 @@ describe("TodayTasksView", () => {
     expect(html).toContain("2 из 5 задач выполнено");
     expect(html).toContain("В планах");
     expect(html).toContain("Выполнено");
-    expect(html).toContain("Создать задачу");
-    expect(html).toContain("Голосом");
-    expect(html).toContain("Интерактивно");
+    expect(html).not.toContain("Создать задачу");
+    expect(html).not.toContain("Голосом");
+    expect(html).not.toContain("Интерактивно");
     expect(html).toContain('aria-label="Разделы задач"');
     expect(html).toContain("Сегодня");
     expect(html).not.toContain("🔍");
@@ -117,7 +114,7 @@ describe("TodayTasksView", () => {
     );
   });
 
-  it("renders the empty state with the sleeping copy and search card", () => {
+  it("renders the empty state without quick access cards", () => {
     const html = renderView();
 
     expect(html).toContain("Задач на сегодня нету 😴");
@@ -125,11 +122,14 @@ describe("TodayTasksView", () => {
     expect(html).not.toContain("Всё идёт по плану");
     expect(html).not.toContain("В планах");
     expect(html).not.toContain("Выполнено");
-    expect(html).toContain("🔍");
-    expect(html).toContain("Ищите, фильтруйте и сортируйте ваши задачи");
+    expect(html).not.toContain("Создать задачу");
+    expect(html).not.toContain("Голосом");
+    expect(html).not.toContain("Интерактивно");
+    expect(html).not.toContain("🔍");
+    expect(html).not.toContain("Ищите, фильтруйте и сортируйте ваши задачи");
   });
 
-  it("renders the completed state without planned group", () => {
+  it("renders the completed state without planned group or quick access cards", () => {
     const html = renderView({
       tasks: completedTasks(2),
       progress: progress(2, 2),
@@ -139,7 +139,10 @@ describe("TodayTasksView", () => {
     expect(html).toContain("2 из 2 задач выполнено ✌");
     expect(html).not.toContain("В планах");
     expect(html).toContain("Выполнено");
-    expect(html).toContain("🔍");
+    expect(html).not.toContain("Создать задачу");
+    expect(html).not.toContain("Голосом");
+    expect(html).not.toContain("Интерактивно");
+    expect(html).not.toContain("🔍");
   });
 
   it("renders the completion error as an alert", () => {
@@ -166,7 +169,7 @@ describe("TodayTasksView", () => {
 
     expect(html).toContain("Запуск сайта");
     expect(html).toContain("запуск сайта");
-    expect(html).toContain("leaf.svg");
+    expect(html).toContain("book.svg");
     expect(html).toContain("#16A34A");
   });
 
@@ -178,23 +181,24 @@ describe("TodayTasksView", () => {
     });
 
     expect(html).toContain("Без проекта");
-    expect(html).toContain("no-project.svg");
+    expect(html).toContain("file.svg");
   });
 });
 
 describe("TodayTasksSkeleton", () => {
-  it("renders an accessible pulsing placeholder", () => {
+  it("mirrors the tasks screen structure with shimmering blocks", () => {
     const html = renderToStaticMarkup(createElement(TodayTasksSkeleton));
 
     expect(html).toContain('aria-busy="true"');
     expect(html).toContain('aria-label="Загружаем задачи"');
-    expect(html).toContain("animate-pulse");
-    expect(html).toContain("h-[50px] rounded-[36px] bg-app-card");
-    expect(html).toContain("mt-[15px] h-[29px] w-2/3 rounded bg-app-card");
-    expect(html).toContain("h-[18px] w-1/3 rounded bg-app-card");
-    expect(html).toContain("h-[89px] rounded-[25px] bg-app-card");
-    expect(html).toContain("h-[231px] rounded-[25px] bg-app-card");
-    expect(html).toContain("h-[164px] rounded-[25px] bg-app-card");
+    expect(html).toContain("skeleton-shimmer");
+    expect(html).toContain("h-[50px] rounded-[36px]");
+    expect(html).toContain("h-[29px]");
+    expect(html).toContain("h-[18px]");
+    expect(html).toContain("h-[24px]");
+    expect(html).toContain("min-h-[67px]");
+    expect(html).not.toContain("min-h-[165px]");
+    expect(html).toContain("rounded-[25px] bg-app-card p-[15px]");
   });
 
   it("does not expose any task data", () => {
@@ -203,6 +207,8 @@ describe("TodayTasksSkeleton", () => {
     expect(html).not.toContain("В планах");
     expect(html).not.toContain("Выполнено");
     expect(html).not.toContain("Сегодня");
+    expect(html).not.toContain("Создать задачу");
+    expect(html).not.toContain("Голосом");
   });
 });
 

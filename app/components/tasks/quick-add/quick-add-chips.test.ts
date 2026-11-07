@@ -2,6 +2,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+import type { LabelResponse } from "~/lib/labels/types";
 import type { ProjectResponse } from "~/lib/projects/types";
 
 import { QuickAddChips } from "./quick-add-chips";
@@ -11,12 +12,20 @@ const projectFixture: ProjectResponse = {
   id: 10,
   name: "Личное",
   description: null,
-  icon: "leaf",
+  icon: "book",
   color: { id: 4, slug: "green", name: "Зелёный", hex: "#16A34A" },
   progress: { total: 0, completed: 0, remaining: 0 },
   archived_at: null,
   created_at: "2026-11-06T09:00:00Z",
   updated_at: "2026-11-06T09:00:00Z",
+};
+
+const labelFixture: LabelResponse = {
+  id: 3,
+  name: "Личное",
+  color: { id: 4, slug: "green", name: "Зелёный", hex: "#16A34A" },
+  created_at: "2026-11-05T09:00:00Z",
+  updated_at: "2026-11-05T09:00:00Z",
 };
 
 function render(overrides: Partial<QuickAddChipsProps> = {}) {
@@ -57,18 +66,24 @@ describe("QuickAddChips", () => {
 
     expect(html).toContain("Без проекта");
     expect(html).toContain("no-project.svg");
+    expect(html).toContain("bg-app-track");
+    expect(html).toContain("text-app-text");
+    expect(html).toContain("size-7");
+    expect(html).not.toContain("file.svg");
     expect(html.indexOf("Выбрать метки")).toBeLessThan(
       html.indexOf("Выбрать проект"),
     );
   });
 
-  it("renders the selected project name and icon color", () => {
+  it("renders the selected project name and badge", () => {
     const html = render({ project: projectFixture });
 
     expect(html).toContain("Личное");
     expect(html).toContain('aria-label="Проект: Личное"');
-    expect(html).toContain("leaf.svg");
-    expect(html).toContain("#16A34A");
+    expect(html).toContain("book.svg");
+    expect(html).toContain("size-7");
+    expect(html).toContain("text-white");
+    expect(html).toContain("background-color:#16A34A");
     expect(html).not.toContain("Без проекта");
   });
 
@@ -78,6 +93,16 @@ describe("QuickAddChips", () => {
     expect(html.indexOf('aria-label="Проект: Личное"')).toBeLessThan(
       html.indexOf('aria-label="Приоритет задачи"'),
     );
+  });
+
+  it("keeps the existing tag icon in the selected labels chip", () => {
+    const html = render({
+      labels: [labelFixture],
+      selectedLabelIds: [3],
+    });
+
+    expect(html).toContain("tag.svg");
+    expect(html).not.toContain("tag-raw.svg");
   });
 
   it("uses the home menu spacing and compact icons", () => {

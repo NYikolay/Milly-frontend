@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 
-import { BottomSheet, BottomSheetAction } from "~/components/ui/bottom-sheet";
+import { BottomSheet } from "~/components/ui/bottom-sheet";
 import type { LabelResponse } from "~/lib/labels/types";
 import type { ProjectResponse } from "~/lib/projects/types";
 import type { QuickTaskDraft } from "~/lib/tasks/quick-task-schema";
@@ -58,7 +58,7 @@ export function QuickAddDetailSheet({
   return (
     <BottomSheet
       bodyClassName="p-[15px]"
-      footer={<BottomSheetAction onClick={onClose}>Закрыть</BottomSheetAction>}
+      expanded
       onOpenChange={(open) => {
         if (!open) {
           onClose();
@@ -66,6 +66,8 @@ export function QuickAddDetailSheet({
       }}
       open={step !== null}
       panelAnimateLayout
+      showCloseButton
+      swipeToClose
       title={step ? getQuickAddHeader(step).title : ""}
     >
       {step === "labels" ? (

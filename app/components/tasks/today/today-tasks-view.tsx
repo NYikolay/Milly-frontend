@@ -11,12 +11,10 @@ import {
   COMPLETED_PREVIEW_LIMIT,
   PLANNED_PREVIEW_LIMIT,
   getTodayTasksState,
-  shouldShowSearchCard,
   splitTodayTasks,
 } from "~/lib/tasks/today-tasks";
 import type { TaskResponse, TodayProgressResponse } from "~/lib/tasks/types";
 
-import { CreateTaskSection } from "./create-task-section";
 import { TodayHeader } from "./today-header";
 import { TodayProgressCard } from "./today-progress-card";
 import { TodayTaskGroup } from "./today-task-group";
@@ -38,9 +36,6 @@ export interface TodayTasksViewProps {
   pendingTaskId: number | null;
   completionError: string | null;
   onToggleTask: (task: TaskResponse, nextCompleted: boolean) => void;
-  onVoice: () => void;
-  onInteractive: () => void;
-  onSearch: () => void;
 }
 
 export function TodayTasksView({
@@ -54,9 +49,6 @@ export function TodayTasksView({
   pendingTaskId,
   completionError,
   onToggleTask,
-  onVoice,
-  onInteractive,
-  onSearch,
 }: TodayTasksViewProps): ReactElement {
   const { planned, completed } = splitTodayTasks(tasks);
   const state = getTodayTasksState(progress.total, progress.completed);
@@ -67,7 +59,6 @@ export function TodayTasksView({
     projects.map((project) => [project.id, project]),
   );
   const showProgress = state !== "empty";
-  const showSearchCard = shouldShowSearchCard(planned.length);
 
   return (
     <div className="flex flex-1 flex-col gap-2">
@@ -123,12 +114,6 @@ export function TodayTasksView({
           title="Выполнено"
         />
       ) : null}
-      <CreateTaskSection
-        onInteractive={onInteractive}
-        onSearch={onSearch}
-        onVoice={onVoice}
-        showSearchCard={showSearchCard}
-      />
     </div>
   );
 }

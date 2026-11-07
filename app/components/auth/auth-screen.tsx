@@ -7,8 +7,6 @@ import { useTelegram } from "~/providers/telegram-provider";
 
 const CONTAINER_CLASSES =
   "flex min-h-full w-full flex-1 flex-col items-center justify-center px-[25px] py-[24px]";
-const BOOT_CONTAINER_CLASSES =
-  "flex min-h-full w-full flex-1 flex-col items-center justify-center";
 const CARD_CLASSES =
   "flex w-full max-w-[362px] flex-col items-center gap-[20px] rounded-[25px] bg-app-card px-[15px] py-[30px] text-center";
 const TEXT_BLOCK_CLASSES = "flex w-full flex-col items-center gap-[15px]";
@@ -21,12 +19,10 @@ const BUTTON_CLASSES =
   "flex h-[50px] w-full items-center justify-center rounded-[25px] bg-app-accent text-[15px] font-semibold text-white active:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-accent";
 
 export interface AuthScreenProps {
-  status: Exclude<AuthStatus, "authenticated">;
+  status: Exclude<AuthStatus, "authenticated" | "booting">;
   reason: AuthFailureReason | null;
   onRetry: () => void;
 }
-
-type AuthScreenErrorStatus = Exclude<AuthScreenProps["status"], "booting">;
 
 interface AuthScreenCopy {
   title: string;
@@ -34,7 +30,7 @@ interface AuthScreenCopy {
 }
 
 function getCopy(
-  status: AuthScreenErrorStatus,
+  status: AuthScreenProps["status"],
   reason: AuthFailureReason | null,
 ): AuthScreenCopy {
   switch (status) {
@@ -72,30 +68,9 @@ export function AuthScreen({ status, reason, onRetry }: AuthScreenProps) {
   const hintId = useId();
   const titleRef = useRef<HTMLHeadingElement>(null);
 
-  const isBooting = status === "booting";
-
   useEffect(() => {
-    if (!isBooting) {
-      titleRef.current?.focus();
-    }
-  }, [isBooting]);
-
-  if (status === "booting") {
-    return (
-      <main className={BOOT_CONTAINER_CLASSES}>
-        <div
-          className="flex flex-col items-center"
-          role="status"
-          aria-live="polite"
-          aria-busy="true"
-        >
-          <img src={logoIcon} alt="" className="h-[100px] w-[100px]" />
-          <h1 className="sr-only">Milly</h1>
-          <p className="sr-only">Проверяем вход…</p>
-        </div>
-      </main>
-    );
-  }
+    titleRef.current?.focus();
+  }, []);
 
   const hasBot = getBotUsername() !== null;
   const showHint = status === "no-init-data" && !hasBot;

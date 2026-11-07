@@ -22,6 +22,19 @@ describe("PriorityStep", () => {
     expect(html).toContain("Применить");
   });
 
+  it("fills the expanded sheet and pins the apply action to the bottom", () => {
+    const html = renderToStaticMarkup(
+      createElement(PriorityStep, {
+        value: "important_not_urgent",
+        onChange: () => {},
+        onApply: () => {},
+      }),
+    );
+
+    expect(html).toContain("flex flex-1 flex-col");
+    expect(html).toContain("mt-auto pt-[15px]");
+  });
+
   it("uses a 15px gap and draws dividers only under the text", () => {
     const html = renderToStaticMarkup(
       createElement(PriorityStep, {

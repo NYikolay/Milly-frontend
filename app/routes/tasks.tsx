@@ -3,10 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 
 import { BottomNavigationDock } from "~/components/home/bottom-navigation-dock";
+import { AddTaskButton } from "~/components/tasks/today/add-task-button";
 import { TodayTasksError } from "~/components/tasks/today/today-tasks-error";
 import { TodayTasksSkeleton } from "~/components/tasks/today/today-tasks-skeleton";
 import { TodayTasksView } from "~/components/tasks/today/today-tasks-view";
-import { VoiceRecorderSheet } from "~/components/voice/voice-recorder-sheet";
 import { useBottomNavigation } from "~/hooks/use-bottom-navigation";
 import {
   useTodayTasksData,
@@ -40,7 +40,6 @@ export default function Tasks() {
     planned: false,
     completed: false,
   });
-  const [activeModal, setActiveModal] = useState<"voice" | null>(null);
 
   const overviewQuery = useTodayTasksData(timeZone, today);
   const projectsQuery = useQuery({
@@ -64,13 +63,18 @@ export default function Tasks() {
     toggleMutation.mutate({ taskId: task.id, nextCompleted });
   }
 
+  function handleAddTask() {
+    haptics.selection();
+    void navigate("/");
+  }
+
   return (
     <main className="flex flex-1 flex-col">
       <div
         className="flex flex-1 flex-col gap-2 px-4"
         style={{
           paddingBottom:
-            "calc(89px + max(0px, 30px - var(--app-inset-bottom)))",
+            "calc(145px + max(0px, 30px - var(--app-inset-bottom)))",
         }}
       >
         {overviewQuery.isPending ? (
@@ -85,11 +89,6 @@ export default function Tasks() {
             completionError={completionError}
             expanded={expanded}
             now={now}
-            onInteractive={() => {
-              haptics.selection();
-              void navigate("/");
-            }}
-            onSearch={() => haptics.selection()}
             onToggleExpanded={(group) => {
               haptics.selection();
               setExpanded((current) => ({
@@ -98,10 +97,6 @@ export default function Tasks() {
               }));
             }}
             onToggleTask={handleToggleTask}
-            onVoice={() => {
-              haptics.impact("light");
-              setActiveModal("voice");
-            }}
             pendingTaskId={pendingTaskId}
             progress={overview.progress}
             projects={projectsQuery.data ?? []}
@@ -111,12 +106,8 @@ export default function Tasks() {
         )}
       </div>
 
+      <AddTaskButton onClick={handleAddTask} />
       <BottomNavigationDock active="tasks" onSelect={onSelectTab} />
-
-      <VoiceRecorderSheet
-        open={activeModal === "voice"}
-        onOpenChange={(open) => setActiveModal(open ? "voice" : null)}
-      />
     </main>
   );
 }

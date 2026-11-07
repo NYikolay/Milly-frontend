@@ -1,16 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { getProjectIcon } from "./project-icons";
+import { getProjectIcon, NO_PROJECT_ICON } from "./project-icons";
 
-describe("getProjectIcon", () => {
+describe("project icons", () => {
   it("maps a known icon name to the projects-icons asset", () => {
-    expect(getProjectIcon("leaf")).toContain("leaf.svg");
+    expect(getProjectIcon("book")).toContain("book.svg");
+    expect(getProjectIcon("file-music")).toContain("file-music.svg");
   });
 
-  it("falls back to no-project for empty and unknown icons", () => {
-    const fallback = getProjectIcon(null);
-    expect(fallback).toContain("no-project.svg");
-    expect(getProjectIcon("")).toBe(fallback);
-    expect(getProjectIcon("missing-icon")).toBe(fallback);
+  it("exposes the no-project asset separately from the fallback", () => {
+    expect(NO_PROJECT_ICON).toContain("no-project.svg");
+    expect(getProjectIcon(null)).toContain("file.svg");
+    expect(getProjectIcon("")).toBe(getProjectIcon(null));
+    expect(getProjectIcon("missing-icon")).toBe(getProjectIcon(null));
   });
 });

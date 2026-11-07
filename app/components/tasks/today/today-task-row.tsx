@@ -64,7 +64,7 @@ export function TodayTaskRow({
       </button>
       <div
         className={cn(
-          "flex min-w-0 flex-1 items-center gap-[12px] border-app-stroke",
+          "flex min-w-0 flex-1 items-center gap-[12px] self-stretch border-app-stroke",
           isLast ? "border-b-0" : "border-b",
         )}
       >
@@ -78,17 +78,15 @@ export function TodayTaskRow({
             {task.title}
           </span>
           <div className="flex min-w-0 items-center gap-[5px] text-[12px] leading-[1.4] text-app-text-secondary">
-            {!completed ? (
-              <span
-                className="shrink-0"
-                style={project ? { color: project.color.hex } : undefined}
-              >
-                <AssetIcon
-                  className="size-[15px]"
-                  src={getProjectIcon(project?.icon ?? null)}
-                />
-              </span>
-            ) : null}
+            <span
+              className="shrink-0"
+              style={project ? { color: project.color.hex } : undefined}
+            >
+              <AssetIcon
+                className="size-[15px]"
+                src={getProjectIcon(project?.icon ?? null)}
+              />
+            </span>
             <span className="truncate">{project?.name ?? "Без проекта"}</span>
             <span
               className={cn(
@@ -98,7 +96,7 @@ export function TodayTaskRow({
             >
               · {formatZonedTime(task.due_at, timeZone)}
             </span>
-            {task.recurrence !== "one_off" ? (
+            {task.series_id !== null ? (
               <span className="shrink-0">· Регулярные</span>
             ) : null}
           </div>

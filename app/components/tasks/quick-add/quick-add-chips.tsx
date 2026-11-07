@@ -3,16 +3,20 @@ import type { ReactElement, Ref } from "react";
 import calendarIcon from "~/assets/icons/calendar.svg?no-inline";
 import repeatIcon from "~/assets/icons/repeat.svg";
 import tagPlusIcon from "~/assets/icons/tag-plus.svg";
-import tagIcon from "~/assets/icons/tag.svg";
+import tagIcon from "~/assets/icons/tag.svg?no-inline";
 import { AssetIcon } from "~/components/ui/asset-icon";
 import { OptionChip } from "~/components/ui/option-chip";
 import type { LabelResponse } from "~/lib/labels/types";
-import { getProjectIcon } from "~/lib/projects/project-icons";
+import {
+  getProjectIcon,
+  NO_PROJECT_ICON,
+} from "~/lib/projects/project-icons";
 import type { ProjectResponse } from "~/lib/projects/types";
 import { formatDueChip } from "~/lib/tasks/date-time";
 import { priorityShortLabel } from "~/lib/tasks/priority";
 import type { Priority } from "~/lib/tasks/types";
 
+import { ProjectIconBadge } from "./project-icon-badge";
 import type { QuickAddStep } from "./quick-add-step";
 
 export type QuickAddChipStep = QuickAddStep;
@@ -101,12 +105,10 @@ export function QuickAddChips({
         ariaLabel={project ? `Проект: ${project.name}` : "Выбрать проект"}
         buttonRef={chipRefs?.project}
         icon={
-          <span style={project ? { color: project.color.hex } : undefined}>
-            <AssetIcon
-              className="size-[18px]"
-              src={getProjectIcon(project?.icon ?? null)}
-            />
-          </span>
+          <ProjectIconBadge
+            colorHex={project ? project.color.hex : null}
+            icon={project ? getProjectIcon(project.icon) : NO_PROJECT_ICON}
+          />
         }
         label={project?.name ?? "Без проекта"}
         onClick={() => onOpenStep("project")}

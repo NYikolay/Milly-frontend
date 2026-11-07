@@ -8,6 +8,7 @@ import {
 
 import {
   applyTaskCompletion,
+  todayProgressQueryKey,
   todayTasksQueryKey,
   type TodayTasksData,
 } from "~/lib/tasks/today-tasks-cache";
@@ -37,6 +38,13 @@ export function useTodayTasksData(timeZone: string, date: string) {
   return useQuery({
     queryKey: todayTasksQueryKey(timeZone, date),
     queryFn: ({ signal }) => fetchTodayTasks(date, signal),
+  });
+}
+
+export function useTodayProgress(timeZone: string, date: string) {
+  return useQuery({
+    queryKey: todayProgressQueryKey(timeZone, date),
+    queryFn: ({ signal }) => fetchTodayProgress(signal),
   });
 }
 

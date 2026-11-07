@@ -2,8 +2,8 @@ import type { TaskResponse } from "./types";
 
 export type TodayTasksState = "default" | "empty" | "completed";
 
-export const PLANNED_PREVIEW_LIMIT = 3;
-export const COMPLETED_PREVIEW_LIMIT = 2;
+export const PLANNED_PREVIEW_LIMIT = 4;
+export const COMPLETED_PREVIEW_LIMIT = 4;
 
 export function getTodayTasksState(
   total: number,
@@ -51,8 +51,4 @@ export function getVisibleTasks(
   expanded: boolean,
 ): TaskResponse[] {
   return expanded ? tasks : tasks.slice(0, limit);
-}
-
-export function shouldShowSearchCard(plannedCount: number): boolean {
-  return plannedCount === 0;
 }

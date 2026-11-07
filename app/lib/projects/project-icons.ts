@@ -1,50 +1,56 @@
-import brandGithubIcon from "~/assets/icons/projects-icons/brand-github.svg?no-inline";
-import brandYoutubeIcon from "~/assets/icons/projects-icons/brand-youtube.svg?no-inline";
-import briefcaseBusinessIcon from "~/assets/icons/projects-icons/briefcase-business.svg?no-inline";
-import buildingSkyscraperIcon from "~/assets/icons/projects-icons/building-skyscraper.svg?no-inline";
-import buildingStoreIcon from "~/assets/icons/projects-icons/building-store.svg?no-inline";
-import bulbIcon from "~/assets/icons/projects-icons/bulb.svg?no-inline";
-import deviceMobileIcon from "~/assets/icons/projects-icons/device-mobile.svg?no-inline";
+import bookIcon from "~/assets/icons/projects-icons/book.svg?no-inline";
+import bookmarkIcon from "~/assets/icons/projects-icons/bookmark.svg?no-inline";
+import briefcaseIcon from "~/assets/icons/projects-icons/briefcase.svg?no-inline";
+import cakeIcon from "~/assets/icons/projects-icons/cake.svg?no-inline";
+import calendarIcon from "~/assets/icons/projects-icons/calendar.svg?no-inline";
+import campfireIcon from "~/assets/icons/projects-icons/campfire.svg?no-inline";
+import cashBanknoteIcon from "~/assets/icons/projects-icons/cash-banknote.svg?no-inline";
+import creditCardIcon from "~/assets/icons/projects-icons/credit-card.svg?no-inline";
+import deviceDesktopIcon from "~/assets/icons/projects-icons/device-desktop.svg?no-inline";
+import fileIcon from "~/assets/icons/projects-icons/file.svg?no-inline";
+import fileMusicIcon from "~/assets/icons/projects-icons/file-music.svg?no-inline";
 import flameIcon from "~/assets/icons/projects-icons/flame.svg?no-inline";
-import homeIcon from "~/assets/icons/projects-icons/home.svg?no-inline";
-import leafIcon from "~/assets/icons/projects-icons/leaf.svg?no-inline";
-import listDetailsIcon from "~/assets/icons/projects-icons/list-details.svg?no-inline";
+import giftIcon from "~/assets/icons/projects-icons/gift.svg?no-inline";
+import listIcon from "~/assets/icons/projects-icons/list.svg?no-inline";
+import messageCircleIcon from "~/assets/icons/projects-icons/message-circle.svg?no-inline";
+import moonIcon from "~/assets/icons/projects-icons/moon.svg?no-inline";
 import noProjectIcon from "~/assets/icons/projects-icons/no-project.svg?no-inline";
 import paletteIcon from "~/assets/icons/projects-icons/palette.svg?no-inline";
-import phoneIcon from "~/assets/icons/projects-icons/phone.svg?no-inline";
-import photoIcon from "~/assets/icons/projects-icons/photo.svg?no-inline";
-import rocketIcon from "~/assets/icons/projects-icons/rocket.svg?no-inline";
-import snailIcon from "~/assets/icons/projects-icons/snail.svg?no-inline";
-import targetArrowIcon from "~/assets/icons/projects-icons/target-arrow.svg?no-inline";
+import pillIcon from "~/assets/icons/projects-icons/pill.svg?no-inline";
+import planeIcon from "~/assets/icons/projects-icons/plane.svg?no-inline";
+import schoolIcon from "~/assets/icons/projects-icons/school.svg?no-inline";
+import sunIcon from "~/assets/icons/projects-icons/sun.svg?no-inline";
+
+export const NO_PROJECT_ICON: string = noProjectIcon;
 
 const PROJECT_ICONS: Readonly<Record<string, string>> = {
-  "brand-github": brandGithubIcon,
-  "brand-youtube": brandYoutubeIcon,
-  "briefcase-business": briefcaseBusinessIcon,
-  "building-skyscraper": buildingSkyscraperIcon,
-  "building-store": buildingStoreIcon,
-  bulb: bulbIcon,
-  "device-mobile": deviceMobileIcon,
+  book: bookIcon,
+  bookmark: bookmarkIcon,
+  briefcase: briefcaseIcon,
+  cake: cakeIcon,
+  calendar: calendarIcon,
+  campfire: campfireIcon,
+  "cash-banknote": cashBanknoteIcon,
+  "credit-card": creditCardIcon,
+  "device-desktop": deviceDesktopIcon,
+  file: fileIcon,
+  "file-music": fileMusicIcon,
   flame: flameIcon,
-  home: homeIcon,
-  leaf: leafIcon,
-  "list-details": listDetailsIcon,
-  "no-project": noProjectIcon,
+  gift: giftIcon,
+  list: listIcon,
+  "message-circle": messageCircleIcon,
+  moon: moonIcon,
   palette: paletteIcon,
-  phone: phoneIcon,
-  photo: photoIcon,
-  rocket: rocketIcon,
-  snail: snailIcon,
-  "target-arrow": targetArrowIcon,
+  pill: pillIcon,
+  plane: planeIcon,
+  school: schoolIcon,
+  sun: sunIcon,
 };
 
 export function getProjectIcon(icon: string | null): string {
-  if (
-    icon !== null &&
-    Object.prototype.hasOwnProperty.call(PROJECT_ICONS, icon)
-  ) {
+  if (icon !== null && Object.hasOwn(PROJECT_ICONS, icon)) {
     return PROJECT_ICONS[icon];
   }
 
-  return PROJECT_ICONS["no-project"];
+  return PROJECT_ICONS.file;
 }

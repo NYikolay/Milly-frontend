@@ -35,4 +35,29 @@ describe("SheetHeader", () => {
     expect(html).toContain('aria-label="Назад"');
     expect(html).not.toContain('aria-label="Закрыть"');
   });
+
+  it("renders the close button when onClose is provided", () => {
+    const html = renderToStaticMarkup(
+      createElement(SheetHeader, {
+        titleId: "title",
+        title: "Дата и время задачи",
+        onClose: noop,
+      }),
+    );
+
+    expect(html).toContain('aria-label="Закрыть"');
+    expect(html).not.toContain('aria-label="Назад"');
+  });
+
+  it("disables touch actions on the header when a drag handler is provided", () => {
+    const html = renderToStaticMarkup(
+      createElement(SheetHeader, {
+        titleId: "title",
+        title: "Дата и время задачи",
+        onPointerDown: noop,
+      }),
+    );
+
+    expect(html).toContain("touch-action:none");
+  });
 });

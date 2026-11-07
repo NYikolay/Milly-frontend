@@ -3,14 +3,16 @@ import type { FocusEvent } from "react";
 
 import { BottomNavigationDock } from "~/components/home/bottom-navigation-dock";
 import { DailyProgressCard } from "~/components/home/daily-progress-card";
+import type { DailyProgressCardStatus } from "~/components/home/daily-progress-card";
 import { FaqSection } from "~/components/home/faq-section";
 import { HomeHeader } from "~/components/home/home-header";
 import { QuickAddComposer } from "~/components/tasks/quick-add/quick-add-composer";
 import { VoiceRecorderSheet } from "~/components/voice/voice-recorder-sheet";
 import { useBottomNavigation } from "~/hooks/use-bottom-navigation";
+import { useTodayProgress } from "~/hooks/use-today-tasks";
 import { ApiError } from "~/lib/api/errors";
 import { throwAppError } from "~/lib/errors/route-error";
-import { getDailyTasksSummary } from "~/lib/tasks/daily-tasks";
+import { formatZonedToday } from "~/lib/tasks/date-time";
 import { useAuth } from "~/providers/auth-provider";
 import { useTelegram } from "~/providers/telegram-provider";
 import type { Route } from "./+types/home";
@@ -22,7 +24,7 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export async function loader({ request }: Route.LoaderArgs) {
+export function loader({ request }: Route.LoaderArgs) {
   const state = new URL(request.url).searchParams.get("state");
   const emptyPreview = state === "empty";
 
@@ -48,11 +50,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     }
   }
 
-  const summary = emptyPreview
-    ? { total: 0, completed: 0 }
-    : await getDailyTasksSummary();
-
-  return { summary };
+  return { emptyPreview };
 }
 
 function isTextEntry(target: EventTarget | null): boolean {
@@ -68,7 +66,19 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const onSelectTab = useBottomNavigation();
   const [activeModal, setActiveModal] = useState<"voice" | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const { summary } = loaderData;
+  const { emptyPreview } = loaderData;
+  const timeZone = authUser?.timezone ?? "UTC";
+  const today = formatZonedToday(new Date(), timeZone);
+  const progressQuery = useTodayProgress(timeZone, today);
+  const summary = emptyPreview
+    ? { total: 0, completed: 0 }
+    : progressQuery.data;
+  const progressStatus: DailyProgressCardStatus =
+    summary !== undefined
+      ? "ready"
+      : progressQuery.isError
+        ? "error"
+        : "loading";
   const profile = authUser?.telegram_profile;
   const firstName = profile?.first_name || telegramUser?.first_name;
   const photoUrl = profile?.photo_url || telegramUser?.photo_url || null;
@@ -101,9 +111,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       >
         <HomeHeader greeting={greeting} />
         <DailyProgressCard
-          completed={summary.completed}
-          total={summary.total}
+          completed={summary?.completed ?? 0}
+          total={summary?.total ?? 0}
           photoUrl={photoUrl}
+          status={progressStatus}
           onOpen={() => haptics.selection()}
         />
         <QuickAddComposer
