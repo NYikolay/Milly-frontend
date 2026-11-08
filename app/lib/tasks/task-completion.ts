@@ -48,21 +48,6 @@ export interface CreateTaskCompletionMutationOptionsParams<TData> {
   ) => TData | undefined;
 }
 
-function writeQueryData<TData>(
-  queryClient: QueryClient,
-  queryKey: QueryKey,
-  data: TData | undefined,
-): void {
-  const query = queryClient.getQueryCache().find({ queryKey, exact: true });
-
-  if (query) {
-    query.setState({ data });
-    return;
-  }
-
-  queryClient.setQueryData(queryKey, data);
-}
-
 export function createTaskCompletionMutationOptions<TData>({
   queryClient,
   haptics,
@@ -90,16 +75,14 @@ export function createTaskCompletionMutationOptions<TData>({
     },
     onError: (_error, _variables, context) => {
       if (context?.previous !== undefined) {
-        writeQueryData(queryClient, queryKey, context.previous);
+        queryClient.setQueryData(queryKey, context.previous);
       }
       haptics.notification("error");
     },
     onSuccess: (updatedTask) => {
       haptics.notification("success");
-      writeQueryData(
-        queryClient,
-        queryKey,
-        applySuccess(queryClient.getQueryData<TData>(queryKey), updatedTask),
+      queryClient.setQueryData<TData>(queryKey, (data) =>
+        applySuccess(data, updatedTask),
       );
     },
     onSettled: () => {

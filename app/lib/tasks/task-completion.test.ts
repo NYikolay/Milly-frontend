@@ -95,7 +95,7 @@ describe("createTaskCompletionMutationOptions", () => {
       context,
     );
 
-    expect(queryClient.getQueryData(queryKey)).toBe(data);
+    expect(queryClient.getQueryData(queryKey)).toEqual(data);
     expect(haptics.notification).toHaveBeenCalledWith("error");
   });
 
@@ -107,7 +107,7 @@ describe("createTaskCompletionMutationOptions", () => {
 
     options.onSuccess(updated);
 
-    expect(queryClient.getQueryData<ListData>(queryKey)?.items[0]).toBe(
+    expect(queryClient.getQueryData<ListData>(queryKey)?.items[0]).toEqual(
       updated,
     );
     expect(haptics.notification).toHaveBeenCalledWith("success");
