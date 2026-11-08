@@ -12,11 +12,12 @@ import {
   taskDetailQueryKey,
 } from "~/lib/tasks/task-detail-cache";
 import {
-  completeTask,
-  deleteTask,
-  fetchTask,
-  uncompleteTask,
-} from "~/lib/tasks/tasks-api";
+  createTaskCompletionMutationOptions,
+  type TaskCompletionMutationContext,
+  type TaskCompletionMutationOptions,
+  type TaskCompletionVariables,
+} from "~/lib/tasks/task-completion";
+import { deleteTask, fetchTask } from "~/lib/tasks/tasks-api";
 import type { TaskResponse } from "~/lib/tasks/types";
 import type { TelegramHaptics } from "~/providers/telegram-provider";
 import { useTelegram } from "~/providers/telegram-provider";
@@ -29,28 +30,11 @@ export function useTaskDetail(taskId: number, enabled: boolean) {
   });
 }
 
-export interface ToggleTaskDetailVariables {
-  taskId: number;
-  nextCompleted: boolean;
-}
-
-export interface ToggleTaskDetailContext {
-  previous: TaskResponse | undefined;
-}
-
-export interface ToggleTaskDetailMutationOptions {
-  mutationFn: (variables: ToggleTaskDetailVariables) => Promise<TaskResponse>;
-  onMutate: (
-    variables: ToggleTaskDetailVariables,
-  ) => Promise<ToggleTaskDetailContext>;
-  onError: (
-    error: Error,
-    variables: ToggleTaskDetailVariables,
-    context: ToggleTaskDetailContext | undefined,
-  ) => void;
-  onSuccess: (updatedTask: TaskResponse) => void;
-  onSettled: () => void;
-}
+export type ToggleTaskDetailVariables = TaskCompletionVariables;
+export type ToggleTaskDetailContext =
+  TaskCompletionMutationContext<TaskResponse>;
+export type ToggleTaskDetailMutationOptions =
+  TaskCompletionMutationOptions<TaskResponse>;
 
 export function createToggleTaskDetailMutationOptions({
   queryClient,
@@ -63,38 +47,14 @@ export function createToggleTaskDetailMutationOptions({
 }): ToggleTaskDetailMutationOptions {
   const queryKey = taskDetailQueryKey(taskId);
 
-  return {
-    mutationFn: ({ nextCompleted }) =>
-      nextCompleted ? completeTask(taskId) : uncompleteTask(taskId),
-    onMutate: async ({ nextCompleted }) => {
-      haptics.selection();
-      await queryClient.cancelQueries({ queryKey });
-      const previous = queryClient.getQueryData<TaskResponse>(queryKey);
-
-      queryClient.setQueryData<TaskResponse>(queryKey, (current) =>
-        applyTaskDetailCompletion(
-          current,
-          nextCompleted ? new Date().toISOString() : null,
-        ),
-      );
-
-      return { previous };
-    },
-    onError: (_error, _variables, context) => {
-      if (context?.previous !== undefined) {
-        queryClient.setQueryData(queryKey, context.previous);
-      }
-      haptics.notification("error");
-    },
-    onSuccess: (updatedTask) => {
-      haptics.notification("success");
-      queryClient.setQueryData<TaskResponse>(queryKey, updatedTask);
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      void queryClient.invalidateQueries({ queryKey: PROJECTS_QUERY_KEY });
-    },
-  };
+  return createTaskCompletionMutationOptions<TaskResponse>({
+    queryClient,
+    haptics,
+    queryKey,
+    applyOptimistic: (data, _taskId, completedAt) =>
+      applyTaskDetailCompletion(data, completedAt),
+    applySuccess: (_data, updatedTask) => updatedTask,
+  });
 }
 
 export function useToggleTaskDetailCompletion(taskId: number) {

@@ -1,26 +1,20 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  type QueryClient,
-  type QueryKey,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { PROJECTS_QUERY_KEY } from "~/lib/projects/projects-query";
+import { replaceTaskInList } from "~/lib/tasks/completion-cache";
+import {
+  createTaskCompletionMutationOptions,
+  type CreateTaskCompletionMutationOptionsParams,
+  type TaskCompletionMutationContext,
+  type TaskCompletionMutationOptions,
+  type TaskCompletionVariables,
+} from "~/lib/tasks/task-completion";
 import {
   applyTaskCompletion,
   todayProgressQueryKey,
   todayTasksQueryKey,
   type TodayTasksData,
 } from "~/lib/tasks/today-tasks-cache";
-import {
-  completeTask,
-  fetchTasks,
-  fetchTodayProgress,
-  uncompleteTask,
-} from "~/lib/tasks/tasks-api";
-import type { TaskResponse } from "~/lib/tasks/types";
-import type { TelegramHaptics } from "~/providers/telegram-provider";
+import { fetchTasks, fetchTodayProgress } from "~/lib/tasks/tasks-api";
 import { useTelegram } from "~/providers/telegram-provider";
 
 async function fetchTodayTasks(
@@ -49,84 +43,31 @@ export function useTodayProgress(timeZone: string, date: string) {
   });
 }
 
-export interface ToggleTaskCompletionVariables {
-  taskId: number;
-  nextCompleted: boolean;
-}
-
-export interface ToggleTaskMutationContext {
-  previous: TodayTasksData | undefined;
-}
-
-export interface ToggleTaskMutationOptions {
-  mutationFn: (
-    variables: ToggleTaskCompletionVariables,
-  ) => Promise<TaskResponse>;
-  onMutate: (
-    variables: ToggleTaskCompletionVariables,
-  ) => Promise<ToggleTaskMutationContext>;
-  onError: (
-    error: Error,
-    variables: ToggleTaskCompletionVariables,
-    context: ToggleTaskMutationContext | undefined,
-  ) => void;
-  onSuccess: (updatedTask: TaskResponse) => void;
-  onSettled: () => void;
-}
-
-export interface CreateToggleTaskMutationOptionsParams {
-  queryClient: QueryClient;
-  haptics: TelegramHaptics;
-  queryKey: QueryKey;
-}
+export type ToggleTaskCompletionVariables = TaskCompletionVariables;
+export type ToggleTaskMutationContext =
+  TaskCompletionMutationContext<TodayTasksData>;
+export type ToggleTaskMutationOptions =
+  TaskCompletionMutationOptions<TodayTasksData>;
+export type CreateToggleTaskMutationOptionsParams = Pick<
+  CreateTaskCompletionMutationOptionsParams<TodayTasksData>,
+  "queryClient" | "haptics" | "queryKey"
+>;
 
 export function createToggleTaskMutationOptions({
   queryClient,
   haptics,
   queryKey,
 }: CreateToggleTaskMutationOptionsParams): ToggleTaskMutationOptions {
-  return {
-    mutationFn: ({ taskId, nextCompleted }) =>
-      nextCompleted ? completeTask(taskId) : uncompleteTask(taskId),
-    onMutate: async ({ taskId, nextCompleted }) => {
-      haptics.selection();
-      await queryClient.cancelQueries({ queryKey });
-      const previous = queryClient.getQueryData<TodayTasksData>(queryKey);
-
-      queryClient.setQueryData<TodayTasksData>(queryKey, (data) =>
-        applyTaskCompletion(
-          data,
-          taskId,
-          nextCompleted ? new Date().toISOString() : null,
-        ),
-      );
-
-      return { previous };
-    },
-    onError: (_error, _variables, context) => {
-      if (context?.previous !== undefined) {
-        queryClient.setQueryData(queryKey, context.previous);
-      }
-      haptics.notification("error");
-    },
-    onSuccess: (updatedTask) => {
-      haptics.notification("success");
-      queryClient.setQueryData<TodayTasksData>(queryKey, (data) =>
-        data
-          ? {
-              ...data,
-              tasks: data.tasks.map((task) =>
-                task.id === updatedTask.id ? updatedTask : task,
-              ),
-            }
-          : data,
-      );
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      void queryClient.invalidateQueries({ queryKey: PROJECTS_QUERY_KEY });
-    },
-  };
+  return createTaskCompletionMutationOptions<TodayTasksData>({
+    queryClient,
+    haptics,
+    queryKey,
+    applyOptimistic: applyTaskCompletion,
+    applySuccess: (data, updatedTask) =>
+      data
+        ? { ...data, tasks: replaceTaskInList(data.tasks, updatedTask) }
+        : data,
+  });
 }
 
 export function useToggleTaskCompletion(timeZone: string, date: string) {
