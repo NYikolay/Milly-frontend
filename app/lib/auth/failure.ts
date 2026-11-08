@@ -1,16 +1,10 @@
 import { ApiError, ApiNetworkError } from "~/lib/api/errors";
+import { isAbortError } from "~/lib/errors/async";
 
 import { EmptyInitDataError } from "./errors";
 import type { AuthFailure, AuthFailureReason } from "./types";
 
-export function isAbortError(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "name" in error &&
-    error.name === "AbortError"
-  );
-}
+export { isAbortError };
 
 export function classifyAuthFailure(
   error: unknown,

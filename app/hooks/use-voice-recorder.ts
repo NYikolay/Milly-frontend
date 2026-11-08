@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { isAbortError } from "~/lib/errors/async";
 import { prepareMicrophone } from "~/lib/voice/microphone";
 import { MAX_RECORDING_MS, MIN_RECORDING_MS } from "~/lib/voice/types";
 import type {
@@ -26,15 +27,6 @@ export interface UseVoiceRecorderResult {
   stopAndSend: () => Promise<void>;
   cancel: () => void;
   reset: () => void;
-}
-
-function isAbortError(error: unknown): boolean {
-  if (typeof error !== "object" || error === null || !("name" in error)) {
-    return false;
-  }
-
-  const { name } = error as { name?: unknown };
-  return name === "AbortError";
 }
 
 export function useVoiceRecorder(

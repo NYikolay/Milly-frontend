@@ -1,5 +1,7 @@
 import axios from "axios";
 
+import { isAbortError } from "~/lib/errors/async";
+
 import { apiUrl, HTTP_REQUEST_TIMEOUT_MS } from "./config";
 import { ApiError, ApiNetworkError } from "./errors";
 import type { ApiErrorEnvelope } from "./types";
@@ -11,15 +13,6 @@ export interface HttpRequestOptions {
   signal?: AbortSignal;
   credentials?: RequestCredentials;
   timeoutMs?: number;
-}
-
-function isAbortError(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "name" in error &&
-    error.name === "AbortError"
-  );
 }
 
 function isCancelError(error: unknown): boolean {
