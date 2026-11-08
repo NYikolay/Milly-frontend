@@ -43,15 +43,15 @@ app/
       quick-add-store.ts      # per-composer vanilla Zustand store черновика
       quick-add-store-provider.tsx  # context, QuickAddStoreProvider, useQuickAddStore
       project-icon-badge.tsx  # круглый бейдж проекта 28×28 с белой иконкой
-      search-filter.ts        # ре-export matchesSearchQuery из lib/text-search.ts
     tasks/search/             # экран «Поиск задач»
       filters/                # шторка фильтров: «Все фильтры», шаги проекта,
                               #   меток, приоритета, статуса, регулярности, даты,
                               #   общая строка и шаги мультивыбора/одиночного выбора
+    tasks/task-rows-skeleton.tsx  # скелетон строк списка задач
     tasks/today/              # экран «Задачи на сегодня»
     ui/                       # примитивы, включая bottom-sheet, sheet-header, switch,
-                              #   select-field, time-input, option-chip, button,
-                              #   card, modal, asset-icon, search-field
+                              #   select-field, time-input, option-chip, modal,
+                              #   asset-icon, search-field
     voice/                    # UI записи голоса
   hooks/
     use-bottom-navigation.ts  # нижние вкладки «Главная» / «Задачи»
@@ -66,8 +66,11 @@ app/
     auth/                     # token-store, auth-api, bootstrap, events, failure
     boot/                     # inline SSR boot-watchdog
     errors/                   # классификация, копирайт, навигация, throwAppError
+      async.ts                # общий isAbortError
     labels/                   # read-only API меток (GET /labels) и типы
+      labels-query.ts         # ключ и query options меток
     projects/                 # read-only API проектов (GET /projects?limit=100), иконки и типы
+      projects-query.ts       # ключ и query options проектов
     telegram/                 # client, types, bot-link
     tasks/                    # модель формы, payload, API задач/серий, date-time,
                               #   priority и временный источник данных главного экрана
@@ -78,9 +81,12 @@ app/
       search-tasks-cache.ts   # кэш и оптимистичное завершение задач поиска
       search-filters.ts       # модель фильтров поиска, query и чистые помощники
       search-filters-reducer.ts  # черновик/применённые фильтры и шаг шторки
+      completion-cache.ts     # общие поля завершения и замена задачи в списке
+      task-completion.ts      # общая фабрика оптимистичной мутации
+      completion-feedback.ts  # общий текст ошибки и pending id
     voice/                    # запись и загрузка голоса
     cn.ts                     # склейка классов
-    format-date.ts
+    layout.ts                 # нижние отступы контента
     text-search.ts            # общий matchesSearchQuery для клиентской фильтрации
   providers/
     app-providers.tsx         # QueryClient + TelegramProvider + AuthProvider
@@ -151,9 +157,10 @@ app/
   сегодня и не считается активным фильтром, выбранная дата меняет день
   списка и заголовок. Фильтр проекта — мультивыбор реальных проектов
   (`project_ids`); строки «Без проекта» в фильтре нет, а «Сбросить»
-  показывается только при непустом выборе. Метки в API не уходят:
-  `filterTasksForDisplay` применяет их на клиенте по AND среди загруженных
-  `limit=100`, там же повторно применяется статус. Поиск серверный по
+  показывается только при непустом выборе. Метки не входят в серверный
+  ключ поиска и не уходят в API: `filterTasksForDisplay` применяет их на
+  клиенте по AND среди загруженных `limit=100`, там же повторно
+  применяется статус. Поиск серверный по
   `title`/`description`, выполняется при каждом изменении поля (`q.trim()`,
   пустой `q` не отправляется); предыдущие результаты остаются до ответа
   нового запроса. Завершение задачи оптимистично обновляет кэш поиска,
