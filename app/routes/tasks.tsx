@@ -13,6 +13,10 @@ import {
   useTodayTasksData,
   useToggleTaskCompletion,
 } from "~/hooks/use-today-tasks";
+import {
+  getCompletionError,
+  getPendingTaskId,
+} from "~/lib/tasks/completion-feedback";
 import { formatZonedToday, formatZonedTodayLabel } from "~/lib/tasks/date-time";
 import { projectsQueryOptions } from "~/lib/projects/projects-query";
 import type { TaskResponse } from "~/lib/tasks/types";
@@ -47,12 +51,8 @@ export default function Tasks() {
   const projectsQuery = useQuery(projectsQueryOptions);
   const toggleMutation = useToggleTaskCompletion(timeZone, today);
 
-  const pendingTaskId = toggleMutation.isPending
-    ? (toggleMutation.variables?.taskId ?? null)
-    : null;
-  const completionError = toggleMutation.isError
-    ? "Не удалось обновить задачу. Попробуйте ещё раз."
-    : null;
+  const pendingTaskId = getPendingTaskId(toggleMutation);
+  const completionError = getCompletionError(toggleMutation);
   const overview = overviewQuery.data;
 
   function handleToggleTask(

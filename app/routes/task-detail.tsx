@@ -18,6 +18,7 @@ import { ApiError } from "~/lib/api/errors";
 import { shouldGoBack } from "~/lib/errors/navigation";
 import { labelsQueryOptions } from "~/lib/labels/labels-query";
 import { projectsQueryOptions } from "~/lib/projects/projects-query";
+import { getCompletionError } from "~/lib/tasks/completion-feedback";
 import { useAuth } from "~/providers/auth-provider";
 import { useTelegram } from "~/providers/telegram-provider";
 import type { Route } from "./+types/task-detail";
@@ -104,9 +105,7 @@ export default function TaskDetail() {
     task.series_id !== null &&
     task.completed_at === null &&
     new Date(task.due_at) > now;
-  const completionError = toggleMutation.isError
-    ? "Не удалось обновить задачу. Попробуйте ещё раз."
-    : null;
+  const completionError = getCompletionError(toggleMutation);
   const deleteError =
     deleteMutation.isError &&
     !(

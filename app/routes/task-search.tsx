@@ -20,6 +20,10 @@ import {
 import { useTaskSegmentNavigation } from "~/hooks/use-task-segment-navigation";
 import { labelsQueryOptions } from "~/lib/labels/labels-query";
 import { projectsQueryOptions } from "~/lib/projects/projects-query";
+import {
+  getCompletionError,
+  getPendingTaskId,
+} from "~/lib/tasks/completion-feedback";
 import { formatZonedToday } from "~/lib/tasks/date-time";
 import type { FiltersStep } from "~/lib/tasks/search-filters";
 import {
@@ -138,12 +142,8 @@ export default function TaskSearch({ loaderData }: Route.ComponentProps) {
     results?.items ?? [],
     appliedFilters,
   );
-  const pendingTaskId = toggleMutation.isPending
-    ? (toggleMutation.variables?.taskId ?? null)
-    : null;
-  const completionError = toggleMutation.isError
-    ? "Не удалось обновить задачу. Попробуйте ещё раз."
-    : null;
+  const pendingTaskId = getPendingTaskId(toggleMutation);
+  const completionError = getCompletionError(toggleMutation);
   const previewActive = loaderData.activeFilterPreview;
   const activeFilterCount = previewActive
     ? 1
