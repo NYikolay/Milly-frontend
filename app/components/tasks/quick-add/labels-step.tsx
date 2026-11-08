@@ -7,8 +7,7 @@ import { BottomSheetPrimaryAction } from "~/components/ui/bottom-sheet";
 import { SearchField } from "~/components/ui/search-field";
 import { cn } from "~/lib/cn";
 import type { LabelResponse } from "~/lib/labels/types";
-
-import { matchesSearchQuery } from "./search-filter";
+import { matchesSearchQuery } from "~/lib/text-search";
 
 const MAX_LABEL_COUNT = 100;
 const STATUS_CLASSES =

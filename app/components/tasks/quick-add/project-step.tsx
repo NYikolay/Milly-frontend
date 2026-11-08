@@ -11,9 +11,9 @@ import {
   NO_PROJECT_ICON,
 } from "~/lib/projects/project-icons";
 import type { ProjectResponse } from "~/lib/projects/types";
+import { matchesSearchQuery } from "~/lib/text-search";
 
 import { ProjectIconBadge } from "./project-icon-badge";
-import { matchesSearchQuery } from "./search-filter";
 
 export type ProjectStepState = "loading" | "error";
 
