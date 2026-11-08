@@ -57,6 +57,7 @@ function render(
       pendingTaskId: null,
       completionError: null,
       onToggleTask: () => {},
+      onOpenTask: () => {},
       ...overrides,
     }),
   );
@@ -117,6 +118,15 @@ describe("SearchResults", () => {
     });
 
     expect(html).toContain("Без проекта");
-    expect(html).toContain("file.svg");
+    expect(html).toContain("no-project.svg");
+    expect(html).not.toContain("file.svg");
+  });
+
+  it("renders a row that opens the task detail", () => {
+    const html = render({
+      tasks: [task({ id: 7, title: "Открыть меня" })],
+    });
+
+    expect(html).toContain('aria-label="Открыть задачу: Открыть меня"');
   });
 });

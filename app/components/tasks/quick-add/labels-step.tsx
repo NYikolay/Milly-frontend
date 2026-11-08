@@ -122,8 +122,8 @@ export function LabelsStep({
     content = <p className={STATUS_CLASSES}>Ничего не найдено</p>;
   } else {
     content = (
-      <ul className="flex flex-col gap-[10px] px-[15px]">
-        {filteredItems.map((label) => {
+      <ul className="flex flex-col px-[15px]">
+        {filteredItems.map((label, index) => {
           const isSelected = visibleSelected.includes(label.id);
 
           return (
@@ -148,7 +148,13 @@ export function LabelsStep({
                     <span className="size-[15px] rounded-full bg-app-accent" />
                   ) : null}
                 </span>
-                <span className="flex h-full min-w-0 flex-1 items-center gap-[5px] border-b border-app-stroke">
+                <span
+                  className={cn(
+                    "flex h-full min-w-0 flex-1 items-center gap-[5px]",
+                    index < filteredItems.length - 1 &&
+                      "border-b border-app-stroke",
+                  )}
+                >
                   <span className="shrink-0" style={{ color: label.color.hex }}>
                     <AssetIcon className="size-[18px]" src={tagIcon} />
                   </span>

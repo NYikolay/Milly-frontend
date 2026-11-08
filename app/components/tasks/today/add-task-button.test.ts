@@ -5,9 +5,9 @@ import { describe, expect, it } from "vitest";
 import { AddTaskButton } from "./add-task-button";
 
 describe("AddTaskButton", () => {
-  function render(): string {
+  function render(hidden = false): string {
     return renderToStaticMarkup(
-      createElement(AddTaskButton, { onClick: () => {} }),
+      createElement(AddTaskButton, { onClick: () => {}, hidden }),
     );
   }
 
@@ -37,5 +37,22 @@ describe("AddTaskButton", () => {
     expect(html).toContain("border-app-fab-stroke");
     expect(html).toContain("text-app-accent");
     expect(html).toContain("shadow-[0_0_20px_rgba(0,0,0,0.25)]");
+  });
+
+  it("fades out and becomes inert when hidden", () => {
+    const html = render(true);
+    const rootTag = html.slice(0, html.indexOf(">") + 1);
+    const buttonTag = /<button[^>]*>/.exec(html)?.[0] ?? "";
+
+    expect(rootTag).toContain("opacity-0");
+    expect(rootTag).toContain('aria-hidden="true"');
+    expect(rootTag).toContain("inert");
+    expect(buttonTag).not.toContain("pointer-events-auto");
+  });
+
+  it("stays interactive when visible", () => {
+    const buttonTag = /<button[^>]*>/.exec(render())?.[0] ?? "";
+
+    expect(buttonTag).toContain("pointer-events-auto");
   });
 });

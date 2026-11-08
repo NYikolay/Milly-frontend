@@ -8,6 +8,11 @@ import {
 } from "@tanstack/react-query";
 
 import {
+  buildSearchTaskListQuery,
+  resolveFilterDate,
+  type SearchTaskFilters,
+} from "~/lib/tasks/search-filters";
+import {
   applySearchTaskCompletion,
   searchTasksQueryKey,
 } from "~/lib/tasks/search-tasks-cache";
@@ -22,21 +27,20 @@ import { useTelegram } from "~/providers/telegram-provider";
 
 export function useSearchTasksData(
   timeZone: string,
-  date: string,
+  today: string,
   query: string,
+  filters: SearchTaskFilters,
 ) {
+  const taskQuery = buildSearchTaskListQuery(filters, today, query);
+
   return useQuery({
-    queryKey: searchTasksQueryKey(timeZone, date, query),
-    queryFn: ({ signal }) =>
-      fetchTasks(
-        {
-          date,
-          status: "all",
-          limit: 100,
-          q: query === "" ? undefined : query,
-        },
-        signal,
-      ),
+    queryKey: searchTasksQueryKey(
+      timeZone,
+      taskQuery.date ?? today,
+      query,
+      filters,
+    ),
+    queryFn: ({ signal }) => fetchTasks(taskQuery, signal),
     placeholderData: keepPreviousData,
   });
 }
@@ -123,12 +127,18 @@ export function createToggleSearchTaskMutationOptions({
 
 export function useToggleSearchTaskCompletion(
   timeZone: string,
-  date: string,
+  today: string,
   query: string,
+  filters: SearchTaskFilters,
 ) {
   const queryClient = useQueryClient();
   const { haptics } = useTelegram();
-  const queryKey = searchTasksQueryKey(timeZone, date, query);
+  const queryKey = searchTasksQueryKey(
+    timeZone,
+    resolveFilterDate(filters, today),
+    query,
+    filters,
+  );
 
   return useMutation(
     createToggleSearchTaskMutationOptions({ queryClient, haptics, queryKey }),

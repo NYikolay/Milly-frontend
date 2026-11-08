@@ -2,6 +2,8 @@ import type { ReactElement } from "react";
 import { useLocation } from "react-router";
 
 import { HomeSkeleton } from "~/components/home/home-skeleton";
+import { TaskDetailSkeleton } from "~/components/tasks/detail/task-detail-skeleton";
+import { SearchTasksPageSkeleton } from "~/components/tasks/search/search-tasks-page-skeleton";
 import { TodayTasksSkeleton } from "~/components/tasks/today/today-tasks-skeleton";
 
 const CONTENT_BOTTOM_PADDING =
@@ -9,6 +11,8 @@ const CONTENT_BOTTOM_PADDING =
 
 export function RouteSkeleton(): ReactElement {
   const { pathname } = useLocation();
+  const isSearch = pathname.startsWith("/tasks/search");
+  const isTaskDetail = pathname.startsWith("/tasks/") && !isSearch;
 
   if (pathname.startsWith("/tasks")) {
     return (
@@ -17,7 +21,13 @@ export function RouteSkeleton(): ReactElement {
           className="flex flex-1 flex-col gap-2 px-4"
           style={{ paddingBottom: CONTENT_BOTTOM_PADDING }}
         >
-          <TodayTasksSkeleton />
+          {isSearch ? (
+            <SearchTasksPageSkeleton />
+          ) : isTaskDetail ? (
+            <TaskDetailSkeleton />
+          ) : (
+            <TodayTasksSkeleton />
+          )}
         </div>
       </main>
     );

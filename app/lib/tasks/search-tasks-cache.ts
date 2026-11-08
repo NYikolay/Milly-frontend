@@ -1,11 +1,24 @@
+import {
+  canonicalizeSearchFilters,
+  searchFiltersFingerprint,
+  type SearchTaskFilters,
+} from "./search-filters";
 import type { TaskListResponse } from "./types";
 
 export function searchTasksQueryKey(
   timeZone: string,
   date: string,
   query: string,
+  filters: SearchTaskFilters,
 ) {
-  return ["tasks", "search", timeZone, date, query] as const;
+  return [
+    "tasks",
+    "search",
+    timeZone,
+    date,
+    query,
+    searchFiltersFingerprint(canonicalizeSearchFilters(filters)),
+  ] as const;
 }
 
 export function applySearchTaskCompletion(

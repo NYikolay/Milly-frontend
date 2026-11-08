@@ -27,6 +27,7 @@ export interface TodayTasksViewProps {
   pendingTaskId: number | null;
   completionError: string | null;
   onToggleTask: (task: TaskResponse, nextCompleted: boolean) => void;
+  onOpenTask: (task: TaskResponse) => void;
   onSelectSegment: (id: TaskSegmentId) => void;
 }
 
@@ -41,6 +42,7 @@ export function TodayTasksView({
   pendingTaskId,
   completionError,
   onToggleTask,
+  onOpenTask,
   onSelectSegment,
 }: TodayTasksViewProps): ReactElement {
   const { planned, completed } = splitTodayTasks(tasks);
@@ -79,6 +81,7 @@ export function TodayTasksView({
         <TodayTaskGroup
           expanded={expanded.planned}
           id="planned"
+          onOpenTask={onOpenTask}
           onToggleExpanded={() => onToggleExpanded("planned")}
           onToggleTask={onToggleTask}
           pendingTaskId={pendingTaskId}
@@ -93,6 +96,7 @@ export function TodayTasksView({
         <TodayTaskGroup
           expanded={expanded.completed}
           id="completed"
+          onOpenTask={onOpenTask}
           onToggleExpanded={() => onToggleExpanded("completed")}
           onToggleTask={onToggleTask}
           pendingTaskId={pendingTaskId}

@@ -7,12 +7,79 @@ import type {
   ReactNode,
   RefObject,
 } from "react";
-import { motion, useDragControls } from "motion/react";
+import { motion, useDragControls, useReducedMotion } from "motion/react";
 
 import { Modal } from "~/components/ui/modal";
 import { SheetHeader } from "~/components/ui/sheet-header";
 import { useKeyboardViewport } from "~/hooks/use-keyboard-viewport";
 import { cn } from "~/lib/cn";
+import { computeFocusScrollDelta } from "~/lib/ui/focus-scroll";
+
+const EXPANDED_FOOTER_ALLOWANCE_PX = 60;
+const KEYBOARD_SPACER_SPRING = {
+  type: "spring",
+  stiffness: 500,
+  damping: 45,
+  mass: 0.8,
+} as const;
+
+export interface KeyboardSpacerProps {
+  height: number;
+}
+
+export function KeyboardSpacer({ height }: KeyboardSpacerProps): ReactElement {
+  const shouldReduceMotion = useReducedMotion();
+
+  return (
+    <motion.div
+      aria-hidden="true"
+      className="shrink-0"
+      data-keyboard-spacer=""
+      initial={false}
+      animate={{ height }}
+      transition={
+        shouldReduceMotion ? { duration: 0 } : KEYBOARD_SPACER_SPRING
+      }
+    />
+  );
+}
+
+function getVisibleViewportBounds(): { top: number; bottom: number } {
+  const visualViewport = window.visualViewport;
+
+  if (!visualViewport) {
+    return { top: 0, bottom: window.innerHeight };
+  }
+
+  return {
+    top: visualViewport.offsetTop,
+    bottom: visualViewport.offsetTop + visualViewport.height,
+  };
+}
+
+function scrollFocusedElementIntoView(container: HTMLElement) {
+  const active = document.activeElement;
+
+  if (!(active instanceof HTMLElement) || !container.contains(active)) {
+    return;
+  }
+
+  const containerRect = container.getBoundingClientRect();
+  const elementRect = active.getBoundingClientRect();
+  const viewport = getVisibleViewportBounds();
+  const delta = computeFocusScrollDelta({
+    elementTop: elementRect.top,
+    elementBottom: elementRect.bottom,
+    containerTop: containerRect.top,
+    containerBottom: containerRect.bottom,
+    visibleTop: viewport.top,
+    visibleBottom: viewport.bottom,
+  });
+
+  if (delta !== 0) {
+    container.scrollBy({ top: delta });
+  }
+}
 
 export interface BottomSheetProps {
   open: boolean;
@@ -58,23 +125,20 @@ export function BottomSheet({
   const [bodyScrollable, setBodyScrollable] = useState(false);
   const keyboard = useKeyboardViewport(open);
   const keyboardOpen = keyboard.keyboardInset > 0;
-  const bottomOffset = keyboardOpen ? keyboard.keyboardInset : 0;
-  const bottomPadding = keyboardOpen
-    ? "15px"
+  const bottomPadding = expanded
+    ? "var(--app-inset-bottom)"
     : "max(15px, var(--app-inset-bottom))";
-  const expandedBottomPadding = keyboardOpen
-    ? "0px"
-    : "var(--app-inset-bottom)";
   const expandedTopPadding = "max(15px, var(--app-inset-top))";
-  const panelBottomPadding = expanded ? expandedBottomPadding : bottomPadding;
-  const panelMaxHeight =
-    keyboardOpen && keyboard.viewportHeight !== null
-      ? `calc(${keyboard.viewportHeight}px - var(--app-inset-top) - 90px)`
-      : "calc(var(--tg-viewport-stable-height, 100dvh) - var(--app-inset-top) - var(--app-inset-bottom) - 90px)";
-  const expandedHeight =
-    keyboardOpen && keyboard.viewportHeight !== null
-      ? `calc(${keyboard.viewportHeight}px - ${expandedTopPadding})`
-      : `calc(var(--tg-viewport-stable-height, 100dvh) - ${expandedTopPadding} - ${expandedBottomPadding})`;
+  const stableHeight =
+    keyboard.baseHeight !== null
+      ? `${keyboard.baseHeight}px`
+      : "var(--tg-viewport-stable-height, 100dvh)";
+  const panelMaxHeight = `calc(${stableHeight} - var(--app-inset-top) - var(--app-inset-bottom) - 90px)`;
+  const expandedHeightAllowance =
+    expanded && footer != null
+      ? ` - ${EXPANDED_FOOTER_ALLOWANCE_PX}px`
+      : "";
+  const expandedHeight = `calc(${stableHeight} - ${expandedTopPadding} - var(--app-inset-bottom)${expandedHeightAllowance})`;
   const bodyRef = useRef<HTMLDivElement>(null);
   const focusFrameRef = useRef(0);
 
@@ -89,10 +153,9 @@ export function BottomSheet({
 
     const frame = window.requestAnimationFrame(() => {
       const body = bodyRef.current;
-      const active = document.activeElement;
 
-      if (body && active instanceof HTMLElement && body.contains(active)) {
-        active.scrollIntoView({ block: "nearest", inline: "nearest" });
+      if (body) {
+        scrollFocusedElementIntoView(body);
       }
     });
 
@@ -136,7 +199,7 @@ export function BottomSheet({
       window.cancelAnimationFrame(frame);
       observer?.disconnect();
     };
-  }, [open, swipeToClose]);
+  }, [open, swipeToClose, keyboard.keyboardInset]);
 
   function handleBodyFocus(event: FocusEvent<HTMLDivElement>) {
     const target = event.target;
@@ -147,8 +210,10 @@ export function BottomSheet({
 
     window.cancelAnimationFrame(focusFrameRef.current);
     focusFrameRef.current = window.requestAnimationFrame(() => {
-      if (document.activeElement === target) {
-        target.scrollIntoView({ block: "nearest", inline: "nearest" });
+      const body = bodyRef.current;
+
+      if (body && document.activeElement === target) {
+        scrollFocusedElementIntoView(body);
       }
     });
   }
@@ -179,12 +244,12 @@ export function BottomSheet({
       closeOnEscape={closeOnEscape}
       className="fixed inset-x-0 z-50 mx-auto flex w-full flex-col gap-[10px]"
       style={{
-        bottom: bottomOffset,
+        bottom: keyboard.layoutInset > 0 ? -keyboard.layoutInset : 0,
         maxWidth:
           "calc(448px + max(15px, var(--app-inset-left)) + max(15px, var(--app-inset-right)))",
         paddingLeft: "max(15px, var(--app-inset-left))",
         paddingRight: "max(15px, var(--app-inset-right))",
-        paddingBottom: panelBottomPadding,
+        paddingBottom: bottomPadding,
       }}
     >
       <motion.div
@@ -233,6 +298,9 @@ export function BottomSheet({
           )}
         >
           {children}
+          {expanded ? (
+            <KeyboardSpacer height={keyboard.keyboardInset} />
+          ) : null}
         </div>
       </motion.div>
       {footer != null ? <div className="shrink-0">{footer}</div> : null}
@@ -241,18 +309,22 @@ export function BottomSheet({
 }
 
 export interface BottomSheetActionProps
-  extends ButtonHTMLAttributes<HTMLButtonElement> {}
+  extends ButtonHTMLAttributes<HTMLButtonElement> {
+  tone?: "accent" | "destructive";
+}
 
 export function BottomSheetAction({
   className,
   type = "button",
+  tone = "accent",
   ...props
 }: BottomSheetActionProps): ReactElement {
   return (
     <button
       type={type}
       className={cn(
-        "flex h-[50px] w-full items-center justify-center rounded-[25px] bg-app-card text-[15px] font-semibold text-app-accent transition-opacity active:opacity-70 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent",
+        "flex h-[50px] w-full items-center justify-center rounded-[25px] bg-app-card text-[15px] font-semibold transition-opacity active:opacity-70 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent",
+        tone === "destructive" ? "text-app-destructive" : "text-app-accent",
         className,
       )}
       {...props}
@@ -264,7 +336,7 @@ export function BottomSheetPrimaryAction({
   className,
   type = "button",
   ...props
-}: BottomSheetActionProps): ReactElement {
+}: ButtonHTMLAttributes<HTMLButtonElement>): ReactElement {
   return (
     <button
       type={type}

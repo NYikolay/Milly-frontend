@@ -1,14 +1,21 @@
 import { useEffect, useState } from "react";
 
-import { computeViewportMetrics } from "~/lib/ui/viewport-metrics";
+import {
+  computeViewportMetrics,
+  resolveBaseHeight,
+} from "~/lib/ui/viewport-metrics";
 
 const CLOSED: KeyboardViewport = {
+  baseHeight: null,
   keyboardInset: 0,
+  layoutInset: 0,
   viewportHeight: null,
 };
 
 export interface KeyboardViewport {
+  baseHeight: number | null;
   keyboardInset: number;
+  layoutInset: number;
   viewportHeight: number | null;
 }
 
@@ -23,6 +30,7 @@ export function useKeyboardViewport(enabled: boolean): KeyboardViewport {
 
     const visualViewport = window.visualViewport;
     let frame = 0;
+    let baseHeight: number | null = null;
 
     const update = () => {
       frame = 0;
@@ -30,17 +38,33 @@ export function useKeyboardViewport(enabled: boolean): KeyboardViewport {
       const layoutHeight = window.innerHeight;
       const viewportHeight = visualViewport?.height ?? layoutHeight;
       const offsetTop = visualViewport?.offsetTop ?? 0;
+
+      const nextBaseHeight = resolveBaseHeight(baseHeight, {
+        layoutHeight,
+        viewportHeight,
+        offsetTop,
+      });
+      baseHeight = nextBaseHeight;
+
       const next = computeViewportMetrics({
+        baseHeight: nextBaseHeight,
         layoutHeight,
         viewportHeight,
         offsetTop,
       });
 
       setMetrics((current) =>
+        current.baseHeight === nextBaseHeight &&
         current.keyboardInset === next.keyboardInset &&
+        current.layoutInset === next.layoutInset &&
         current.viewportHeight === next.viewportHeight
           ? current
-          : next,
+          : {
+              baseHeight: nextBaseHeight,
+              keyboardInset: next.keyboardInset,
+              layoutInset: next.layoutInset,
+              viewportHeight: next.viewportHeight,
+            },
       );
     };
 
@@ -50,10 +74,15 @@ export function useKeyboardViewport(enabled: boolean): KeyboardViewport {
       }
     };
 
+    const handleOrientationChange = () => {
+      baseHeight = null;
+      schedule();
+    };
+
     visualViewport?.addEventListener("resize", schedule);
     visualViewport?.addEventListener("scroll", schedule);
     window.addEventListener("resize", schedule);
-    window.addEventListener("orientationchange", schedule);
+    window.addEventListener("orientationchange", handleOrientationChange);
     update();
 
     return () => {
@@ -63,7 +92,7 @@ export function useKeyboardViewport(enabled: boolean): KeyboardViewport {
       visualViewport?.removeEventListener("resize", schedule);
       visualViewport?.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
-      window.removeEventListener("orientationchange", schedule);
+      window.removeEventListener("orientationchange", handleOrientationChange);
     };
   }, [enabled]);
 

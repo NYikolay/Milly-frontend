@@ -8,14 +8,28 @@ import { OptionChip } from "~/components/ui/option-chip";
 
 export interface SearchFilterBarProps {
   activeFilterCount: number;
-  activeChip: "priority" | "project" | "recurrence" | null;
+  activeDate: boolean;
+  activePriority: boolean;
+  activeProject: boolean;
+  activeRecurrence: boolean;
+  onOpenAll: () => void;
+  onOpenDate: () => void;
+  onOpenPriority: () => void;
+  onOpenProject: () => void;
+  onOpenRecurrence: () => void;
 }
-
-const noop = () => {};
 
 export function SearchFilterBar({
   activeFilterCount,
-  activeChip,
+  activeDate,
+  activePriority,
+  activeProject,
+  activeRecurrence,
+  onOpenAll,
+  onOpenDate,
+  onOpenPriority,
+  onOpenProject,
+  onOpenRecurrence,
 }: SearchFilterBarProps): ReactElement {
   const allFiltersLabel =
     activeFilterCount > 0
@@ -23,55 +37,51 @@ export function SearchFilterBar({
       : "Все фильтры";
 
   return (
-    <div className="-mx-4 flex shrink-0 gap-[5px] overflow-x-auto pl-4 pt-[5px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex shrink-0 gap-[5px] overflow-x-auto pt-[5px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="relative">
         <OptionChip
           active={activeFilterCount > 0}
           ariaLabel={allFiltersLabel}
-          disabled
           icon={
             <AssetIcon className="size-6" src={adjustmentsHorizontalIcon} />
           }
-          onClick={noop}
+          onClick={onOpenAll}
         />
         {activeFilterCount > 0 ? (
           <span
             aria-hidden="true"
-            className="absolute right-[4px] top-[5px] flex size-[10px] items-center justify-center rounded-full bg-app-accent text-[6px] font-semibold leading-none text-white"
+            className="absolute -right-px -top-px flex size-[14px] items-center justify-center rounded-full bg-app-accent text-[9px] font-semibold leading-none text-white"
           >
             {activeFilterCount}
           </span>
         ) : null}
       </div>
       <OptionChip
+        active={activeDate}
         ariaLabel="Фильтр по дате"
-        disabled
         icon={<AssetIcon className="size-6" src={calendarIcon} />}
-        onClick={noop}
+        onClick={onOpenDate}
       />
       <OptionChip
-        active={activeChip === "priority"}
+        active={activePriority}
         ariaLabel="Фильтр по приоритету"
-        disabled
         endIcon={<AssetIcon className="size-4" src={chevronDownIcon} />}
         label="По приоритету"
-        onClick={noop}
+        onClick={onOpenPriority}
       />
       <OptionChip
-        active={activeChip === "project"}
+        active={activeProject}
         ariaLabel="Фильтр по проекту"
-        disabled
         endIcon={<AssetIcon className="size-4" src={chevronDownIcon} />}
         label="Проект"
-        onClick={noop}
+        onClick={onOpenProject}
       />
       <OptionChip
-        active={activeChip === "recurrence"}
+        active={activeRecurrence}
         ariaLabel="Фильтр по периодичности"
-        disabled
         endIcon={<AssetIcon className="size-4" src={chevronDownIcon} />}
         label="Периодичность"
-        onClick={noop}
+        onClick={onOpenRecurrence}
       />
     </div>
   );

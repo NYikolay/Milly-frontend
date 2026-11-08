@@ -6,6 +6,8 @@ import {
   formatDueHint,
   formatMonthTitle,
   formatNumericDate,
+  formatZonedDate,
+  formatZonedDateTime,
   formatZonedTime,
   formatZonedToday,
   formatZonedTodayLabel,
@@ -56,6 +58,20 @@ describe("formatZonedTime", () => {
     expect(formatZonedTime("2026-11-06T08:00:00.000Z", "UTC")).toBe(
       "08:00",
     );
+  });
+});
+
+describe("zoned date formatting", () => {
+  it("formats a zoned calendar date across midnight", () => {
+    expect(
+      formatZonedDate("2026-11-06T21:30:00.000Z", "Europe/Moscow"),
+    ).toBe("2026-11-07");
+  });
+
+  it("formats a zoned date and time", () => {
+    expect(
+      formatZonedDateTime("2026-11-06T07:00:00.000Z", "Europe/Moscow"),
+    ).toBe("06.11.2026, 10:00");
   });
 });
 

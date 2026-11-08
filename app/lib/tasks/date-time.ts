@@ -150,6 +150,21 @@ export function formatZonedTime(iso: string, timeZone: string): string {
   }).format(new Date(iso));
 }
 
+export function formatZonedDate(iso: string, timeZone: string): string {
+  const { year, month, day } = getZonedNow(new Date(iso), timeZone);
+
+  return formatDate(year, month, day);
+}
+
+export function formatZonedDateTime(
+  iso: string,
+  timeZone: string,
+): string {
+  return `${formatNumericDate(
+    formatZonedDate(iso, timeZone),
+  )}, ${formatZonedTime(iso, timeZone)}`;
+}
+
 export function getDefaultDue(
   now: Date,
   timeZone: string,

@@ -52,13 +52,12 @@ function extractDiv(html: string, startIndex: number): string {
 }
 
 describe("AppErrorPage", () => {
-  it("renders the primary navigation with all four tabs", () => {
+  it("renders the primary navigation with all three tabs", () => {
     const html = render();
 
     expect(html).toContain('aria-label="Основная навигация"');
     expect(html).toContain("Главная");
     expect(html).toContain("Задачи");
-    expect(html).toContain("Финансы");
     expect(html).toContain("Воркспейсы");
   });
 

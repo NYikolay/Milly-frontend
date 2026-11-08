@@ -47,6 +47,7 @@ function render(
       timeZone: "Europe/Moscow",
       pendingTaskId: null,
       onToggleTask: () => {},
+      onOpenTask: () => {},
       ...props,
     }),
   );

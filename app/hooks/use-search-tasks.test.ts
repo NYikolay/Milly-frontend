@@ -1,19 +1,49 @@
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, keepPreviousData } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  buildSearchTaskListQuery,
+  createDefaultSearchFilters,
+  type SearchTaskFilters,
+} from "~/lib/tasks/search-filters";
 import { searchTasksQueryKey } from "~/lib/tasks/search-tasks-cache";
+import { fetchTasks } from "~/lib/tasks/tasks-api";
 import type { TaskListResponse, TaskResponse } from "~/lib/tasks/types";
 import type { TelegramHaptics } from "~/providers/telegram-provider";
 
 import {
   createToggleSearchTaskMutationOptions,
+  useSearchTasksData,
   type ToggleSearchTaskMutationOptions,
 } from "./use-search-tasks";
+
+const useQueryMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@tanstack/react-query", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@tanstack/react-query")>();
+  return { ...actual, useQuery: useQueryMock };
+});
+
+vi.mock("~/lib/tasks/tasks-api", () => ({
+  completeTask: vi.fn(),
+  fetchTasks: vi.fn(),
+  uncompleteTask: vi.fn(),
+}));
 
 const TIME_ZONE = "Europe/Moscow";
 const DATE = "2026-11-06";
 const QUERY = "отчёт";
-const queryKey = searchTasksQueryKey(TIME_ZONE, DATE, QUERY);
+const FILTERS: SearchTaskFilters = {
+  ...createDefaultSearchFilters(),
+  status: "open",
+};
+const queryKey = searchTasksQueryKey(
+  TIME_ZONE,
+  DATE,
+  QUERY,
+  createDefaultSearchFilters(),
+);
 
 function task(overrides: Partial<TaskResponse> = {}): TaskResponse {
   return {
@@ -50,6 +80,8 @@ let haptics: TelegramHaptics;
 
 beforeEach(() => {
   queryClient = new QueryClient();
+  useQueryMock.mockReset();
+  vi.mocked(fetchTasks).mockReset();
   haptics = {
     impact: vi.fn(),
     notification: vi.fn(),
@@ -70,6 +102,36 @@ function createOptions(
     queryKey,
   });
 }
+
+describe("useSearchTasksData", () => {
+  it("requests tasks with the built server query and fingerprinted key", async () => {
+    useQueryMock.mockReturnValue({ data: undefined });
+    vi.mocked(fetchTasks).mockResolvedValue({ items: [], next_cursor: null });
+    const controller = new AbortController();
+
+    useSearchTasksData(TIME_ZONE, DATE, QUERY, FILTERS);
+
+    expect(useQueryMock).toHaveBeenCalledTimes(1);
+
+    const options = useQueryMock.mock.calls[0][0] as {
+      queryKey: unknown;
+      queryFn: (context: { signal: AbortSignal }) => Promise<unknown>;
+      placeholderData: unknown;
+    };
+
+    expect(options.queryKey).toEqual(
+      searchTasksQueryKey(TIME_ZONE, DATE, QUERY, FILTERS),
+    );
+    expect(options.placeholderData).toBe(keepPreviousData);
+
+    await options.queryFn({ signal: controller.signal });
+
+    expect(fetchTasks).toHaveBeenCalledWith(
+      buildSearchTaskListQuery(FILTERS, DATE, QUERY),
+      controller.signal,
+    );
+  });
+});
 
 describe("createToggleSearchTaskMutationOptions", () => {
   it("snapshots the cache and optimistically completes a task", async () => {

@@ -23,12 +23,14 @@ describe("ProjectIconBadge", () => {
     expect(html).toContain("book.svg");
   });
 
-  it("renders the no-project badge with app tokens", () => {
+  it("renders the no-project badge with app tokens and a larger glyph", () => {
     const html = render(null, "/icons/no-project.svg");
 
     expect(html).toContain("bg-app-track");
     expect(html).toContain("text-app-text");
     expect(html).not.toContain("background-color");
     expect(html).toContain("no-project.svg");
+    expect(html).toContain("size-[20px]");
+    expect(html).not.toContain("size-[18px]");
   });
 });

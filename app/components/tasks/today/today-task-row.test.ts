@@ -60,12 +60,12 @@ function render(
 }
 
 describe("TodayTaskRow", () => {
-  it("renders an unfinished priority task with project, flag and accent time", () => {
+  it("renders an unfinished P1 task with project, flag and accent time", () => {
     const html = render({
       task: task({
         title: "Обсудить макет",
         project_id: 10,
-        priority: "important_not_urgent",
+        priority: "urgent_important",
         series_id: 55,
       }),
       project: project(),
@@ -77,7 +77,9 @@ describe("TodayTaskRow", () => {
       'aria-label="Обсудить макет: отметить выполненной"',
     );
     expect(html).toContain("book.svg");
-    expect(html).toContain("#16A34A");
+    expect(html).toContain('style="background-color:#16A34A"');
+    expect(html).toContain("size-7");
+    expect(html).toContain("p-[5px] text-white");
     expect(html).toContain("запуск сайта");
     expect(html).toContain("· 11:00");
     expect(html).toContain("flag.svg");
@@ -86,7 +88,9 @@ describe("TodayTaskRow", () => {
     expect(html).toContain("size-[35px]");
     expect(html).toContain("size-[28px]");
     expect(html).toContain("chevron-right.svg");
-    expect(html).toContain("· Регулярные");
+    expect(html).toContain("repeat.svg");
+    expect(html).toContain('aria-label="Регулярная задача"');
+    expect(html).not.toContain("· Регулярные");
     expect(html).not.toContain("check.svg");
   });
 
@@ -108,7 +112,9 @@ describe("TodayTaskRow", () => {
     expect(html).toContain("bg-app-accent");
     expect(html).toContain("check.svg");
     expect(html).toContain("text-white");
-    expect(html).toContain("text-app-text-secondary\">Обсудить макет");
+    expect(html).toContain(
+      'text-app-text-secondary line-through">Обсудить макет',
+    );
     expect(html).not.toContain("flag.svg");
     expect(html).toContain("book.svg");
     expect(html).toContain("#16A34A");
@@ -116,10 +122,12 @@ describe("TodayTaskRow", () => {
     expect(html).toContain("text-app-text-secondary\">· 11:00");
   });
 
-  it("renders the no-project fallback", () => {
+  it("renders the no-project fallback with the gray project badge", () => {
     const html = render();
 
-    expect(html).toContain("file.svg");
+    expect(html).toContain("no-project.svg");
+    expect(html).not.toContain("file.svg");
+    expect(html).toContain('bg-app-track text-app-text"');
     expect(html).toContain("Без проекта");
   });
 
@@ -129,6 +137,16 @@ describe("TodayTaskRow", () => {
     expect(html).not.toContain("flag.svg");
     expect(html).toContain("text-app-text-secondary\">· 11:00");
   });
+
+  it.each(["important_not_urgent", "urgent_not_important"] as const)(
+    "renders no flag and secondary time for the %s priority",
+    (priority) => {
+      const html = render({ task: task({ priority }) });
+
+      expect(html).not.toContain("flag.svg");
+      expect(html).toContain("text-app-text-secondary\">· 11:00");
+    },
+  );
 
   it("renders a bottom border only for non-last rows", () => {
     const bordered = render({ isLast: false });
@@ -140,19 +158,34 @@ describe("TodayTaskRow", () => {
     expect(last).not.toMatch(/border-b(?!-)/);
   });
 
-  it("renders the recurring label based on series_id", () => {
+  it("renders the recurring icon based on series_id", () => {
     const withSeries = render({ task: task({ series_id: 55 }) });
     const withoutSeries = render({
       task: task({ series_id: null, recurrence: "regular" }),
     });
 
-    expect(withSeries).toContain("· Регулярные");
-    expect(withoutSeries).not.toContain("· Регулярные");
+    expect(withSeries).toContain("repeat.svg");
+    expect(withSeries).toContain('aria-label="Регулярная задача"');
+    expect(withoutSeries).not.toContain("repeat.svg");
   });
 
   it("stretches the divider to the bottom of the row", () => {
     const html = render();
 
     expect(html).toContain("self-stretch");
+  });
+
+  it("renders a detail button when onOpen is provided", () => {
+    const html = render({ onOpen: () => {} });
+
+    expect(html).toContain('aria-label="Открыть задачу: Задача"');
+    expect(html.match(/type="button"/g)?.length).toBe(2);
+  });
+
+  it("keeps the row content non-interactive without onOpen", () => {
+    const html = render();
+
+    expect(html).not.toContain("Открыть задачу");
+    expect(html.match(/type="button"/g)?.length).toBe(1);
   });
 });

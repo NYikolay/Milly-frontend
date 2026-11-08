@@ -95,15 +95,20 @@ export function ProjectStep({
         onChange={setQuery}
         value={query}
       />
-      <div aria-label="Проект" className="flex flex-col" role="radiogroup">
+      <div
+        aria-label="Проект"
+        className="mt-[15px] flex flex-col"
+        role="radiogroup"
+      >
         {rows.map((row, index) => {
           const isSelected = row.id === selectedId;
+          const isLast = index === rows.length - 1;
 
           return (
             <Fragment key={row.id ?? "no-project"}>
               <button
                 aria-checked={isSelected}
-                className="flex h-[59px] w-full items-center gap-[15px] text-left transition-opacity active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent"
+                className="flex h-[50px] w-full items-center gap-[15px] text-left transition-opacity active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent"
                 onClick={() => onChange(row.id)}
                 role="radio"
                 type="button"
@@ -113,7 +118,12 @@ export function ProjectStep({
                 ) : (
                   <span aria-hidden="true" className="size-6 shrink-0" />
                 )}
-                <span className="flex h-full min-w-0 flex-1 items-center gap-[5px] border-b border-app-stroke">
+                <span
+                  className={cn(
+                    "flex h-full min-w-0 flex-1 items-center gap-[5px]",
+                    !isLast && "border-b border-app-stroke",
+                  )}
+                >
                   <ProjectIconBadge
                     colorHex={row.colorHex}
                     icon={row.icon}

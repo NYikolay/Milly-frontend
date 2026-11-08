@@ -67,7 +67,8 @@ describe("ProjectStep", () => {
       "truncate text-[15px] leading-[1.3] text-app-text",
     );
     expect(html).toContain('aria-checked="true"');
-    expect(html).toContain("h-[59px]");
+    expect(html).toContain("h-[50px]");
+    expect(html).not.toContain("h-[59px]");
   });
 
   it("renders the project search field", () => {
@@ -76,6 +77,10 @@ describe("ProjectStep", () => {
     expect(html).toContain('placeholder="Поиск"');
     expect(html).toContain('aria-label="Поиск проектов"');
     expect(html).toContain("h-[45px]");
+  });
+
+  it("keeps the same gap after search as the labels step", () => {
+    expect(render()).toContain("mt-[15px]");
   });
 
   it("renders loading and error states", () => {
@@ -123,12 +128,12 @@ describe("ProjectStep", () => {
     expect(html).toContain("Без проекта");
   });
 
-  it("draws a divider after every row", () => {
-    expect(render().match(/border-b border-app-stroke/g)).toHaveLength(1);
+  it("draws a divider only between rows", () => {
+    expect(render().match(/border-b border-app-stroke/g)).toBeNull();
 
     const html = render({ projects: [project] });
 
-    expect(html.match(/border-b border-app-stroke/g)).toHaveLength(2);
+    expect(html.match(/border-b border-app-stroke/g)).toHaveLength(1);
   });
 
   it("filters real projects by name but never filters the no-project row", () => {

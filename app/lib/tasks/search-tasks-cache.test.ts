@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { createDefaultSearchFilters } from "./search-filters";
 import {
   applySearchTaskCompletion,
   searchTasksQueryKey,
@@ -36,11 +37,41 @@ function data(): TaskListResponse {
   };
 }
 
+const TODAY = "2026-11-08";
+
 describe("searchTasksQueryKey", () => {
   it("keeps the search key under the tasks prefix", () => {
-    expect(searchTasksQueryKey("Europe/Moscow", "2026-11-06", "отчёт")).toEqual(
-      ["tasks", "search", "Europe/Moscow", "2026-11-06", "отчёт"],
-    );
+    expect(
+      searchTasksQueryKey(
+        "Europe/Moscow",
+        "2026-11-06",
+        "отчёт",
+        createDefaultSearchFilters(),
+      ),
+    ).toEqual([
+      "tasks",
+      "search",
+      "Europe/Moscow",
+      "2026-11-06",
+      "отчёт",
+      "p:|pr:|s:all|r:all|l:",
+    ]);
+  });
+
+  it("builds the search query key with the filters fingerprint", () => {
+    const key = searchTasksQueryKey("Europe/Moscow", TODAY, "созвон", {
+      ...createDefaultSearchFilters(),
+      projectIds: [2, 1],
+    });
+
+    expect(key).toEqual([
+      "tasks",
+      "search",
+      "Europe/Moscow",
+      TODAY,
+      "созвон",
+      "p:1,2|pr:|s:all|r:all|l:",
+    ]);
   });
 });
 

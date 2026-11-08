@@ -20,12 +20,6 @@ const TABS = [
     iconClassName: undefined,
   },
   {
-    id: "finance",
-    label: "Финансы",
-    iconSrc: cardIcon,
-    iconClassName: undefined,
-  },
-  {
     id: "workspaces",
     label: "Воркспейсы",
     iconSrc: coopIcon,

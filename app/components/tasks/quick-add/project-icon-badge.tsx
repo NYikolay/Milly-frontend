@@ -14,16 +14,21 @@ export function ProjectIconBadge({
   colorHex,
   className,
 }: ProjectIconBadgeProps): ReactElement {
+  const isNoProject = colorHex === null;
+
   return (
     <span
       className={cn(
         "flex size-7 shrink-0 items-center justify-center rounded-full p-[5px]",
-        colorHex === null ? "bg-app-track text-app-text" : "text-white",
+        isNoProject ? "bg-app-track text-app-text" : "text-white",
         className,
       )}
-      style={colorHex === null ? undefined : { backgroundColor: colorHex }}
+      style={isNoProject ? undefined : { backgroundColor: colorHex }}
     >
-      <AssetIcon className="size-[18px]" src={icon} />
+      <AssetIcon
+        className={isNoProject ? "size-[20px]" : "size-[18px]"}
+        src={icon}
+      />
     </span>
   );
 }

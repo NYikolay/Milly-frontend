@@ -17,6 +17,7 @@ export interface TodayTaskGroupProps {
   timeZone: string;
   pendingTaskId: number | null;
   onToggleTask: (task: TaskResponse, nextCompleted: boolean) => void;
+  onOpenTask: (task: TaskResponse) => void;
 }
 
 export function TodayTaskGroup({
@@ -30,6 +31,7 @@ export function TodayTaskGroup({
   timeZone,
   pendingTaskId,
   onToggleTask,
+  onOpenTask,
 }: TodayTaskGroupProps): ReactElement {
   return (
     <section aria-labelledby={`${id}-title`} className="flex flex-col gap-2 pt-4">
@@ -62,6 +64,7 @@ export function TodayTaskGroup({
               isLast={index === visible.length - 1}
               isPending={pendingTaskId === task.id}
               key={task.id}
+              onOpen={onOpenTask}
               onToggle={onToggleTask}
               project={
                 task.project_id === null

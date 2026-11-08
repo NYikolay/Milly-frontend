@@ -82,7 +82,10 @@ export type TaskListStatus = "all" | "open" | "completed" | "overdue";
 
 export interface TaskListQuery {
   date?: string;
+  project_ids?: number[];
+  priorities?: Priority[];
   status?: TaskListStatus;
+  recurrence?: TaskRecurrence | "all";
   limit?: number;
   cursor?: string;
   q?: string;

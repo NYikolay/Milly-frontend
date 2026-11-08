@@ -12,6 +12,8 @@ export interface SearchFieldProps {
   placeholder?: string;
   variant?: "track" | "stroke";
   className?: string;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 export function SearchField({
@@ -21,6 +23,8 @@ export function SearchField({
   placeholder = "Поиск",
   variant = "track",
   className,
+  onFocus,
+  onBlur,
 }: SearchFieldProps): ReactElement {
   const surfaceClassName =
     variant === "stroke" ? "bg-app-stroke" : "bg-app-track";
@@ -40,9 +44,11 @@ export function SearchField({
       <input
         aria-label={ariaLabel}
         className="min-w-0 flex-1 appearance-none bg-transparent text-[15px] leading-[1.3] text-app-text outline-none placeholder:text-app-text-secondary [&::-webkit-search-cancel-button]:appearance-none"
+        onBlur={onBlur}
         onChange={(event: ChangeEvent<HTMLInputElement>) =>
           onChange(event.target.value)
         }
+        onFocus={onFocus}
         placeholder={placeholder}
         type="search"
         value={value}

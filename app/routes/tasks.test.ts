@@ -30,6 +30,10 @@ const routeState = vi.hoisted(() => ({
       nextCompleted: boolean;
     }): void => {},
   },
+  navigate: vi.fn(),
+  onOpenTask: undefined as
+    | ((task: { id: number }) => void)
+    | undefined,
 }));
 
 vi.mock("@tanstack/react-query", () => ({
@@ -37,7 +41,7 @@ vi.mock("@tanstack/react-query", () => ({
 }));
 
 vi.mock("react-router", () => ({
-  useNavigate: () => () => undefined,
+  useNavigate: () => routeState.navigate,
 }));
 
 vi.mock("~/hooks/use-today-tasks", () => ({
@@ -67,12 +71,21 @@ vi.mock("~/providers/telegram-provider", () => ({
 }));
 
 vi.mock("~/components/tasks/today/today-tasks-view", () => ({
-  TodayTasksView: ({ tasks }: { tasks: { title: string }[] }) =>
-    createElement(
+  TodayTasksView: ({
+    tasks,
+    onOpenTask,
+  }: {
+    tasks: { title: string }[];
+    onOpenTask: (task: { id: number }) => void;
+  }) => {
+    routeState.onOpenTask = onOpenTask;
+
+    return createElement(
       "div",
       null,
       `VIEW:${tasks.map((task) => task.title).join(",")}`,
-    ),
+    );
+  },
 }));
 
 vi.mock("~/components/tasks/today/today-tasks-error", () => ({
@@ -99,6 +112,8 @@ function renderTasks(): string {
 
 describe("Tasks route overview state", () => {
   beforeEach(() => {
+    routeState.navigate.mockClear();
+    routeState.onOpenTask = undefined;
     routeState.overview = {
       isPending: false,
       isError: false,
@@ -143,5 +158,12 @@ describe("Tasks route overview state", () => {
     };
 
     expect(renderTasks()).toContain("SKELETON");
+  });
+
+  it("navigates to the task detail from a row", () => {
+    renderTasks();
+    routeState.onOpenTask?.({ id: 42 });
+
+    expect(routeState.navigate).toHaveBeenCalledWith("/tasks/42");
   });
 });

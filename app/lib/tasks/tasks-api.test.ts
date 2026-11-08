@@ -5,6 +5,8 @@ import {
   completeTask,
   createSeries,
   createTask,
+  deleteTask,
+  fetchTask,
   fetchTasks,
   fetchTodayProgress,
   uncompleteTask,
@@ -127,6 +129,39 @@ describe("tasks list API", () => {
       signal: undefined,
     });
   });
+
+  it("serializes repeated project and priority filters", async () => {
+    await fetchTasks({
+      date: "2026-11-08",
+      project_ids: [3, 1],
+      priorities: ["neither", "urgent_important"],
+      status: "open",
+      recurrence: "regular",
+      limit: 100,
+      q: "созвон",
+    });
+
+    expect(apiRequest).toHaveBeenCalledWith(
+      "/tasks?date=2026-11-08&project_ids=1&project_ids=3&priorities=neither&priorities=urgent_important&status=open&recurrence=regular&limit=100&q=%D1%81%D0%BE%D0%B7%D0%B2%D0%BE%D0%BD",
+      { signal: undefined },
+    );
+  });
+
+  it("omits empty repeated filters and recurrence=all", async () => {
+    await fetchTasks({
+      date: "2026-11-08",
+      project_ids: [],
+      priorities: [],
+      status: "all",
+      recurrence: "all",
+      limit: 100,
+    });
+
+    expect(apiRequest).toHaveBeenCalledWith(
+      "/tasks?date=2026-11-08&status=all&limit=100",
+      { signal: undefined },
+    );
+  });
 });
 
 describe("tasks completion API", () => {
@@ -150,5 +185,24 @@ describe("tasks completion API", () => {
       "/tasks/100/uncomplete",
       { method: "POST", signal: undefined },
     );
+  });
+});
+
+describe("task detail API", () => {
+  it("fetches a task with GET /tasks/{id}", async () => {
+    apiRequestMock.mockResolvedValue({ id: 100 });
+    await expect(fetchTask(100)).resolves.toEqual({ id: 100 });
+    expect(apiRequestMock).toHaveBeenCalledWith("/tasks/100", {
+      signal: undefined,
+    });
+  });
+
+  it("deletes a task with DELETE /tasks/{id}", async () => {
+    apiRequestMock.mockResolvedValue(undefined);
+    await expect(deleteTask(100)).resolves.toBeUndefined();
+    expect(apiRequestMock).toHaveBeenCalledWith("/tasks/100", {
+      method: "DELETE",
+      signal: undefined,
+    });
   });
 });

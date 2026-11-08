@@ -12,6 +12,10 @@ const mocks = vi.hoisted(() => ({
     notification: vi.fn(),
     selection: vi.fn(),
   },
+  webApp: {
+    isVersionAtLeast: vi.fn(() => true),
+    showPopup: vi.fn(),
+  },
 }));
 
 vi.mock("react-router", () => ({
@@ -20,7 +24,7 @@ vi.mock("react-router", () => ({
 }));
 
 vi.mock("~/providers/telegram-provider", () => ({
-  useTelegram: () => ({ haptics: mocks.haptics }),
+  useTelegram: () => ({ haptics: mocks.haptics, webApp: mocks.webApp }),
 }));
 
 import { useBottomNavigation } from "./use-bottom-navigation";
@@ -81,9 +85,30 @@ describe("useBottomNavigation", () => {
     mocks.pathname = "/tasks";
     const onSelect = renderOnSelect();
 
-    onSelect("finance");
+    onSelect("workspaces");
 
     expect(mocks.haptics.selection).toHaveBeenCalledTimes(1);
     expect(mocks.navigate).not.toHaveBeenCalled();
+  });
+
+  it("shows the native coming-soon popup for the workspaces tab", () => {
+    const onSelect = renderOnSelect();
+
+    onSelect("workspaces");
+
+    expect(mocks.webApp.showPopup).toHaveBeenCalledWith({
+      title: "Воркспейсы",
+      message: "Скоро будет доступно",
+    });
+    expect(mocks.navigate).not.toHaveBeenCalled();
+  });
+
+  it("does not show the popup when the Telegram client is too old", () => {
+    mocks.webApp.isVersionAtLeast.mockReturnValueOnce(false);
+    const onSelect = renderOnSelect();
+
+    onSelect("workspaces");
+
+    expect(mocks.webApp.showPopup).not.toHaveBeenCalled();
   });
 });

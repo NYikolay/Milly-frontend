@@ -70,6 +70,11 @@ export default function Tasks() {
     void navigate("/");
   }
 
+  function handleOpenTask(task: TaskResponse) {
+    haptics.selection();
+    void navigate(`/tasks/${task.id}`);
+  }
+
   return (
     <main className="flex flex-1 flex-col">
       <div
@@ -100,6 +105,7 @@ export default function Tasks() {
               }));
             }}
             onToggleTask={handleToggleTask}
+            onOpenTask={handleOpenTask}
             onSelectSegment={onSelectSegment}
             pendingTaskId={pendingTaskId}
             progress={overview.progress}

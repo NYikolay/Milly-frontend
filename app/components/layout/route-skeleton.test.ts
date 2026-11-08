@@ -11,6 +11,15 @@ vi.mock("~/components/tasks/today/today-tasks-skeleton", () => ({
   TodayTasksSkeleton: () => createElement("div", null, "TASKS_SKELETON"),
 }));
 
+vi.mock("~/components/tasks/search/search-tasks-page-skeleton", () => ({
+  SearchTasksPageSkeleton: () =>
+    createElement("div", null, "SEARCH_SKELETON"),
+}));
+
+vi.mock("~/components/tasks/detail/task-detail-skeleton", () => ({
+  TaskDetailSkeleton: () => createElement("div", null, "DETAIL_SKELETON"),
+}));
+
 import { RouteSkeleton } from "./route-skeleton";
 
 function renderAt(pathname: string): string {
@@ -29,6 +38,23 @@ describe("RouteSkeleton", () => {
   });
 
   it("renders the tasks skeleton on the tasks screen", () => {
-    expect(renderAt("/tasks")).toContain("TASKS_SKELETON");
+    const html = renderAt("/tasks");
+
+    expect(html).toContain("TASKS_SKELETON");
+    expect(html).not.toContain("SEARCH_SKELETON");
+  });
+
+  it("renders the search page skeleton on the search screen", () => {
+    const html = renderAt("/tasks/search");
+
+    expect(html).toContain("SEARCH_SKELETON");
+    expect(html).not.toContain("TASKS_SKELETON");
+  });
+
+  it("renders the task detail skeleton on a detail path", () => {
+    const html = renderAt("/tasks/42");
+    expect(html).toContain("DETAIL_SKELETON");
+    expect(html).not.toContain("TASKS_SKELETON");
+    expect(html).not.toContain("SEARCH_SKELETON");
   });
 });

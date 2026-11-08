@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useLocation, useNavigate } from "react-router";
 
 import type { TabId } from "~/components/home/bottom-navigation";
+import { supportsVersion } from "~/lib/telegram/client";
 import { useTelegram } from "~/providers/telegram-provider";
 
 const TAB_PATHS: Partial<Record<TabId, string>> = {
@@ -12,11 +13,22 @@ const TAB_PATHS: Partial<Record<TabId, string>> = {
 export function useBottomNavigation(): (id: TabId) => void {
   const navigate = useNavigate();
   const location = useLocation();
-  const { haptics } = useTelegram();
+  const { haptics, webApp } = useTelegram();
 
   return useCallback(
     (id: TabId) => {
       haptics.selection();
+
+      if (id === "workspaces") {
+        if (supportsVersion("6.2", webApp)) {
+          webApp?.showPopup?.({
+            title: "Воркспейсы",
+            message: "Скоро будет доступно",
+          });
+        }
+
+        return;
+      }
 
       const targetPath = TAB_PATHS[id];
 
@@ -24,6 +36,6 @@ export function useBottomNavigation(): (id: TabId) => void {
         void navigate(targetPath);
       }
     },
-    [haptics, location.pathname, navigate],
+    [haptics, location.pathname, navigate, webApp],
   );
 }

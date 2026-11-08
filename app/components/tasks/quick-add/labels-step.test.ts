@@ -68,7 +68,8 @@ describe("LabelsStep", () => {
     expect(html).toContain('aria-label="Поиск меток"');
     expect(html).toContain("h-[45px]");
     expect(html).toContain("mt-[15px]");
-    expect(html).toContain("flex flex-col gap-[10px] px-[15px]");
+    expect(html).toContain("flex flex-col px-[15px]");
+    expect(html).not.toContain("flex flex-col gap-[10px] px-[15px]");
   });
 
   it("renders the selection from the controlled selectedIds", () => {
@@ -80,10 +81,16 @@ describe("LabelsStep", () => {
     expect(empty).toContain("border-app-text-secondary/55");
   });
 
-  it("draws a divider after every label row", () => {
-    const html = render({ labels: [label] });
+  it("draws a divider only between label rows", () => {
+    const single = render({ labels: [label] });
 
-    expect(html.match(/border-b border-app-stroke/g)).toHaveLength(1);
+    expect(single.match(/border-b border-app-stroke/g)).toBeNull();
+
+    const multiple = render({
+      labels: [label, { ...label, id: 4, name: "Работа" }],
+    });
+
+    expect(multiple.match(/border-b border-app-stroke/g)).toHaveLength(1);
   });
 
   it("filters labels by name case-insensitively", () => {

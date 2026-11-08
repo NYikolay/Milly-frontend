@@ -15,6 +15,7 @@ export interface SearchResultsProps {
   pendingTaskId: number | null;
   completionError: string | null;
   onToggleTask: (task: TaskResponse, nextCompleted: boolean) => void;
+  onOpenTask: (task: TaskResponse) => void;
 }
 
 export function SearchResults({
@@ -25,6 +26,7 @@ export function SearchResults({
   pendingTaskId,
   completionError,
   onToggleTask,
+  onOpenTask,
 }: SearchResultsProps): ReactElement {
   const projectsById = new Map(
     projects.map((project) => [project.id, project]),
@@ -58,6 +60,7 @@ export function SearchResults({
               isLast={index === tasks.length - 1}
               isPending={pendingTaskId === task.id}
               key={task.id}
+              onOpen={onOpenTask}
               onToggle={onToggleTask}
               project={
                 task.project_id === null

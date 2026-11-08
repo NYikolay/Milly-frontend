@@ -8,7 +8,12 @@ const routeState = vi.hoisted(() => ({
         isPending: boolean;
         data:
           | {
-              items: { id: number; title: string }[];
+              items: {
+                id: number;
+                title: string;
+                completed_at: string | null;
+                labels: { id: number; name: string }[];
+              }[];
               next_cursor: string | null;
             }
           | undefined;
@@ -26,19 +31,42 @@ const routeState = vi.hoisted(() => ({
       nextCompleted: boolean;
     }): void => {},
   },
+  hookArgs: {
+    search: undefined as unknown[] | undefined,
+    toggle: undefined as unknown[] | undefined,
+  },
+  navigate: vi.fn(),
+  onOpenTask: undefined as
+    | ((task: { id: number }) => void)
+    | undefined,
 }));
 
 vi.mock("@tanstack/react-query", () => ({
-  useQuery: () => ({ data: [] }),
+  useQuery: () => ({
+    data: [],
+    isPending: false,
+    isError: false,
+    refetch: () => undefined,
+  }),
 }));
 
 vi.mock("react-router", () => ({
-  useNavigate: () => () => undefined,
+  useNavigate: () => routeState.navigate,
 }));
 
 vi.mock("~/hooks/use-search-tasks", () => ({
-  useSearchTasksData: () => routeState.search,
-  useToggleSearchTaskCompletion: () => routeState.toggle,
+  useSearchTasksData: (...args: unknown[]) => {
+    routeState.hookArgs.search = args;
+    return routeState.search;
+  },
+  useToggleSearchTaskCompletion: (...args: unknown[]) => {
+    routeState.hookArgs.toggle = args;
+    return routeState.toggle;
+  },
+}));
+
+vi.mock("~/lib/labels/labels-api", () => ({
+  fetchLabels: vi.fn(async () => []),
 }));
 
 vi.mock("~/hooks/use-bottom-navigation", () => ({
@@ -72,33 +100,35 @@ vi.mock("~/components/tasks/search/search-header", () => ({
 }));
 
 vi.mock("~/components/tasks/search/search-filter-bar", () => ({
-  SearchFilterBar: ({
-    activeFilterCount,
-    activeChip,
-  }: {
-    activeFilterCount: number;
-    activeChip: string | null;
-  }) =>
-    createElement(
-      "div",
-      null,
-      `FILTERS:${activeFilterCount}:${activeChip ?? "none"}`,
-    ),
+  SearchFilterBar: (props: Record<string, unknown>) =>
+    createElement("div", { "data-filter-bar": JSON.stringify(props) }),
+}));
+
+vi.mock("~/components/tasks/search/filters/search-filters-sheet", () => ({
+  SearchFiltersSheet: ({ state }: { state: { step: string | null } }) =>
+    createElement("div", null, `SHEET:${state.step ?? "none"}`),
 }));
 
 vi.mock("~/components/tasks/search/search-results", () => ({
   SearchResults: ({
+    date,
     tasks,
     completionError,
+    onOpenTask,
   }: {
+    date: string;
     tasks: { title: string }[];
     completionError: string | null;
-  }) =>
-    createElement(
+    onOpenTask: (task: { id: number }) => void;
+  }) => {
+    routeState.onOpenTask = onOpenTask;
+
+    return createElement(
       "div",
       null,
-      `RESULTS:${tasks.map((task) => task.title).join(",")}:${completionError ?? ""}`,
-    ),
+      `RESULTS:${date}:${tasks.map((task) => task.title).join(",")}:${completionError ?? ""}`,
+    );
+  },
 }));
 
 vi.mock("~/components/tasks/search/search-tasks-skeleton", () => ({
@@ -117,6 +147,8 @@ vi.mock("~/components/home/bottom-navigation-dock", () => ({
   BottomNavigationDock: () => null,
 }));
 
+import { formatZonedToday } from "~/lib/tasks/date-time";
+import { createDefaultSearchFilters } from "~/lib/tasks/search-filters";
 import type { TaskListResponse } from "~/lib/tasks/types";
 
 import TaskSearch, { loader, resolveSearchResults } from "./task-search";
@@ -129,12 +161,43 @@ function render(activeFilterPreview = false): string {
   );
 }
 
+function currentToday(): string {
+  return formatZonedToday(new Date(), "UTC");
+}
+
+interface FilterBarProps {
+  activeFilterCount: number;
+  activeDate: boolean;
+  activePriority: boolean;
+  activeProject: boolean;
+  activeRecurrence: boolean;
+}
+
+function getFilterBarProps(html: string): FilterBarProps {
+  const match = /data-filter-bar="([^"]*)"/.exec(html);
+
+  if (!match) {
+    throw new Error("SearchFilterBar props were not rendered");
+  }
+
+  return JSON.parse(match[1].replaceAll("&quot;", '"')) as FilterBarProps;
+}
+
 describe("TaskSearch route", () => {
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-08T12:00:00Z"));
     routeState.search = {
       isPending: false,
       data: {
-        items: [{ id: 1, title: "Плановая задача" }],
+        items: [
+          {
+            id: 1,
+            title: "Плановая задача",
+            completed_at: null,
+            labels: [],
+          },
+        ],
         next_cursor: null,
       },
       refetch: () => undefined,
@@ -143,15 +206,42 @@ describe("TaskSearch route", () => {
     routeState.toggle.isError = false;
     routeState.toggle.variables = undefined;
     routeState.toggle.mutate = () => undefined;
+    routeState.hookArgs.search = undefined;
+    routeState.hookArgs.toggle = undefined;
+    routeState.navigate.mockClear();
+    routeState.onOpenTask = undefined;
   });
 
-  it("renders the search composition with results", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("renders the search composition with default filters", () => {
+    const today = currentToday();
     const html = render();
 
     expect(html).toContain("SEGMENTS:search");
     expect(html).toContain("HEADER");
-    expect(html).toContain("RESULTS:Плановая задача:");
-    expect(html).toContain("FILTERS:0:none");
+    expect(html).toContain(`RESULTS:${today}:Плановая задача:`);
+    expect(getFilterBarProps(html)).toEqual({
+      activeFilterCount: 0,
+      activeDate: false,
+      activePriority: false,
+      activeProject: false,
+      activeRecurrence: false,
+    });
+    expect(html).toContain("SHEET:none");
+    expect(routeState.hookArgs.search?.slice(0, 3)).toEqual([
+      "UTC",
+      today,
+      "",
+    ]);
+    expect(routeState.hookArgs.search?.[3]).toEqual(
+      createDefaultSearchFilters(),
+    );
+    expect(routeState.hookArgs.toggle?.[3]).toEqual(
+      createDefaultSearchFilters(),
+    );
   });
 
   it("shows the skeleton while the first request is pending", () => {
@@ -166,7 +256,8 @@ describe("TaskSearch route", () => {
     expect(html).toContain("SKELETON");
     expect(html).toContain("SEGMENTS:search");
     expect(html).toContain("HEADER");
-    expect(html).toContain("FILTERS:0:none");
+    expect(getFilterBarProps(html).activeFilterCount).toBe(0);
+    expect(html).toContain("SHEET:none");
   });
 
   it("shows the error when a request fails without cached data", () => {
@@ -181,22 +272,37 @@ describe("TaskSearch route", () => {
     expect(html).toContain("ERROR");
     expect(html).toContain("SEGMENTS:search");
     expect(html).toContain("HEADER");
-    expect(html).toContain("FILTERS:0:none");
+    expect(getFilterBarProps(html).activeFilterCount).toBe(0);
+    expect(html).toContain("SHEET:none");
   });
 
   it("passes the completion error to the results", () => {
+    const today = currentToday();
     routeState.toggle.isError = true;
     routeState.toggle.variables = { taskId: 1, nextCompleted: true };
 
     expect(render()).toContain(
-      "RESULTS:Плановая задача:Не удалось обновить задачу. Попробуйте ещё раз.",
+      `RESULTS:${today}:Плановая задача:Не удалось обновить задачу. Попробуйте ещё раз.`,
     );
   });
 
   it("shows the active project filter in preview mode", () => {
-    const html = render(true);
+    const filterBar = getFilterBarProps(render(true));
 
-    expect(html).toContain("FILTERS:1:project");
+    expect(filterBar).toEqual({
+      activeFilterCount: 1,
+      activeDate: false,
+      activePriority: false,
+      activeProject: true,
+      activeRecurrence: false,
+    });
+  });
+
+  it("navigates to the task detail from a row", () => {
+    render();
+    routeState.onOpenTask?.({ id: 42 });
+
+    expect(routeState.navigate).toHaveBeenCalledWith("/tasks/42");
   });
 });
 
