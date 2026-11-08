@@ -54,7 +54,7 @@ describe("searchTasksQueryKey", () => {
       "Europe/Moscow",
       "2026-11-06",
       "отчёт",
-      "p:|pr:|s:all|r:all|l:",
+      "p:|pr:|s:all|r:all",
     ]);
   });
 
@@ -70,8 +70,24 @@ describe("searchTasksQueryKey", () => {
       "Europe/Moscow",
       TODAY,
       "созвон",
-      "p:1,2|pr:|s:all|r:all|l:",
+      "p:1,2|pr:|s:all|r:all",
     ]);
+  });
+
+  it("keeps the same server key when only labels change", () => {
+    const base = createDefaultSearchFilters();
+
+    expect(
+      searchTasksQueryKey("Europe/Moscow", TODAY, "созвон", {
+        ...base,
+        labelIds: [1],
+      }),
+    ).toEqual(
+      searchTasksQueryKey("Europe/Moscow", TODAY, "созвон", {
+        ...base,
+        labelIds: [2],
+      }),
+    );
   });
 });
 

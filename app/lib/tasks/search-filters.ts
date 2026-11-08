@@ -118,7 +118,7 @@ export function canonicalizeSearchFilters(filters: SearchTaskFilters): SearchTas
 }
 
 export function searchFiltersFingerprint(filters: SearchTaskFilters): string {
-  return `p:${filters.projectIds.join(",")}|pr:${filters.priorities.join(",")}|s:${filters.status}|r:${filters.recurrence}|l:${filters.labelIds.join(",")}`;
+  return `p:${filters.projectIds.join(",")}|pr:${filters.priorities.join(",")}|s:${filters.status}|r:${filters.recurrence}`;
 }
 
 export function toggleSelection<T>(values: T[], value: T): T[] {

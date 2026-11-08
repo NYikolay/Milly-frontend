@@ -108,6 +108,14 @@ describe("search filters model", () => {
     expect(left.labelIds).toEqual([2, 9]);
   });
 
+  it("ignores client-only labels in the server fingerprint", () => {
+    const base = createDefaultSearchFilters();
+
+    expect(searchFiltersFingerprint({ ...base, labelIds: [1, 2] })).toBe(
+      searchFiltersFingerprint(base),
+    );
+  });
+
   it("toggles values and optional single values", () => {
     expect(toggleSelection([1, 2], 2)).toEqual([1]);
     expect(toggleSelection([1, 2], 3)).toEqual([1, 2, 3]);
