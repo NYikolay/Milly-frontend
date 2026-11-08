@@ -14,7 +14,7 @@ import {
   useToggleTaskCompletion,
 } from "~/hooks/use-today-tasks";
 import { formatZonedToday, formatZonedTodayLabel } from "~/lib/tasks/date-time";
-import { fetchProjects } from "~/lib/projects/projects-api";
+import { projectsQueryOptions } from "~/lib/projects/projects-query";
 import type { TaskResponse } from "~/lib/tasks/types";
 import { useAuth } from "~/providers/auth-provider";
 import { useTelegram } from "~/providers/telegram-provider";
@@ -44,10 +44,7 @@ export default function Tasks() {
   });
 
   const overviewQuery = useTodayTasksData(timeZone, today);
-  const projectsQuery = useQuery({
-    queryKey: ["projects"],
-    queryFn: ({ signal }) => fetchProjects(signal),
-  });
+  const projectsQuery = useQuery(projectsQueryOptions);
   const toggleMutation = useToggleTaskCompletion(timeZone, today);
 
   const pendingTaskId = toggleMutation.isPending

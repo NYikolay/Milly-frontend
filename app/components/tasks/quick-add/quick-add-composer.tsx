@@ -4,8 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useRevalidator } from "react-router";
 
 import { SectionHeading } from "~/components/home/section-heading";
-import { fetchLabels } from "~/lib/labels/labels-api";
-import { fetchProjects } from "~/lib/projects/projects-api";
+import { labelsQueryOptions } from "~/lib/labels/labels-query";
+import { projectsQueryOptions } from "~/lib/projects/projects-query";
 import {
   describeQuickAddError,
   QUICK_ADD_SELECTION_UNAVAILABLE_COPY,
@@ -100,16 +100,8 @@ function QuickAddComposerContent({
 
   const form = useQuickTaskForm({ draft });
 
-  const labelsQuery = useQuery({
-    queryKey: ["labels"],
-    queryFn: ({ signal }) => fetchLabels(signal),
-    enabled: true,
-  });
-
-  const projectsQuery = useQuery({
-    queryKey: ["projects"],
-    queryFn: ({ signal }) => fetchProjects(signal),
-  });
+  const labelsQuery = useQuery(labelsQueryOptions);
+  const projectsQuery = useQuery(projectsQueryOptions);
 
   useEffect(() => {
     if (!projectsQuery.isSuccess) {

@@ -18,8 +18,8 @@ import {
   useToggleSearchTaskCompletion,
 } from "~/hooks/use-search-tasks";
 import { useTaskSegmentNavigation } from "~/hooks/use-task-segment-navigation";
-import { fetchLabels } from "~/lib/labels/labels-api";
-import { fetchProjects } from "~/lib/projects/projects-api";
+import { labelsQueryOptions } from "~/lib/labels/labels-query";
+import { projectsQueryOptions } from "~/lib/projects/projects-query";
 import { formatZonedToday } from "~/lib/tasks/date-time";
 import type { FiltersStep } from "~/lib/tasks/search-filters";
 import {
@@ -95,14 +95,8 @@ export default function TaskSearch({ loaderData }: Route.ComponentProps) {
     searchQuery.data,
     lastResultsRef.current,
   );
-  const projectsQuery = useQuery({
-    queryKey: ["projects"],
-    queryFn: ({ signal }) => fetchProjects(signal),
-  });
-  const labelsQuery = useQuery({
-    queryKey: ["labels"],
-    queryFn: ({ signal }) => fetchLabels(signal),
-  });
+  const projectsQuery = useQuery(projectsQueryOptions);
+  const labelsQuery = useQuery(labelsQueryOptions);
   const toggleMutation = useToggleSearchTaskCompletion(
     timeZone,
     today,

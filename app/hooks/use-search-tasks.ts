@@ -7,6 +7,7 @@ import {
   type QueryKey,
 } from "@tanstack/react-query";
 
+import { PROJECTS_QUERY_KEY } from "~/lib/projects/projects-query";
 import {
   buildSearchTaskListQuery,
   resolveFilterDate,
@@ -120,7 +121,7 @@ export function createToggleSearchTaskMutationOptions({
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      void queryClient.invalidateQueries({ queryKey: ["projects"] });
+      void queryClient.invalidateQueries({ queryKey: PROJECTS_QUERY_KEY });
     },
   };
 }

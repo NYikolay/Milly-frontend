@@ -6,6 +6,7 @@ import {
   type QueryKey,
 } from "@tanstack/react-query";
 
+import { PROJECTS_QUERY_KEY } from "~/lib/projects/projects-query";
 import {
   applyTaskCompletion,
   todayProgressQueryKey,
@@ -123,7 +124,7 @@ export function createToggleTaskMutationOptions({
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      void queryClient.invalidateQueries({ queryKey: ["projects"] });
+      void queryClient.invalidateQueries({ queryKey: PROJECTS_QUERY_KEY });
     },
   };
 }

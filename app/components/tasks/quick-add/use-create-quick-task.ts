@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseMutationResult } from "@tanstack/react-query";
 
+import { PROJECTS_QUERY_KEY } from "~/lib/projects/projects-query";
 import {
   toSeriesCreateInput,
   toTaskCreateInput,
@@ -45,7 +46,7 @@ export function useCreateQuickTask({
     onSuccess: (data, variables) => {
       void queryClient.invalidateQueries({ queryKey: ["tasks"] });
       void queryClient.invalidateQueries({ queryKey: ["task-series"] });
-      void queryClient.invalidateQueries({ queryKey: ["projects"] });
+      void queryClient.invalidateQueries({ queryKey: PROJECTS_QUERY_KEY });
       onSuccess?.(data, variables);
     },
     onError: (error, variables) => {

@@ -42,6 +42,7 @@ const routeState = vi.hoisted(() => ({
 }));
 
 vi.mock("@tanstack/react-query", () => ({
+  queryOptions: (options: unknown) => options,
   useQuery: () => ({
     data: [],
     isPending: false,

@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 
 import { ApiError } from "~/lib/api/errors";
+import { PROJECTS_QUERY_KEY } from "~/lib/projects/projects-query";
 import {
   applyTaskDetailCompletion,
   taskDetailQueryKey,
@@ -91,7 +92,7 @@ export function createToggleTaskDetailMutationOptions({
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      void queryClient.invalidateQueries({ queryKey: ["projects"] });
+      void queryClient.invalidateQueries({ queryKey: PROJECTS_QUERY_KEY });
     },
   };
 }
@@ -127,7 +128,7 @@ export function createDeleteTaskMutationOptions({
   function finishDeletion() {
     queryClient.removeQueries({ queryKey });
     void queryClient.invalidateQueries({ queryKey: ["tasks"] });
-    void queryClient.invalidateQueries({ queryKey: ["projects"] });
+    void queryClient.invalidateQueries({ queryKey: PROJECTS_QUERY_KEY });
     haptics.notification("success");
     onDeleted();
   }

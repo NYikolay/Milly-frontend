@@ -16,8 +16,8 @@ import {
 import { useTelegramBackButton } from "~/hooks/use-telegram-back-button";
 import { ApiError } from "~/lib/api/errors";
 import { shouldGoBack } from "~/lib/errors/navigation";
-import { fetchLabels } from "~/lib/labels/labels-api";
-import { fetchProjects } from "~/lib/projects/projects-api";
+import { labelsQueryOptions } from "~/lib/labels/labels-query";
+import { projectsQueryOptions } from "~/lib/projects/projects-query";
 import { useAuth } from "~/providers/auth-provider";
 import { useTelegram } from "~/providers/telegram-provider";
 import type { Route } from "./+types/task-detail";
@@ -44,13 +44,11 @@ export default function TaskDetail() {
   const taskQuery = useTaskDetail(taskId, isValidId);
   const task = taskQuery.data;
   const projectsQuery = useQuery({
-    queryKey: ["projects"],
-    queryFn: ({ signal }) => fetchProjects(signal),
+    ...projectsQueryOptions,
     enabled: task !== undefined && task.project_id !== null,
   });
   const labelsQuery = useQuery({
-    queryKey: ["labels"],
-    queryFn: ({ signal }) => fetchLabels(signal),
+    ...labelsQueryOptions,
     enabled: task !== undefined && task.labels.length > 0,
   });
   const toggleMutation = useToggleTaskDetailCompletion(taskId);
