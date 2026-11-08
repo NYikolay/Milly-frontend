@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   createQuickTaskDefaults,
   isQuickTaskSubmittable,
+  quickTaskResolver,
   quickTaskSchema,
 } from "./quick-task-schema";
 import { PRIORITY_OPTIONS, priorityShortLabel } from "./priority";
@@ -60,6 +61,30 @@ describe("quick task schema", () => {
     expect(
       quickTaskSchema.safeParse({ ...base, projectId: 0 }).success,
     ).toBe(false);
+  });
+
+  it("maps nested array issues to the top-level field", async () => {
+    const base = {
+      ...createQuickTaskDefaults(now, "Europe/Moscow"),
+      title: "Задача",
+      labelIds: [1, 1],
+    };
+    const result = await quickTaskResolver(base, undefined, {} as never);
+
+    expect(result.errors.labelIds).toBeDefined();
+    expect(result.errors).not.toHaveProperty("labelIds.0");
+  });
+
+  it("maps nested array element issues to the top-level field", async () => {
+    const base = {
+      ...createQuickTaskDefaults(now, "Europe/Moscow"),
+      title: "Задача",
+      labelIds: [0],
+    };
+    const result = await quickTaskResolver(base, undefined, {} as never);
+
+    expect(result.errors.labelIds).toBeDefined();
+    expect(result.errors).not.toHaveProperty("labelIds.0");
   });
 
   it("keeps the submit button disabled for empty titles and pending state", () => {

@@ -72,6 +72,25 @@ export const quickTaskSchema: z.ZodType<QuickTaskDraft> = z.object({
   scheduledTime: timeSchema,
 });
 
+const QUICK_TASK_FIELD_KEYS = [
+  "title",
+  "dueDate",
+  "dueTime",
+  "isRecurring",
+  "priority",
+  "projectId",
+  "labelIds",
+  "remindersEnabled",
+  "beforeDueEnabled",
+  "beforeDueAmount",
+  "beforeDueUnit",
+  "scheduledEnabled",
+  "scheduledIntervalDays",
+  "scheduledTime",
+] as const satisfies readonly (keyof QuickTaskDraft)[];
+
+const QUICK_TASK_FIELDS = new Set<string>(QUICK_TASK_FIELD_KEYS);
+
 export const quickTaskResolver: Resolver<QuickTaskDraft> = async (values) => {
   const result = quickTaskSchema.safeParse(values);
 
@@ -82,7 +101,13 @@ export const quickTaskResolver: Resolver<QuickTaskDraft> = async (values) => {
   const errors: FieldErrors<QuickTaskDraft> = {};
 
   for (const issue of result.error.issues) {
-    const key = issue.path.join(".") as keyof QuickTaskDraft;
+    const field = issue.path[0];
+
+    if (typeof field !== "string" || !QUICK_TASK_FIELDS.has(field)) {
+      continue;
+    }
+
+    const key = field as keyof QuickTaskDraft;
 
     if (errors[key]) {
       continue;
