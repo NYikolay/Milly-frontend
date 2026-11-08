@@ -1,3 +1,5 @@
+import { applyCompletionFields, hasCompletionChanged } from "./completion-cache";
+import { normalizeCompleted } from "./today-tasks";
 import type { TaskResponse, TodayProgressResponse } from "./types";
 
 export interface TodayTasksData {
@@ -24,23 +26,14 @@ export function applyTaskCompletion(
 
   if (!current) return data;
 
-  const wasCompleted = current.completed_at !== null;
-  const isCompleted = completedAt !== null;
-
-  if (wasCompleted === isCompleted) return data;
+  if (!hasCompletionChanged(current, completedAt)) return data;
 
   const tasks = data.tasks.map((task) =>
-    task.id === taskId
-      ? {
-          ...task,
-          completed_at: completedAt,
-          updated_at: completedAt ?? task.updated_at,
-        }
-      : task,
+    task.id === taskId ? applyCompletionFields(task, completedAt) : task,
   );
-  const completed = Math.min(
+  const completed = normalizeCompleted(
     data.progress.total,
-    Math.max(0, data.progress.completed + (isCompleted ? 1 : -1)),
+    data.progress.completed + (completedAt !== null ? 1 : -1),
   );
 
   return {

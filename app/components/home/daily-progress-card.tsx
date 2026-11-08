@@ -4,6 +4,7 @@ import chevronRightIcon from "~/assets/icons/chevron_right.svg";
 
 import { AssetIcon } from "~/components/ui/asset-icon";
 import { Skeleton } from "~/components/ui/skeleton";
+import { normalizeCompleted } from "~/lib/tasks/today-tasks";
 
 export type DailyProgressCardStatus = "ready" | "loading" | "error";
 
@@ -22,8 +23,7 @@ export function DailyProgressCard({
   status = "ready",
   onOpen,
 }: DailyProgressCardProps) {
-  const normalizedCompleted =
-    total === 0 ? 0 : Math.min(Math.max(completed, 0), total);
+  const normalizedCompleted = normalizeCompleted(total, completed);
   const progressWidth =
     total === 0 ? "7px" : `${(normalizedCompleted / total) * 100}%`;
   const title = total === 0 ? "Чем займёмся?" : "Всё идёт по плану";

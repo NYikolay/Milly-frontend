@@ -25,12 +25,13 @@ export function splitTodayTasks(tasks: TaskResponse[]) {
   return { planned, completed };
 }
 
+export function normalizeCompleted(total: number, completed: number): number {
+  return total === 0 ? 0 : Math.min(Math.max(completed, 0), total);
+}
+
 export function getTodayProgressCopy(total: number, completed: number) {
   const normalizedTotal = Math.max(total, 0);
-  const normalizedCompleted =
-    normalizedTotal === 0
-      ? 0
-      : Math.min(Math.max(completed, 0), normalizedTotal);
+  const normalizedCompleted = normalizeCompleted(normalizedTotal, completed);
 
   if (normalizedTotal > 0 && normalizedCompleted >= normalizedTotal) {
     return {

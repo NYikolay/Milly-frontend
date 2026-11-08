@@ -1,7 +1,10 @@
 import checkCheckIcon from "~/assets/icons/check-check.svg?no-inline";
 
 import { AssetIcon } from "~/components/ui/asset-icon";
-import { getTodayProgressCopy } from "~/lib/tasks/today-tasks";
+import {
+  getTodayProgressCopy,
+  normalizeCompleted,
+} from "~/lib/tasks/today-tasks";
 
 export interface TodayProgressCardProps {
   total: number;
@@ -12,7 +15,7 @@ export function TodayProgressCard({
   total,
   completed,
 }: TodayProgressCardProps) {
-  const normalized = total === 0 ? 0 : Math.min(Math.max(completed, 0), total);
+  const normalized = normalizeCompleted(total, completed);
   const progressWidth = total === 0 ? "0%" : `${(normalized / total) * 100}%`;
   const { title, description } = getTodayProgressCopy(total, completed);
 

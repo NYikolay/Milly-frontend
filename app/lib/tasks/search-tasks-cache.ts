@@ -1,3 +1,4 @@
+import { applyCompletionFields, hasCompletionChanged } from "./completion-cache";
 import {
   canonicalizeSearchFilters,
   searchFiltersFingerprint,
@@ -32,21 +33,12 @@ export function applySearchTaskCompletion(
 
   if (!current) return data;
 
-  const wasCompleted = current.completed_at !== null;
-  const isCompleted = completedAt !== null;
-
-  if (wasCompleted === isCompleted) return data;
+  if (!hasCompletionChanged(current, completedAt)) return data;
 
   return {
     ...data,
     items: data.items.map((task) =>
-      task.id === taskId
-        ? {
-            ...task,
-            completed_at: completedAt,
-            updated_at: completedAt ?? task.updated_at,
-          }
-        : task,
+      task.id === taskId ? applyCompletionFields(task, completedAt) : task,
     ),
   };
 }

@@ -7,6 +7,7 @@ import {
   getTodayProgressCopy,
   getTodayTasksState,
   getVisibleTasks,
+  normalizeCompleted,
   splitTodayTasks,
 } from "./today-tasks";
 
@@ -76,6 +77,15 @@ describe("getTodayProgressCopy", () => {
     expect(getTodayProgressCopy(3, 5).description).toBe(
       "3 из 3 задач выполнено ✌",
     );
+  });
+});
+
+describe("normalizeCompleted", () => {
+  it("clamps completed into a valid range", () => {
+    expect(normalizeCompleted(5, -1)).toBe(0);
+    expect(normalizeCompleted(5, 3)).toBe(3);
+    expect(normalizeCompleted(5, 9)).toBe(5);
+    expect(normalizeCompleted(0, 4)).toBe(0);
   });
 });
 
