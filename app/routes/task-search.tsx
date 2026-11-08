@@ -19,6 +19,7 @@ import {
 } from "~/hooks/use-search-tasks";
 import { useTaskSegmentNavigation } from "~/hooks/use-task-segment-navigation";
 import { labelsQueryOptions } from "~/lib/labels/labels-query";
+import { CONTENT_BOTTOM_PADDING_WITH_FAB } from "~/lib/layout";
 import { projectsQueryOptions } from "~/lib/projects/projects-query";
 import {
   getCompletionError,
@@ -177,8 +178,7 @@ export default function TaskSearch({ loaderData }: Route.ComponentProps) {
       <div
         className="flex flex-1 flex-col gap-2 px-4"
         style={{
-          paddingBottom:
-            "calc(145px + max(0px, 30px - var(--app-inset-bottom)))",
+          paddingBottom: CONTENT_BOTTOM_PADDING_WITH_FAB,
         }}
       >
         <div className="pb-[15px] pt-[15px]">

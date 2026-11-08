@@ -18,6 +18,7 @@ import {
   getPendingTaskId,
 } from "~/lib/tasks/completion-feedback";
 import { formatZonedToday, formatZonedTodayLabel } from "~/lib/tasks/date-time";
+import { CONTENT_BOTTOM_PADDING_WITH_FAB } from "~/lib/layout";
 import { projectsQueryOptions } from "~/lib/projects/projects-query";
 import type { TaskResponse } from "~/lib/tasks/types";
 import { useAuth } from "~/providers/auth-provider";
@@ -77,8 +78,7 @@ export default function Tasks() {
       <div
         className="flex flex-1 flex-col gap-2 px-4"
         style={{
-          paddingBottom:
-            "calc(145px + max(0px, 30px - var(--app-inset-bottom)))",
+          paddingBottom: CONTENT_BOTTOM_PADDING_WITH_FAB,
         }}
       >
         {overviewQuery.isPending ? (

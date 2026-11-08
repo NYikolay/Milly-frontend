@@ -17,6 +17,7 @@ import { useTelegramBackButton } from "~/hooks/use-telegram-back-button";
 import { ApiError } from "~/lib/api/errors";
 import { shouldGoBack } from "~/lib/errors/navigation";
 import { labelsQueryOptions } from "~/lib/labels/labels-query";
+import { CONTENT_BOTTOM_PADDING } from "~/lib/layout";
 import { projectsQueryOptions } from "~/lib/projects/projects-query";
 import { getCompletionError } from "~/lib/tasks/completion-feedback";
 import { useAuth } from "~/providers/auth-provider";
@@ -158,8 +159,7 @@ export default function TaskDetail() {
       <div
         className="flex flex-1 flex-col gap-2 px-4"
         style={{
-          paddingBottom:
-            "calc(89px + max(0px, 30px - var(--app-inset-bottom)))",
+          paddingBottom: CONTENT_BOTTOM_PADDING,
         }}
       >
         {content}

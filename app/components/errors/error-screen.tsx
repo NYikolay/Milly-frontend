@@ -4,6 +4,7 @@ import type { ReactElement } from "react";
 import logoIcon from "~/assets/icons/Logo.svg";
 import type { AppErrorDescriptor } from "~/lib/errors/app-error";
 import { getAppErrorCopy } from "~/lib/errors/copy";
+import { CONTENT_BOTTOM_PADDING } from "~/lib/layout";
 
 const CARD_CLASSES =
   "flex w-full max-w-[362px] flex-col items-center gap-[20px] rounded-[25px] bg-app-card px-[15px] py-[30px] text-center [@media(max-height:620px)]:py-[20px]";
@@ -59,8 +60,7 @@ export function ErrorScreen({
     <main
       className="relative flex flex-1 flex-col overflow-y-auto px-[25px] pt-[24px]"
       style={{
-        paddingBottom:
-          "calc(89px + max(0px, 30px - var(--app-inset-bottom)))",
+        paddingBottom: CONTENT_BOTTOM_PADDING,
       }}
     >
       <div

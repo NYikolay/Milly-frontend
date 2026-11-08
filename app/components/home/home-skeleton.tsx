@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import logoIcon from "~/assets/icons/Logo.svg";
 import { Skeleton } from "~/components/ui/skeleton";
 import { cn } from "~/lib/cn";
+import { CONTENT_BOTTOM_PADDING } from "~/lib/layout";
 
 const FAQ_ROW_INDEXES = [0, 1];
 
@@ -17,8 +18,7 @@ export function HomeSkeleton(): ReactElement {
       <div
         className="flex flex-1 flex-col gap-2 px-[15px]"
         style={{
-          paddingBottom:
-            "calc(89px + max(0px, 30px - var(--app-inset-bottom)))",
+          paddingBottom: CONTENT_BOTTOM_PADDING,
         }}
       >
         <header className="flex flex-col items-center gap-[5px] pb-[15px] pt-[15px]">

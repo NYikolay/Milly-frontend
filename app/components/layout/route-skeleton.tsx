@@ -5,9 +5,7 @@ import { HomeSkeleton } from "~/components/home/home-skeleton";
 import { TaskDetailSkeleton } from "~/components/tasks/detail/task-detail-skeleton";
 import { SearchTasksPageSkeleton } from "~/components/tasks/search/search-tasks-page-skeleton";
 import { TodayTasksSkeleton } from "~/components/tasks/today/today-tasks-skeleton";
-
-const CONTENT_BOTTOM_PADDING =
-  "calc(89px + max(0px, 30px - var(--app-inset-bottom)))";
+import { CONTENT_BOTTOM_PADDING } from "~/lib/layout";
 
 export function RouteSkeleton(): ReactElement {
   const { pathname } = useLocation();

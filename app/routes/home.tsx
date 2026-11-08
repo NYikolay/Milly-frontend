@@ -12,6 +12,7 @@ import { useBottomNavigation } from "~/hooks/use-bottom-navigation";
 import { useTodayProgress } from "~/hooks/use-today-tasks";
 import { ApiError } from "~/lib/api/errors";
 import { throwAppError } from "~/lib/errors/route-error";
+import { CONTENT_BOTTOM_PADDING } from "~/lib/layout";
 import { formatZonedToday } from "~/lib/tasks/date-time";
 import { useAuth } from "~/providers/auth-provider";
 import { useTelegram } from "~/providers/telegram-provider";
@@ -105,8 +106,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         onBlur={handleBlur}
         onFocus={handleFocus}
         style={{
-          paddingBottom:
-            "calc(89px + max(0px, 30px - var(--app-inset-bottom)))",
+          paddingBottom: CONTENT_BOTTOM_PADDING,
         }}
       >
         <HomeHeader greeting={greeting} />
