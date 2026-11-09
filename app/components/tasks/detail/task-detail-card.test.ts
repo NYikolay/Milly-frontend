@@ -145,6 +145,30 @@ describe("TaskDetailCard", () => {
     expect(render()).not.toContain('aria-label="Изменить напоминание"');
   });
 
+  it("renders the priority row as an edit button when a handler is provided", () => {
+    const html = render({ onPriorityClick: () => {} });
+
+    expect(html).toContain('aria-label="Изменить приоритет"');
+    expect(html).toMatch(/<button[^>]*aria-label="Изменить приоритет"[^>]*>/);
+    expect(html).toContain("Приоритет");
+  });
+
+  it("keeps the priority row non-interactive without a handler", () => {
+    expect(render()).not.toContain('aria-label="Изменить приоритет"');
+  });
+
+  it("renders the project row as an edit button when a handler is provided", () => {
+    const html = render({ onProjectClick: () => {} });
+
+    expect(html).toContain('aria-label="Изменить проект"');
+    expect(html).toMatch(/<button[^>]*aria-label="Изменить проект"[^>]*>/);
+    expect(html).toContain("Проект");
+  });
+
+  it("keeps the project row non-interactive without a handler", () => {
+    expect(render()).not.toContain('aria-label="Изменить проект"');
+  });
+
   it("truncates long plain-text values while the label stays visible", () => {
     const longProjectName =
       "Очень длинное название проекта, которое заметно длиннее шестидесяти символов";

@@ -9,6 +9,8 @@ app/
     layout/app-shell.tsx      # каркас с safe-area и max-w-md
     tasks/detail/             # экран деталей, карточка, модалка удаления
       task-due-sheet.tsx      # шторка «Дата и время задачи»
+    tasks/priority/           # экран «Приоритет задачи»
+    tasks/project/            # экран «Выбор проекта»
     tasks/quick-add/          # быстрое создание: форма, шаги, календарь, отправка
       quick-add-store.ts      # per-composer vanilla Zustand store черновика
       quick-add-store-provider.tsx  # context, QuickAddStoreProvider, useQuickAddStore
@@ -32,6 +34,8 @@ app/
     use-telegram-back-button.ts  # Telegram BackButton 6.1+ с колбэком возврата
     use-today-tasks.ts        # данные и завершение задач на сегодня
     use-update-task-due.ts    # PATCH срока, кэш, haptics
+    use-update-task-priority.ts  # PATCH приоритета, оптимистичный кэш, haptics
+    use-update-task-project.ts  # PATCH проекта, оптимистичный кэш, haptics
     use-update-task-reminders.ts  # автосохранение PATCH напоминаний
     use-voice-recorder.ts
   lib/
@@ -50,7 +54,7 @@ app/
       today-tasks.ts          # состояние экрана «Задачи на сегодня»
       today-tasks-cache.ts    # кэш и оптимистичное завершение задач
       task-detail.ts          # форматирование деталей: срок, создание, напоминания, метки
-      task-detail-cache.ts    # ключ ["tasks","detail",id] и оптимистичное завершение
+      task-detail-cache.ts    # ключ ["tasks","detail",id], оптимистичное завершение, приоритет и проект
       task-due.ts             # начальный черновик и payload срока
       reminders.ts            # модель, payload и опции правил напоминаний
       search-tasks-cache.ts   # кэш и оптимистичное завершение задач поиска
@@ -73,6 +77,8 @@ app/
     tasks.tsx                 # экран «Задачи на сегодня» на /tasks
     task-detail.tsx           # экран деталей на /tasks/:id
     task-reminders.tsx        # экран «Автоматические напоминания» на /tasks/:id/reminders
+    task-priority.tsx         # экран «Приоритет задачи» на /tasks/:id/priority
+    task-project.tsx          # экран «Выбор проекта» на /tasks/:id/project
     task-search.tsx           # экран «Поиск задач» на /tasks/search
   app.css                     # Tailwind theme tokens и базовые стили
   entry.client.tsx            # снятие boot-watchdog перед hydrateRoot

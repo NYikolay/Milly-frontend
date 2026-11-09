@@ -52,6 +52,8 @@ export default function TaskDetail() {
 
   const taskQuery = useTaskDetail(taskId, isValidId);
   const task = taskQuery.data;
+  const isTaskNotFound =
+    taskQuery.error instanceof ApiError && taskQuery.error.status === 404;
   const projectsQuery = useQuery({
     ...projectsQueryOptions,
     enabled: task !== undefined && task.project_id !== null,
@@ -137,6 +139,20 @@ export default function TaskDetail() {
     void navigate(`/tasks/${task.id}/reminders`);
   }
 
+  function handlePriorityClick() {
+    if (!task) return;
+
+    haptics.selection();
+    void navigate(`/tasks/${task.id}/priority`);
+  }
+
+  function handleProjectClick() {
+    if (!task) return;
+
+    haptics.selection();
+    void navigate(`/tasks/${task.id}/project`);
+  }
+
   const project =
     task?.project_id != null
       ? projectsQuery.data?.find((item) => item.id === task.project_id)
@@ -175,12 +191,18 @@ export default function TaskDetail() {
     );
   } else if (taskQuery.isPending) {
     content = <TaskDetailSkeleton />;
-  } else if (!task) {
-    const isNotFound =
-      taskQuery.error instanceof ApiError && taskQuery.error.status === 404;
+  } else if (isTaskNotFound) {
     content = (
       <TaskDetailError
-        kind={isNotFound ? "not-found" : "load-error"}
+        kind="not-found"
+        onBack={handleBack}
+        onRetry={handleBack}
+      />
+    );
+  } else if (!task) {
+    content = (
+      <TaskDetailError
+        kind="load-error"
         onBack={handleBack}
         onRetry={() => void taskQuery.refetch()}
       />
@@ -195,6 +217,8 @@ export default function TaskDetail() {
         now={now}
         onDelete={() => handleDeleteOpenChange(true)}
         onDueClick={() => handleDueOpenChange(true)}
+        onPriorityClick={handlePriorityClick}
+        onProjectClick={handleProjectClick}
         onReminderClick={handleReminderClick}
         onToggleCompleted={handleToggleCompleted}
         project={project}
@@ -215,7 +239,7 @@ export default function TaskDetail() {
         {content}
       </div>
       <BottomNavigationDock active="tasks" onSelect={onSelectTab} />
-      {task ? (
+      {task && !isTaskNotFound ? (
         <DeleteTaskModal
           error={deleteError}
           isPending={deleteMutation.isPending}
@@ -225,7 +249,7 @@ export default function TaskDetail() {
           showSeriesWarning={showSeriesWarning}
         />
       ) : null}
-      {task ? (
+      {task && !isTaskNotFound ? (
         <TaskDueSheet
           error={dueError}
           isPending={dueMutation.isPending}

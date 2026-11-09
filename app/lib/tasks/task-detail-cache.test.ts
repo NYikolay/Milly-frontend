@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   applyTaskDetailCompletion,
+  applyTaskDetailPriority,
+  applyTaskDetailProject,
   taskDetailQueryKey,
 } from "./task-detail-cache";
 import type { TaskResponse } from "./types";
@@ -58,5 +60,47 @@ describe("applyTaskDetailCompletion", () => {
 
   it("returns undefined for missing data", () => {
     expect(applyTaskDetailCompletion(undefined, null)).toBeUndefined();
+  });
+});
+
+describe("applyTaskDetailPriority", () => {
+  it("changes the priority optimistically", () => {
+    const next = applyTaskDetailPriority(task(), "urgent_important");
+    expect(next?.priority).toBe("urgent_important");
+  });
+
+  it("returns the same task for the same priority", () => {
+    const current = task({ priority: "neither" });
+    expect(applyTaskDetailPriority(current, "neither")).toBe(current);
+  });
+
+  it("returns undefined for missing data", () => {
+    expect(applyTaskDetailPriority(undefined, "neither")).toBeUndefined();
+  });
+});
+
+describe("applyTaskDetailProject", () => {
+  it("changes the project optimistically", () => {
+    const next = applyTaskDetailProject(task(), 10);
+    expect(next?.project_id).toBe(10);
+  });
+
+  it("clears the project optimistically with null", () => {
+    const next = applyTaskDetailProject(task({ project_id: 10 }), null);
+    expect(next?.project_id).toBeNull();
+  });
+
+  it("returns the same task for the same project", () => {
+    const current = task({ project_id: 10 });
+    expect(applyTaskDetailProject(current, 10)).toBe(current);
+  });
+
+  it("returns the same task for the same no-project state", () => {
+    const current = task({ project_id: null });
+    expect(applyTaskDetailProject(current, null)).toBe(current);
+  });
+
+  it("returns undefined for missing data", () => {
+    expect(applyTaskDetailProject(undefined, 10)).toBeUndefined();
   });
 });

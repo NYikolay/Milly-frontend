@@ -75,6 +75,20 @@ describe("TaskDetailView", () => {
     expect(render()).not.toContain('aria-label="Изменить напоминание"');
   });
 
+  it("forwards the priority row handler to the card", () => {
+    expect(render({ onPriorityClick: () => {} })).toContain(
+      'aria-label="Изменить приоритет"',
+    );
+    expect(render()).not.toContain('aria-label="Изменить приоритет"');
+  });
+
+  it("forwards the project row handler to the card", () => {
+    expect(render({ onProjectClick: () => {} })).toContain(
+      'aria-label="Изменить проект"',
+    );
+    expect(render()).not.toContain('aria-label="Изменить проект"');
+  });
+
   it("wraps long unbroken titles", () => {
     const html = render({
       task: task({ title: `https://example.com/${"a".repeat(200)}` }),

@@ -30,6 +30,8 @@ export interface TaskDetailCardProps {
   now: Date;
   isDueDateWarning?: boolean;
   onDueClick?: () => void;
+  onPriorityClick?: () => void;
+  onProjectClick?: () => void;
   onReminderClick?: () => void;
 }
 
@@ -113,6 +115,8 @@ export function TaskDetailCard({
   now,
   isDueDateWarning = false,
   onDueClick,
+  onPriorityClick,
+  onProjectClick,
   onReminderClick,
 }: TaskDetailCardProps): ReactElement {
   const overdue = isTaskOverdue(task, now);
@@ -156,9 +160,11 @@ export function TaskDetailCard({
         valueClassName="text-app-text-secondary"
       />
       <DetailRow
+        ariaLabel="Изменить приоритет"
         iconSrc={flagIcon}
         isLast={false}
         label="Приоритет"
+        onClick={onPriorityClick}
         value={formatTaskPriority(task.priority)}
         valueClassName="text-app-text-secondary"
       />
@@ -169,9 +175,11 @@ export function TaskDetailCard({
         value={labelsValue}
       />
       <DetailRow
+        ariaLabel="Изменить проект"
         iconSrc={folderIcon}
         isLast
         label="Проект"
+        onClick={onProjectClick}
         value={project?.name ?? "Без проекта"}
         valueClassName="text-app-text-secondary"
       />

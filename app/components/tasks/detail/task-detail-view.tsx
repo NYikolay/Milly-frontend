@@ -20,6 +20,8 @@ export interface TaskDetailViewProps {
   onToggleCompleted: () => void;
   onDelete: () => void;
   onDueClick?: () => void;
+  onPriorityClick?: () => void;
+  onProjectClick?: () => void;
   onReminderClick?: () => void;
 }
 
@@ -35,6 +37,8 @@ export function TaskDetailView({
   onToggleCompleted,
   onDelete,
   onDueClick,
+  onPriorityClick,
+  onProjectClick,
   onReminderClick,
 }: TaskDetailViewProps): ReactElement {
   const description = task.description?.trim() ?? "";
@@ -61,6 +65,8 @@ export function TaskDetailView({
         labels={labels}
         now={now}
         onDueClick={onDueClick}
+        onPriorityClick={onPriorityClick}
+        onProjectClick={onProjectClick}
         onReminderClick={onReminderClick}
         project={project}
         task={task}

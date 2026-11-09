@@ -4,6 +4,8 @@ import {
   showTaskCreatedToast,
   showTaskDeletedToast,
   showTaskPastDueToast,
+  showTaskPriorityUpdateErrorToast,
+  showTaskProjectUpdateErrorToast,
 } from "./task-toasts";
 
 const sonner = vi.hoisted(() => ({
@@ -38,6 +40,24 @@ describe("task toasts", () => {
 
     expect(sonner.error).toHaveBeenCalledWith(
       "Нельзя вернуть в работу задачу с прошедшей датой. Сначала измените дату задачи.",
+      { icon: null },
+    );
+  });
+
+  it("shows a priority update error toast without an icon", () => {
+    showTaskPriorityUpdateErrorToast();
+
+    expect(sonner.error).toHaveBeenCalledWith(
+      "Не удалось изменить приоритет. Попробуйте ещё раз.",
+      { icon: null },
+    );
+  });
+
+  it("shows a project update error toast without an icon", () => {
+    showTaskProjectUpdateErrorToast();
+
+    expect(sonner.error).toHaveBeenCalledWith(
+      "Не удалось изменить проект. Попробуйте ещё раз.",
       { icon: null },
     );
   });

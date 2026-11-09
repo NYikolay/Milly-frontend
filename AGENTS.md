@@ -19,6 +19,8 @@
 | Экран «Поиск задач» и фильтры (`/tasks/search`) | `docs/agents/features/search.md` |
 | Детали задачи и шторка срока (`/tasks/:id`) | `docs/agents/features/task-detail.md` |
 | Автоматические напоминания (`/tasks/:id/reminders`) | `docs/agents/features/reminders.md` |
+| Приоритет задачи (`/tasks/:id/priority`) | `docs/agents/features/task-priority.md` |
+| Проект задачи (`/tasks/:id/project`) | `docs/agents/features/task-project.md` |
 | Telegram Mini App | `docs/agents/telegram.md` |
 | UI, токены, общие примитивы | `docs/agents/ui.md` |
 | Ручные проверки перед завершением | `docs/agents/qa.md` |
@@ -29,11 +31,11 @@
 
 ### Быстрая карта
 
-- `app/routes.ts` — маршруты; `app/routes/_app.tsx` — `AppShell > AuthGate > Outlet`.
+- `app/routes.ts` — маршруты; `app/routes/_app.tsx` — `AppShell > AuthGate > Outlet`. Экраны задач: `/tasks`, `/tasks/search`, `/tasks/:id`, `/tasks/:id/reminders`, `/tasks/:id/priority`, `/tasks/:id/project`.
 - `app/providers/` — QueryClient, Telegram, Auth.
 - `app/lib/` — api, auth, tasks, errors, projects, labels, telegram, voice.
-- `app/components/` — auth, errors, home, layout, tasks, ui, voice.
-- `app/hooks/` — данные экранов, завершение задач, навигация, BackButton.
+- `app/components/` — auth, errors, home, layout, tasks (`detail`, `priority`, `project`, `quick-add`, `reminders`, `search`, `today`), ui, voice.
+- `app/hooks/` — данные экранов, завершение задач, PATCH срока/приоритета/напоминаний/проекта, навигация, BackButton, включая `use-update-task-priority.ts` и `use-update-task-project.ts`.
 
 ## 2. Стек и запуск
 
@@ -70,6 +72,8 @@ npm run test:watch  # Vitest в watch-режиме
 - Zustand — только для клиентского UI-состояния; формы — `react-hook-form` + `zod`, без ручного дублирования валидации.
 - Все запросы — через `apiRequest` / `requestJson` из `app/lib/api/`, не разбрасывать `fetch`. База — `VITE_API_BASE_URL` (по умолчанию `/api/v1`), ошибки — `ApiError` / `ApiNetworkError`.
 - `AuthGate` в `app/routes/_app.tsx` оборачивает `Outlet`. Access token — только в памяти; refresh token — HttpOnly cookie. Не хранить access/refresh/`initData` в браузерных или Telegram-хранилищах и не логировать их; `useAuth()` не отдаёт токены.
+- Приоритет задачи: выбор варианта на `/tasks/:id/priority` сразу отправляет `PATCH { priority }`, оптимистично обновляет `["tasks","detail",id]` и возвращает на детали; выбор текущего приоритета `PATCH` не отправляет, только возвращает. Не-`404` ошибка откатывает кэш и показывает toast «Не удалось изменить приоритет. Попробуйте ещё раз.»; `404` инвалидирует детали, и маршрут показывает «Задача не найдена».
+- Проект задачи: выбор на `/tasks/:id/project` сразу отправляет `PATCH { project_id }` (включая `null`), оптимистично обновляет `["tasks","detail",id]` и возвращает на детали; выбор текущего проекта `PATCH` не отправляет. Ошибка любого статуса откатывает кэш и показывает toast «Не удалось изменить проект. Попробуйте ещё раз.»; при `404` дополнительно инвалидируются детали и `["projects"]`; `onSettled` инвалидирует детали, `["tasks"]`, `["task-series"]` и `["projects"]`.
 - SSR не отключать. `telegram-web-app.js` — в `<head>` в `root.tsx` до `Meta`, `Links` и app-скриптов, не переносить в `<body>` и не подключать лениво.
 - С Telegram работать только через `useTelegram()` и helpers из `app/lib/telegram/`, не через `window.Telegram`. Новые API гейтить через `supportsVersion`; `initDataUnsafe` — только для отображения, для авторизации отправлять сырой `initData`. Пустой `initData` допустим (refresh-cookie).
 - Безопасные зоны — через `AppShell` и `--app-inset-*`; нижние панели — от `viewportStableHeight`, не от `viewportHeight`. Клавиатура в нижних шторках не меняет высоту и позицию панели.
@@ -90,7 +94,7 @@ npm run build
 
 - `npm test` обязателен перед завершением.
 - Для UI-изменений дополнительно проверить SSR-ответ; для error-экранов — `curl -i http://localhost:3000/does-not-exist`.
-- Полный чеклист ручных проверок по экранам — `docs/agents/qa.md`.
+- Полный чеклист ручных проверок по экранам — `docs/agents/qa.md` (для выбора проекта — раздел «`/tasks/:id/project`»).
 
 <!-- CODEGRAPH_START -->
 ## CodeGraph

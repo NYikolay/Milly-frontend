@@ -35,10 +35,12 @@ export interface TaskCreateInput {
 }
 
 export interface TaskUpdateInput {
+  priority?: Priority;
   due_at?: string;
   recurrence?: TaskRecurrence;
   reminders_enabled?: boolean;
   reminders?: ReminderInput[];
+  project_id?: number | null;
 }
 
 export interface SeriesCreateInput {

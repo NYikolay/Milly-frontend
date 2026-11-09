@@ -24,6 +24,8 @@ interface TaskDetailViewState {
   isPastDueWarning?: boolean;
   onToggleCompleted: () => void;
   onDueClick?: () => void;
+  onPriorityClick?: () => void;
+  onProjectClick?: () => void;
   onReminderClick?: () => void;
 }
 
@@ -371,6 +373,21 @@ describe("TaskDetail route", () => {
     expect(renderRoute()).toContain("VIEW");
   });
 
+  it("shows not found when a background refetch returns a 404", () => {
+    routeState.task = {
+      isPending: false,
+      data: task(),
+      error: new ApiError("Not found", {
+        status: 404,
+        code: "not_found",
+        requestId: "test",
+      }),
+      refetch: vi.fn(),
+    };
+
+    expect(renderRoute()).toContain("ERROR:not-found");
+  });
+
   it("returns back after deletion", () => {
     vi.stubGlobal("window", { history: { state: { idx: 1 } } });
     routeState.task = {
@@ -591,6 +608,18 @@ describe("TaskDetail route", () => {
     renderRoute();
     routeState.viewProps?.onDueClick?.();
     expect(routeState.dueReset).toHaveBeenCalled();
+  });
+
+  it("opens the priority screen from the priority row", () => {
+    renderRoute();
+    routeState.viewProps?.onPriorityClick?.();
+    expect(routeState.navigate).toHaveBeenCalledWith("/tasks/42/priority");
+  });
+
+  it("opens the project screen from the project row", () => {
+    renderRoute();
+    routeState.viewProps?.onProjectClick?.();
+    expect(routeState.navigate).toHaveBeenCalledWith("/tasks/42/project");
   });
 
   it("opens the reminders screen from the reminder row", () => {

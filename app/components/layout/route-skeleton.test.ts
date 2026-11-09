@@ -25,6 +25,15 @@ vi.mock("~/components/tasks/reminders/task-reminders-skeleton", () => ({
     createElement("div", null, "REMINDERS_SKELETON"),
 }));
 
+vi.mock("~/components/tasks/priority/task-priority-skeleton", () => ({
+  TaskPrioritySkeleton: () =>
+    createElement("div", null, "PRIORITY_SKELETON"),
+}));
+
+vi.mock("~/components/tasks/project/task-project-skeleton", () => ({
+  TaskProjectSkeleton: () => createElement("div", null, "PROJECT_SKELETON"),
+}));
+
 import { RouteSkeleton } from "./route-skeleton";
 
 function renderAt(pathname: string): string {
@@ -74,6 +83,34 @@ describe("RouteSkeleton", () => {
     const html = renderAt("/tasks/42/reminders/");
 
     expect(html).toContain("REMINDERS_SKELETON");
+    expect(html).not.toContain("DETAIL_SKELETON");
+  });
+
+  it("renders the priority skeleton on a priority path", () => {
+    const html = renderAt("/tasks/42/priority");
+
+    expect(html).toContain("PRIORITY_SKELETON");
+    expect(html).not.toContain("DETAIL_SKELETON");
+  });
+
+  it("renders the priority skeleton with a trailing slash", () => {
+    const html = renderAt("/tasks/42/priority/");
+
+    expect(html).toContain("PRIORITY_SKELETON");
+    expect(html).not.toContain("DETAIL_SKELETON");
+  });
+
+  it("renders the project skeleton on a project path", () => {
+    const html = renderAt("/tasks/42/project");
+
+    expect(html).toContain("PROJECT_SKELETON");
+    expect(html).not.toContain("DETAIL_SKELETON");
+  });
+
+  it("renders the project skeleton with a trailing slash", () => {
+    const html = renderAt("/tasks/42/project/");
+
+    expect(html).toContain("PROJECT_SKELETON");
     expect(html).not.toContain("DETAIL_SKELETON");
   });
 });
