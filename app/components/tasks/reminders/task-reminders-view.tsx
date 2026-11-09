@@ -199,7 +199,7 @@ export function TaskRemindersView({
                     <span className="text-[13px] leading-[1.4] text-app-text-secondary">
                       За сколько до завершения задачи напомнить
                     </span>
-                    <div className="flex items-start gap-[15px]">
+                    <div className="flex flex-wrap items-start gap-[15px]">
                       <input
                         aria-invalid={!isAmountValid || undefined}
                         aria-label="За сколько до завершения задачи напомнить"
@@ -230,10 +230,12 @@ export function TaskRemindersView({
                 </p>
               ) : null}
 
-              <p className="px-[15px] text-[13px] leading-[1.4] text-app-text-secondary">
-                Напоминание будет выслано в чат с Milly один раз до её
-                завершения.
-              </p>
+              {draft.beforeDueEnabled ? (
+                <p className="px-[15px] text-[13px] leading-[1.4] text-app-text-secondary">
+                  Напоминание будет выслано в чат с Milly один раз до её
+                  завершения.
+                </p>
+              ) : null}
             </div>
 
             <div className="flex flex-col gap-[5px]">
@@ -251,7 +253,7 @@ export function TaskRemindersView({
                 </div>
 
                 {draft.scheduledEnabled ? (
-                  <div className="flex items-end gap-[15px]">
+                  <div className="flex flex-wrap items-end gap-[15px]">
                     <div className="flex w-[215px] max-w-full shrink-0 flex-col gap-[5px]">
                       <span className="text-[13px] leading-[1.4] text-app-text-secondary">
                         Повторять
@@ -286,10 +288,12 @@ export function TaskRemindersView({
                 </p>
               ) : null}
 
-              <p className="px-[15px] text-[13px] leading-[1.4] text-app-text-secondary">
-                Напоминание по расписанию будет высылаться в чат с Milly каждый
-                заданный промежуток времени.
-              </p>
+              {draft.scheduledEnabled ? (
+                <p className="px-[15px] text-[13px] leading-[1.4] text-app-text-secondary">
+                  Напоминание по расписанию будет высылаться в чат с Milly
+                  каждый заданный промежуток времени.
+                </p>
+              ) : null}
             </div>
           </div>
         </div>

@@ -94,6 +94,32 @@ describe("TaskRemindersView", () => {
     );
   });
 
+  it("hides the before-due helper when the rule is off", () => {
+    const base = task();
+    const html = render({
+      task: task({ reminders: [base.reminders[1]] }),
+    });
+    expect(html).toContain(
+      "Напоминание по расписанию будет высылаться в чат с Milly каждый заданный промежуток времени.",
+    );
+    expect(html).not.toContain(
+      "Напоминание будет выслано в чат с Milly один раз до её завершения.",
+    );
+  });
+
+  it("hides the scheduled helper when the rule is off", () => {
+    const base = task();
+    const html = render({
+      task: task({ reminders: [base.reminders[0]] }),
+    });
+    expect(html).toContain(
+      "Напоминание будет выслано в чат с Milly один раз до её завершения.",
+    );
+    expect(html).not.toContain(
+      "Напоминание по расписанию будет высылаться в чат с Milly каждый заданный промежуток времени.",
+    );
+  });
+
   it("shows the save error with a retry button", () => {
     const html = render({ error: "Не удалось сохранить напоминания. Попробуйте ещё раз." });
     expect(html).toContain('role="alert"');
