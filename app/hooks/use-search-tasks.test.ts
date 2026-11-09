@@ -1,6 +1,7 @@
 import { QueryClient, keepPreviousData } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ApiError } from "~/lib/api/errors";
 import {
   buildSearchTaskListQuery,
   createDefaultSearchFilters,
@@ -18,6 +19,11 @@ import {
 } from "./use-search-tasks";
 
 const useQueryMock = vi.hoisted(() => vi.fn());
+const taskToasts = vi.hoisted(() => ({
+  showTaskPastDueToast: vi.fn(),
+}));
+
+vi.mock("~/lib/tasks/task-toasts", () => taskToasts);
 
 vi.mock("@tanstack/react-query", async (importOriginal) => {
   const actual =
@@ -82,6 +88,7 @@ beforeEach(() => {
   queryClient = new QueryClient();
   useQueryMock.mockReset();
   vi.mocked(fetchTasks).mockReset();
+  taskToasts.showTaskPastDueToast.mockClear();
   haptics = {
     impact: vi.fn(),
     notification: vi.fn(),
@@ -180,6 +187,28 @@ describe("createToggleSearchTaskMutationOptions", () => {
 
     expect(queryClient.getQueryData(queryKey)).toEqual(data);
     expect(haptics.notification).toHaveBeenCalledWith("error");
+  });
+
+  it("shows the past-due toast when reactivation is rejected", async () => {
+    const data = createData();
+    const options = createOptions(data);
+    const context = await options.onMutate({
+      taskId: 2,
+      nextCompleted: false,
+    });
+
+    options.onError(
+      new ApiError("Task due date is in the past", {
+        status: 400,
+        code: "bad_request",
+        requestId: "request-1",
+      }),
+      { taskId: 2, nextCompleted: false },
+      context,
+    );
+
+    expect(taskToasts.showTaskPastDueToast).toHaveBeenCalledTimes(1);
+    expect(queryClient.getQueryData(queryKey)).toEqual(data);
   });
 
   it("replaces the task with the server response and reports success", () => {

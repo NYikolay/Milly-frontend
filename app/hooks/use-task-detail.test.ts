@@ -11,6 +11,13 @@ import {
   createToggleTaskDetailMutationOptions,
 } from "./use-task-detail";
 
+const taskToasts = vi.hoisted(() => ({
+  showTaskCreatedToast: vi.fn(),
+  showTaskDeletedToast: vi.fn(),
+}));
+
+vi.mock("~/lib/tasks/task-toasts", () => taskToasts);
+
 const TASK_ID = 1;
 const queryKey = taskDetailQueryKey(TASK_ID);
 
@@ -44,6 +51,7 @@ beforeEach(() => {
     notification: vi.fn(),
     selection: vi.fn(),
   };
+  taskToasts.showTaskDeletedToast.mockClear();
 });
 
 describe("createToggleTaskDetailMutationOptions", () => {
@@ -147,6 +155,7 @@ describe("createDeleteTaskMutationOptions", () => {
       queryKey: ["projects"],
     });
     expect(haptics.notification).toHaveBeenCalledWith("success");
+    expect(taskToasts.showTaskDeletedToast).toHaveBeenCalledTimes(1);
     expect(onDeleted).toHaveBeenCalledTimes(1);
   });
 
@@ -168,6 +177,7 @@ describe("createDeleteTaskMutationOptions", () => {
     );
 
     expect(haptics.notification).toHaveBeenCalledWith("success");
+    expect(taskToasts.showTaskDeletedToast).toHaveBeenCalledTimes(1);
     expect(onDeleted).toHaveBeenCalledTimes(1);
   });
 
@@ -192,6 +202,7 @@ describe("createDeleteTaskMutationOptions", () => {
 
     expect(removeQueries).not.toHaveBeenCalled();
     expect(haptics.notification).toHaveBeenCalledWith("error");
+    expect(taskToasts.showTaskDeletedToast).not.toHaveBeenCalled();
     expect(onDeleted).not.toHaveBeenCalled();
   });
 });

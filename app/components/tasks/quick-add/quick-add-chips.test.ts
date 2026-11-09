@@ -87,11 +87,14 @@ describe("QuickAddChips", () => {
     expect(html).not.toContain("Без проекта");
   });
 
-  it("renders the project chip before the priority chip", () => {
+  it("renders the project chip after the labels chip", () => {
     const html = render({ project: projectFixture });
 
+    expect(html.indexOf("Выбрать метки")).toBeLessThan(
+      html.indexOf('aria-label="Проект: Личное"'),
+    );
     expect(html.indexOf('aria-label="Проект: Личное"')).toBeLessThan(
-      html.indexOf('aria-label="Приоритет задачи"'),
+      html.indexOf("Автонапоминания"),
     );
   });
 
@@ -110,12 +113,13 @@ describe("QuickAddChips", () => {
 
     expect(html).toContain("gap-[5px]");
     expect(html).toContain("size-[18px]");
-    expect(html).toContain("size-6");
+    expect(html).toContain("size-4.5");
   });
 
   it("uses the compact repeat icon when recurring", () => {
     const html = render({ isRecurring: true });
 
-    expect(html).toContain("size-[15px]");
+    expect(html).toContain("repeat.svg");
+    expect(html).toContain("size-[18px]");
   });
 });

@@ -1,16 +1,13 @@
 import type { ReactElement, Ref } from "react";
 
 import calendarIcon from "~/assets/icons/calendar.svg?no-inline";
-import repeatIcon from "~/assets/icons/repeat.svg";
+import repeatIcon from "~/assets/icons/repeat.svg?no-inline";
 import tagPlusIcon from "~/assets/icons/tag-plus.svg";
 import tagIcon from "~/assets/icons/tag.svg?no-inline";
 import { AssetIcon } from "~/components/ui/asset-icon";
 import { OptionChip } from "~/components/ui/option-chip";
 import type { LabelResponse } from "~/lib/labels/types";
-import {
-  getProjectIcon,
-  NO_PROJECT_ICON,
-} from "~/lib/projects/project-icons";
+import { getProjectIcon, NO_PROJECT_ICON } from "~/lib/projects/project-icons";
 import type { ProjectResponse } from "~/lib/projects/types";
 import { formatDueChip } from "~/lib/tasks/date-time";
 import { priorityShortLabel } from "~/lib/tasks/priority";
@@ -66,7 +63,7 @@ export function QuickAddChips({
     ? selectedLabels.length > 1
       ? `${firstSelectedLabel.name}... + ${selectedLabels.length - 1}`
       : firstSelectedLabel.name
-    : undefined;
+    : "Без метки";
   const labelsIcon = firstSelectedLabel ? (
     <span
       className="inline-flex"
@@ -75,7 +72,7 @@ export function QuickAddChips({
       <AssetIcon className="size-[18px]" src={tagIcon} />
     </span>
   ) : (
-    <AssetIcon className="size-6" src={tagPlusIcon} />
+    <AssetIcon className="size-[18px]" src={tagPlusIcon} />
   );
 
   return (
@@ -86,13 +83,20 @@ export function QuickAddChips({
         buttonRef={chipRefs?.due}
         endIcon={
           isRecurring ? (
-            <AssetIcon className="size-[15px]" src={repeatIcon} />
+            <AssetIcon className="size-[18px]" src={repeatIcon} />
           ) : null
         }
         icon={<AssetIcon className="size-[18px]" src={calendarIcon} />}
         iconGap="tight"
         label={formatDueChip(dueDate, dueTime, timeZone, now)}
         onClick={() => onOpenStep("due")}
+      />
+      <OptionChip
+        ariaLabel="Приоритет задачи"
+        buttonRef={chipRefs?.priority}
+        className="w-[45px] justify-center text-center"
+        label={priorityShortLabel(priority)}
+        onClick={() => onOpenStep("priority")}
       />
       <OptionChip
         ariaLabel="Выбрать метки"
@@ -112,13 +116,6 @@ export function QuickAddChips({
         }
         label={project?.name ?? "Без проекта"}
         onClick={() => onOpenStep("project")}
-      />
-      <OptionChip
-        ariaLabel="Приоритет задачи"
-        buttonRef={chipRefs?.priority}
-        className="w-[45px] justify-center text-center"
-        label={priorityShortLabel(priority)}
-        onClick={() => onOpenStep("priority")}
       />
       <OptionChip
         active={remindersEnabled && (beforeDueEnabled || scheduledEnabled)}

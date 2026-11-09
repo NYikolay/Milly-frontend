@@ -18,6 +18,7 @@ import {
   type TaskCompletionVariables,
 } from "~/lib/tasks/task-completion";
 import { deleteTask, fetchTask } from "~/lib/tasks/tasks-api";
+import { showTaskDeletedToast } from "~/lib/tasks/task-toasts";
 import type { TaskResponse } from "~/lib/tasks/types";
 import type { TelegramHaptics } from "~/providers/telegram-provider";
 import { useTelegram } from "~/providers/telegram-provider";
@@ -90,6 +91,7 @@ export function createDeleteTaskMutationOptions({
     void queryClient.invalidateQueries({ queryKey: ["tasks"] });
     void queryClient.invalidateQueries({ queryKey: PROJECTS_QUERY_KEY });
     haptics.notification("success");
+    showTaskDeletedToast();
     onDeleted();
   }
 

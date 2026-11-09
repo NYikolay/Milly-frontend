@@ -20,6 +20,10 @@ import { labelsQueryOptions } from "~/lib/labels/labels-query";
 import { CONTENT_BOTTOM_PADDING } from "~/lib/layout";
 import { projectsQueryOptions } from "~/lib/projects/projects-query";
 import { getCompletionError } from "~/lib/tasks/completion-feedback";
+import {
+  isPastDueUncompleteError,
+  shouldBlockTaskReactivation,
+} from "~/lib/tasks/task-reactivation";
 import { useAuth } from "~/providers/auth-provider";
 import { useTelegram } from "~/providers/telegram-provider";
 import type { Route } from "./+types/task-detail";
@@ -55,6 +59,7 @@ export default function TaskDetail() {
   });
   const toggleMutation = useToggleTaskDetailCompletion(taskId);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isPastDueWarning, setIsPastDueWarning] = useState(false);
   const isMountedRef = useRef(true);
   const deleteMutation = useDeleteTask(taskId, handleDeleted);
   useTelegramBackButton(handleBack);
@@ -66,6 +71,12 @@ export default function TaskDetail() {
       isMountedRef.current = false;
     };
   }, []);
+
+  const dueAt = task?.due_at;
+
+  useEffect(() => {
+    setIsPastDueWarning(false);
+  }, [dueAt]);
 
   function handleBack() {
     haptics.selection();
@@ -85,10 +96,17 @@ export default function TaskDetail() {
 
   function handleToggleCompleted() {
     if (!task) return;
-    toggleMutation.mutate({
-      taskId: task.id,
-      nextCompleted: task.completed_at === null,
-    });
+
+    const nextCompleted = task.completed_at === null;
+
+    if (shouldBlockTaskReactivation(task, nextCompleted, timeZone, now)) {
+      toggleMutation.reset();
+      setIsPastDueWarning(true);
+      return;
+    }
+
+    setIsPastDueWarning(false);
+    toggleMutation.mutate({ taskId: task.id, nextCompleted });
   }
 
   function handleDeleteOpenChange(open: boolean) {
@@ -107,6 +125,10 @@ export default function TaskDetail() {
     task.completed_at === null &&
     new Date(task.due_at) > now;
   const completionError = getCompletionError(toggleMutation);
+  const showPastDueWarning =
+    task !== undefined &&
+    task.completed_at !== null &&
+    (isPastDueWarning || isPastDueUncompleteError(toggleMutation.error));
   const deleteError =
     deleteMutation.isError &&
     !(
@@ -143,6 +165,7 @@ export default function TaskDetail() {
       <TaskDetailView
         completionError={completionError}
         isCompletionPending={toggleMutation.isPending}
+        isPastDueWarning={showPastDueWarning}
         labels={labelsQuery.data ?? []}
         now={now}
         onDelete={() => handleDeleteOpenChange(true)}

@@ -43,6 +43,7 @@ function isApiErrorEnvelope(value: unknown): value is ApiErrorEnvelope {
     candidate.error === true &&
     typeof candidate.code === "string" &&
     typeof candidate.message === "string" &&
+    typeof candidate.description === "string" &&
     typeof candidate.request_id === "string"
   );
 }
@@ -73,6 +74,7 @@ function toApiError(
       status,
       code: envelope.code,
       requestId: envelope.request_id,
+      description: envelope.description,
     });
   }
 

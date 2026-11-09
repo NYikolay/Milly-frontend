@@ -8,6 +8,7 @@ import {
 
 import type { Route } from "./+types/root";
 import { AppErrorBoundary } from "./components/errors/app-error-boundary";
+import { AppToaster } from "./components/ui/app-toaster";
 import { getBootWatchdogScript } from "./lib/boot/watchdog";
 import { AppProviders } from "./providers/app-providers";
 import "./app.css";
@@ -63,6 +64,7 @@ export default function App() {
   return (
     <AppProviders>
       <Outlet />
+      <AppToaster />
     </AppProviders>
   );
 }

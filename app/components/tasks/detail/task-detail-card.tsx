@@ -5,8 +5,8 @@ import calendarIcon from "~/assets/icons/calendar.svg?no-inline";
 import chevronRightIcon from "~/assets/icons/chevron-right.svg?no-inline";
 import flagIcon from "~/assets/icons/flag.svg?no-inline";
 import folderIcon from "~/assets/icons/folder.svg?no-inline";
-import tagRawIcon from "~/assets/icons/tag.svg?no-inline";
-import tagIcon from "~/assets/icons/tag-raw.svg?no-inline";
+import tagIcon from "~/assets/icons/tag.svg?no-inline";
+import tagRawIcon from "~/assets/icons/tag-raw.svg?no-inline";
 
 import { AssetIcon } from "~/components/ui/asset-icon";
 import { cn } from "~/lib/cn";

@@ -22,6 +22,7 @@ import {
   type TaskCompletionMutationOptions,
   type TaskCompletionVariables,
 } from "~/lib/tasks/task-completion";
+import { showTaskPastDueToast } from "~/lib/tasks/task-toasts";
 import { fetchTasks } from "~/lib/tasks/tasks-api";
 import type { TaskListResponse } from "~/lib/tasks/types";
 import { useTelegram } from "~/providers/telegram-provider";
@@ -65,6 +66,7 @@ export function createToggleSearchTaskMutationOptions({
     queryClient,
     haptics,
     queryKey,
+    onPastDueError: showTaskPastDueToast,
     applyOptimistic: applySearchTaskCompletion,
     applySuccess: (data, updatedTask) =>
       data

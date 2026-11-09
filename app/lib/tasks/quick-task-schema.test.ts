@@ -15,7 +15,7 @@ describe("quick task defaults", () => {
     expect(createQuickTaskDefaults(now, "Europe/Moscow")).toEqual({
       title: "",
       dueDate: "2026-11-05",
-      dueTime: "16:07",
+      dueTime: "17:00",
       isRecurring: false,
       priority: "important_not_urgent",
       projectId: null,

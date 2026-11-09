@@ -1,3 +1,5 @@
+import { isPastDueUncompleteError } from "./task-reactivation";
+
 export const TASK_COMPLETION_ERROR =
   "Не удалось обновить задачу. Попробуйте ещё раз.";
 
@@ -5,6 +7,7 @@ export interface CompletionMutationView {
   isPending: boolean;
   isError: boolean;
   variables?: { taskId: number };
+  error?: unknown;
 }
 
 export function getPendingTaskId(
@@ -16,7 +19,11 @@ export function getPendingTaskId(
 }
 
 export function getCompletionError(
-  mutation: Pick<CompletionMutationView, "isError">,
+  mutation: Pick<CompletionMutationView, "isError" | "error">,
 ): string | null {
-  return mutation.isError ? TASK_COMPLETION_ERROR : null;
+  if (!mutation.isError || isPastDueUncompleteError(mutation.error)) {
+    return null;
+  }
+
+  return TASK_COMPLETION_ERROR;
 }

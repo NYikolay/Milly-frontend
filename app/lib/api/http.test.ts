@@ -206,6 +206,41 @@ describe("requestJson", () => {
       expect(error.code).toBe("init_data_invalid");
       expect(error.requestId).toBe("request-1");
       expect(error.message).toBe("Init data is invalid");
+      expect(error.description).toBe("Signature check failed");
+    }
+  });
+
+  it("falls back to http_error when an error envelope description is not a string", async () => {
+    requestSpy.mockResolvedValue(
+      jsonResponse(
+        {
+          error: true,
+          code: "init_data_invalid",
+          message: "Init data is invalid",
+          description: null,
+          details: null,
+          request_id: "request-1",
+        },
+        { status: 422, statusText: "Unprocessable Entity" },
+      ),
+    );
+
+    try {
+      await requestJson("/auth/telegram", {
+        method: "POST",
+        body: { init_data: "bad" },
+      });
+      expect.unreachable("requestJson should reject");
+    } catch (error) {
+      if (!(error instanceof ApiError)) {
+        throw error;
+      }
+
+      expect(error.status).toBe(422);
+      expect(error.code).toBe("http_error");
+      expect(error.requestId).toBe("");
+      expect(error.message).toBe("Unprocessable Entity");
+      expect(error.description).toBe("");
     }
   });
 

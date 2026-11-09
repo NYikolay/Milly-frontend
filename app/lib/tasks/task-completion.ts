@@ -2,6 +2,7 @@ import type { QueryClient, QueryKey } from "@tanstack/react-query";
 
 import { PROJECTS_QUERY_KEY } from "~/lib/projects/projects-query";
 
+import { isPastDueUncompleteError } from "./task-reactivation";
 import { completeTask, uncompleteTask } from "./tasks-api";
 import type { TaskResponse } from "./types";
 
@@ -46,6 +47,7 @@ export interface CreateTaskCompletionMutationOptionsParams<TData> {
     data: TData | undefined,
     updatedTask: TaskResponse,
   ) => TData | undefined;
+  onPastDueError?: () => void;
 }
 
 export function createTaskCompletionMutationOptions<TData>({
@@ -54,6 +56,7 @@ export function createTaskCompletionMutationOptions<TData>({
   queryKey,
   applyOptimistic,
   applySuccess,
+  onPastDueError,
 }: CreateTaskCompletionMutationOptionsParams<TData>): TaskCompletionMutationOptions<TData> {
   return {
     mutationFn: ({ taskId, nextCompleted }) =>
@@ -73,11 +76,15 @@ export function createTaskCompletionMutationOptions<TData>({
 
       return { previous };
     },
-    onError: (_error, _variables, context) => {
+    onError: (error, _variables, context) => {
       if (context?.previous !== undefined) {
         queryClient.setQueryData(queryKey, context.previous);
       }
       haptics.notification("error");
+
+      if (isPastDueUncompleteError(error)) {
+        onPastDueError?.();
+      }
     },
     onSuccess: (updatedTask) => {
       haptics.notification("success");

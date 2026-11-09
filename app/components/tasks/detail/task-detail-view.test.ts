@@ -2,6 +2,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+import { TASK_PAST_DUE_MESSAGE } from "~/lib/tasks/task-reactivation";
 import type { TaskResponse } from "~/lib/tasks/types";
 
 import { TaskDetailView, type TaskDetailViewProps } from "./task-detail-view";
@@ -38,6 +39,7 @@ function render(props: Partial<TaskDetailViewProps> = {}): string {
       now: NOW,
       isCompletionPending: false,
       completionError: null,
+      isPastDueWarning: false,
       onToggleCompleted: () => {},
       onDelete: () => {},
       ...props,
@@ -108,5 +110,17 @@ describe("TaskDetailView", () => {
         completionError: "Не удалось обновить задачу. Попробуйте ещё раз.",
       }),
     ).toContain('role="alert"');
+  });
+
+  it("shows the past-due warning with destructive styling", () => {
+    const html = render({ isPastDueWarning: true });
+    const alert = html.match(/<p[^>]*role="alert"[^>]*>[^<]*<\/p>/)?.[0] ?? "";
+
+    expect(alert).toContain(TASK_PAST_DUE_MESSAGE);
+    expect(alert).toContain("text-app-destructive");
+  });
+
+  it("does not show the past-due warning by default", () => {
+    expect(render()).not.toContain(TASK_PAST_DUE_MESSAGE);
   });
 });

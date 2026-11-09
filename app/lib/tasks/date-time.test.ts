@@ -88,17 +88,33 @@ describe("getZonedNow", () => {
 });
 
 describe("getDefaultDue", () => {
-  it("uses the current local minute with zero seconds", () => {
+  it("uses the start of the next local hour", () => {
     expect(getDefaultDue(now, "Europe/Moscow")).toEqual({
       date: "2026-11-05",
-      time: "16:07",
+      time: "17:00",
+    });
+  });
+
+  it("uses the next hour even when the local minute is exactly zero", () => {
+    expect(
+      getDefaultDue(new Date("2026-11-05T18:00:00Z"), "Europe/Moscow"),
+    ).toEqual({
+      date: "2026-11-05",
+      time: "22:00",
     });
   });
 
   it("keeps the user timezone across UTC day boundaries", () => {
     expect(getDefaultDue(new Date("2026-11-05T22:30:00Z"), "Europe/Moscow")).toEqual({
       date: "2026-11-06",
-      time: "01:30",
+      time: "02:00",
+    });
+  });
+
+  it("rolls over to the next date near local midnight", () => {
+    expect(getDefaultDue(new Date("2026-11-05T20:20:00Z"), "Europe/Moscow")).toEqual({
+      date: "2026-11-06",
+      time: "00:00",
     });
   });
 });

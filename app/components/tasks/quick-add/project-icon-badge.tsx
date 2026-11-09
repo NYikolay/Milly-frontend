@@ -26,7 +26,7 @@ export function ProjectIconBadge({
       style={isNoProject ? undefined : { backgroundColor: colorHex }}
     >
       <AssetIcon
-        className={isNoProject ? "size-[20px]" : "size-[18px]"}
+        className={"size-4.5"}
         src={icon}
       />
     </span>

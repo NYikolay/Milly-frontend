@@ -2,6 +2,19 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+interface RouteTask {
+  id: number;
+  series_id: number | null;
+  due_at: string;
+  completed_at: string | null;
+}
+
+const taskToasts = vi.hoisted(() => ({
+  showTaskPastDueToast: vi.fn(),
+}));
+
+vi.mock("~/lib/tasks/task-toasts", () => taskToasts);
+
 const routeState = vi.hoisted(() => ({
   search: undefined as
     | {
@@ -30,6 +43,7 @@ const routeState = vi.hoisted(() => ({
       taskId: number;
       nextCompleted: boolean;
     }): void => {},
+    reset: vi.fn(),
   },
   hookArgs: {
     search: undefined as unknown[] | undefined,
@@ -38,6 +52,9 @@ const routeState = vi.hoisted(() => ({
   navigate: vi.fn(),
   onOpenTask: undefined as
     | ((task: { id: number }) => void)
+    | undefined,
+  onToggleTask: undefined as
+    | ((task: RouteTask, nextCompleted: boolean) => void)
     | undefined,
 }));
 
@@ -116,13 +133,16 @@ vi.mock("~/components/tasks/search/search-results", () => ({
     tasks,
     completionError,
     onOpenTask,
+    onToggleTask,
   }: {
     date: string;
     tasks: { title: string }[];
     completionError: string | null;
     onOpenTask: (task: { id: number }) => void;
+    onToggleTask: (task: RouteTask, nextCompleted: boolean) => void;
   }) => {
     routeState.onOpenTask = onOpenTask;
+    routeState.onToggleTask = onToggleTask;
 
     return createElement(
       "div",
@@ -184,6 +204,16 @@ function getFilterBarProps(html: string): FilterBarProps {
   return JSON.parse(match[1].replaceAll("&quot;", '"')) as FilterBarProps;
 }
 
+function pastDueTask(overrides: Partial<RouteTask> = {}): RouteTask {
+  return {
+    id: 7,
+    series_id: null,
+    due_at: "2026-11-07T08:00:00.000Z",
+    completed_at: "2026-11-07T09:00:00.000Z",
+    ...overrides,
+  };
+}
+
 describe("TaskSearch route", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -206,11 +236,14 @@ describe("TaskSearch route", () => {
     routeState.toggle.isPending = false;
     routeState.toggle.isError = false;
     routeState.toggle.variables = undefined;
-    routeState.toggle.mutate = () => undefined;
+    routeState.toggle.mutate = vi.fn();
+    routeState.toggle.reset = vi.fn();
     routeState.hookArgs.search = undefined;
     routeState.hookArgs.toggle = undefined;
     routeState.navigate.mockClear();
     routeState.onOpenTask = undefined;
+    routeState.onToggleTask = undefined;
+    taskToasts.showTaskPastDueToast.mockClear();
   });
 
   afterEach(() => {
@@ -304,6 +337,28 @@ describe("TaskSearch route", () => {
     routeState.onOpenTask?.({ id: 42 });
 
     expect(routeState.navigate).toHaveBeenCalledWith("/tasks/42");
+  });
+
+  it("shows the past-due toast instead of reactivating a completed one-off task due yesterday", () => {
+    render();
+
+    routeState.onToggleTask?.(pastDueTask(), false);
+
+    expect(taskToasts.showTaskPastDueToast).toHaveBeenCalledTimes(1);
+    expect(routeState.toggle.reset).toHaveBeenCalledTimes(1);
+    expect(routeState.toggle.mutate).not.toHaveBeenCalled();
+  });
+
+  it("sends a completed series task due yesterday to the backend", () => {
+    render();
+
+    routeState.onToggleTask?.(pastDueTask({ series_id: 42 }), false);
+
+    expect(taskToasts.showTaskPastDueToast).not.toHaveBeenCalled();
+    expect(routeState.toggle.mutate).toHaveBeenCalledWith({
+      taskId: 7,
+      nextCompleted: false,
+    });
   });
 });
 

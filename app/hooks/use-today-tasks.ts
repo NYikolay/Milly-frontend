@@ -8,6 +8,7 @@ import {
   type TaskCompletionMutationOptions,
   type TaskCompletionVariables,
 } from "~/lib/tasks/task-completion";
+import { showTaskPastDueToast } from "~/lib/tasks/task-toasts";
 import {
   applyTaskCompletion,
   todayProgressQueryKey,
@@ -62,6 +63,7 @@ export function createToggleTaskMutationOptions({
     queryClient,
     haptics,
     queryKey,
+    onPastDueError: showTaskPastDueToast,
     applyOptimistic: applyTaskCompletion,
     applySuccess: (data, updatedTask) =>
       data

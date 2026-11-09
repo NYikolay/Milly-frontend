@@ -11,6 +11,7 @@ import {
   QUICK_ADD_SELECTION_UNAVAILABLE_COPY,
 } from "~/lib/tasks/quick-task-errors";
 import type { QuickTaskDraft } from "~/lib/tasks/quick-task-schema";
+import { showTaskCreatedToast } from "~/lib/tasks/task-toasts";
 import { useAuth } from "~/providers/auth-provider";
 import { useTelegram } from "~/providers/telegram-provider";
 
@@ -120,6 +121,7 @@ function QuickAddComposerContent({
       }
 
       haptics.notification("success");
+      showTaskCreatedToast();
       resetDraft();
       void revalidator.revalidate();
     },

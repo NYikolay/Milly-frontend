@@ -15,7 +15,14 @@ interface TaskQueryState {
 interface ToggleState {
   isPending: boolean;
   isError: boolean;
+  error: unknown;
   mutate: (variables: { taskId: number; nextCompleted: boolean }) => void;
+  reset: () => void;
+}
+
+interface TaskDetailViewState {
+  isPastDueWarning?: boolean;
+  onToggleCompleted: () => void;
 }
 
 const routeState = vi.hoisted(() => ({
@@ -25,11 +32,14 @@ const routeState = vi.hoisted(() => ({
   toggle: {
     isPending: false,
     isError: false,
+    error: null,
     mutate: (_variables: {
       taskId: number;
       nextCompleted: boolean;
     }): void => {},
+    reset: (): void => {},
   } as ToggleState,
+  viewProps: undefined as TaskDetailViewState | undefined,
   navigate: vi.fn(),
   bottomNavActive: undefined as string | undefined,
   onDeleted: undefined as (() => void) | undefined,
@@ -98,7 +108,11 @@ vi.mock("~/components/home/bottom-navigation-dock", () => ({
 }));
 
 vi.mock("~/components/tasks/detail/task-detail-view", () => ({
-  TaskDetailView: () => createElement("div", null, "VIEW"),
+  TaskDetailView: (props: TaskDetailViewState) => {
+    routeState.viewProps = props;
+
+    return createElement("div", null, "VIEW");
+  },
 }));
 
 vi.mock("~/components/tasks/detail/task-detail-error", () => ({
@@ -176,8 +190,11 @@ describe("TaskDetail route", () => {
     routeState.toggle = {
       isPending: false,
       isError: false,
+      error: null,
       mutate: vi.fn(),
+      reset: vi.fn(),
     };
+    routeState.viewProps = undefined;
     routeState.navigate.mockClear();
     routeState.bottomNavActive = undefined;
     routeState.onDeleted = undefined;
@@ -389,5 +406,95 @@ describe("TaskDetail route", () => {
     renderRoute();
 
     expect(routeState.showSeriesWarning).toBe(false);
+  });
+
+  it("blocks reactivation of a completed one-off task due yesterday", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-08T10:00:00Z"));
+    routeState.task = {
+      isPending: false,
+      data: task({
+        series_id: null,
+        completed_at: "2026-11-07T12:00:00.000Z",
+        due_at: "2026-11-07T12:00:00.000Z",
+      }),
+      error: null,
+      refetch: vi.fn(),
+    };
+
+    renderRoute();
+    routeState.viewProps?.onToggleCompleted();
+
+    expect(routeState.toggle.reset).toHaveBeenCalledTimes(1);
+    expect(routeState.toggle.mutate).not.toHaveBeenCalled();
+  });
+
+  it("sends reactivation of a completed series task due yesterday to the backend", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-08T10:00:00Z"));
+    routeState.task = {
+      isPending: false,
+      data: task({
+        series_id: 5,
+        completed_at: "2026-11-07T12:00:00.000Z",
+        due_at: "2026-11-07T12:00:00.000Z",
+      }),
+      error: null,
+      refetch: vi.fn(),
+    };
+
+    renderRoute();
+    routeState.viewProps?.onToggleCompleted();
+
+    expect(routeState.toggle.mutate).toHaveBeenCalledWith({
+      taskId: 42,
+      nextCompleted: false,
+    });
+  });
+
+  it("sends reactivation of a completed task due today with an earlier time", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-08T10:00:00Z"));
+    routeState.task = {
+      isPending: false,
+      data: task({
+        completed_at: "2026-11-08T08:00:00.000Z",
+        due_at: "2026-11-08T07:00:00.000Z",
+      }),
+      error: null,
+      refetch: vi.fn(),
+    };
+
+    renderRoute();
+    routeState.viewProps?.onToggleCompleted();
+
+    expect(routeState.toggle.mutate).toHaveBeenCalledWith({
+      taskId: 42,
+      nextCompleted: false,
+    });
+  });
+
+  it("shows the past-due warning for a past-due uncomplete error", () => {
+    routeState.task = {
+      isPending: false,
+      data: task({ completed_at: "2026-11-07T12:00:00.000Z" }),
+      error: null,
+      refetch: vi.fn(),
+    };
+    routeState.toggle = {
+      isPending: false,
+      isError: true,
+      error: new ApiError("Task due date is in the past", {
+        status: 400,
+        code: "bad_request",
+        requestId: "test",
+      }),
+      mutate: vi.fn(),
+      reset: vi.fn(),
+    };
+
+    renderRoute();
+
+    expect(routeState.viewProps?.isPastDueWarning).toBe(true);
   });
 });

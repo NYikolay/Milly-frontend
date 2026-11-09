@@ -20,6 +20,8 @@ import {
 import { formatZonedToday, formatZonedTodayLabel } from "~/lib/tasks/date-time";
 import { CONTENT_BOTTOM_PADDING_WITH_FAB } from "~/lib/layout";
 import { projectsQueryOptions } from "~/lib/projects/projects-query";
+import { shouldBlockTaskReactivation } from "~/lib/tasks/task-reactivation";
+import { showTaskPastDueToast } from "~/lib/tasks/task-toasts";
 import type { TaskResponse } from "~/lib/tasks/types";
 import { useAuth } from "~/providers/auth-provider";
 import { useTelegram } from "~/providers/telegram-provider";
@@ -60,6 +62,12 @@ export default function Tasks() {
     task: TaskResponse,
     nextCompleted: boolean,
   ) {
+    if (shouldBlockTaskReactivation(task, nextCompleted, timeZone, now)) {
+      toggleMutation.reset();
+      showTaskPastDueToast();
+      return;
+    }
+
     toggleMutation.mutate({ taskId: task.id, nextCompleted });
   }
 

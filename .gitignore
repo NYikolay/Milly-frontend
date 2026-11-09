@@ -28,6 +28,7 @@ pnpm-debug.log*
 # Tests and coverage
 /coverage/
 .nyc_output/
+/.vitest/
 
 # Caches
 .cache/

@@ -1,6 +1,8 @@
 import { QueryClient } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ApiError } from "~/lib/api/errors";
+
 import { completeTask, uncompleteTask } from "./tasks-api";
 import { applyCompletionFields, replaceTaskInList } from "./completion-cache";
 import {
@@ -50,11 +52,12 @@ beforeEach(() => {
   vi.mocked(uncompleteTask).mockReset();
 });
 
-function createOptions() {
+function createOptions(onPastDueError?: () => void) {
   return createTaskCompletionMutationOptions<ListData>({
     queryClient,
     haptics,
     queryKey,
+    onPastDueError,
     applyOptimistic: (data, taskId, completedAt) =>
       data
         ? {
@@ -97,6 +100,50 @@ describe("createTaskCompletionMutationOptions", () => {
 
     expect(queryClient.getQueryData(queryKey)).toEqual(data);
     expect(haptics.notification).toHaveBeenCalledWith("error");
+  });
+
+  it("calls onPastDueError for a past-due uncomplete after rollback", async () => {
+    const data: ListData = { items: [task()] };
+    queryClient.setQueryData(queryKey, data);
+    const onPastDueError = vi.fn();
+    const options = createOptions(onPastDueError);
+    const context = await options.onMutate({
+      taskId: 1,
+      nextCompleted: false,
+    });
+
+    options.onError(
+      new ApiError("Task due date is in the past", {
+        status: 400,
+        code: "bad_request",
+        requestId: "request-1",
+      }),
+      { taskId: 1, nextCompleted: false },
+      context,
+    );
+
+    expect(queryClient.getQueryData(queryKey)).toEqual(data);
+    expect(haptics.notification).toHaveBeenCalledWith("error");
+    expect(onPastDueError).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not call onPastDueError for a generic failure", async () => {
+    const data: ListData = { items: [task()] };
+    queryClient.setQueryData(queryKey, data);
+    const onPastDueError = vi.fn();
+    const options = createOptions(onPastDueError);
+    const context = await options.onMutate({
+      taskId: 1,
+      nextCompleted: false,
+    });
+
+    options.onError(
+      new Error("request failed"),
+      { taskId: 1, nextCompleted: false },
+      context,
+    );
+
+    expect(onPastDueError).not.toHaveBeenCalled();
   });
 
   it("replaces the task with the server response on success", () => {

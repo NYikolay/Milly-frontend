@@ -169,11 +169,13 @@ export function getDefaultDue(
   now: Date,
   timeZone: string,
 ): { date: string; time: string } {
-  const { year, month, day, hour, minute } = getZonedNow(now, timeZone);
+  const { year, month, day, hour } = getZonedNow(now, timeZone);
+  const nextHour = (hour + 1) % 24;
+  const date = formatDate(year, month, day);
 
   return {
-    date: formatDate(year, month, day),
-    time: `${pad(hour)}:${pad(minute)}`,
+    date: nextHour === 0 ? addDays(date, 1) : date,
+    time: `${pad(nextHour)}:00`,
   };
 }
 

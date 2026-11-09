@@ -37,6 +37,8 @@ import {
   createSearchFiltersState,
   searchFiltersReducer,
 } from "~/lib/tasks/search-filters-reducer";
+import { shouldBlockTaskReactivation } from "~/lib/tasks/task-reactivation";
+import { showTaskPastDueToast } from "~/lib/tasks/task-toasts";
 import type { TaskListResponse, TaskResponse } from "~/lib/tasks/types";
 import { useAuth } from "~/providers/auth-provider";
 import { useTelegram } from "~/providers/telegram-provider";
@@ -155,6 +157,12 @@ export default function TaskSearch({ loaderData }: Route.ComponentProps) {
   const activeRecurrence = appliedFilters.recurrence !== "all";
 
   function handleToggleTask(task: TaskResponse, nextCompleted: boolean) {
+    if (shouldBlockTaskReactivation(task, nextCompleted, timeZone, now)) {
+      toggleMutation.reset();
+      showTaskPastDueToast();
+      return;
+    }
+
     toggleMutation.mutate({ taskId: task.id, nextCompleted });
   }
 

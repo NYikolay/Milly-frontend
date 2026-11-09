@@ -4,6 +4,7 @@ import { TaskDetailCard } from "~/components/tasks/detail/task-detail-card";
 import { cn } from "~/lib/cn";
 import type { LabelResponse } from "~/lib/labels/types";
 import type { ProjectResponse } from "~/lib/projects/types";
+import { TASK_PAST_DUE_MESSAGE } from "~/lib/tasks/task-reactivation";
 import { formatTaskCreatedAt } from "~/lib/tasks/task-detail";
 import type { TaskResponse } from "~/lib/tasks/types";
 
@@ -15,6 +16,7 @@ export interface TaskDetailViewProps {
   now: Date;
   isCompletionPending: boolean;
   completionError: string | null;
+  isPastDueWarning: boolean;
   onToggleCompleted: () => void;
   onDelete: () => void;
 }
@@ -27,6 +29,7 @@ export function TaskDetailView({
   now,
   isCompletionPending,
   completionError,
+  isPastDueWarning,
   onToggleCompleted,
   onDelete,
 }: TaskDetailViewProps): ReactElement {
@@ -50,6 +53,7 @@ export function TaskDetailView({
         </div>
       ) : null}
       <TaskDetailCard
+        isDueDateWarning={isPastDueWarning}
         labels={labels}
         now={now}
         project={project}
@@ -59,6 +63,14 @@ export function TaskDetailView({
       <p className="px-[15px] text-[13px] leading-[1.4] text-app-text-secondary">
         Создано {formatTaskCreatedAt(task.created_at, timeZone)}
       </p>
+      {isPastDueWarning ? (
+        <p
+          className="px-[15px] text-[13px] leading-[1.4] text-app-destructive"
+          role="alert"
+        >
+          {TASK_PAST_DUE_MESSAGE}
+        </p>
+      ) : null}
       {completionError ? (
         <p
           className="px-[15px] text-[13px] leading-[1.4] text-app-destructive"
