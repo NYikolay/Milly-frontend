@@ -562,7 +562,7 @@ it("disables apply and marks it busy while pending", () => {
   const html = render({}, { isPending: true });
 
   expect(html).toMatch(
-    /<button[^>]*aria-busy="true"[^>]*disabled=""[^>]*>Готово<\/button>/,
+    /<button(?=[^>]*aria-busy="true")(?=[^>]*disabled="")[^>]*>Готово<\/button>/,
   );
 });
 ```
@@ -736,7 +736,9 @@ describe("TaskDueSheet", () => {
 
     expect(html).toContain('role="alert"');
     expect(html).toContain("Не удалось изменить срок. Попробуйте ещё раз.");
-    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Готово<\/button>/);
+    expect(html).toMatch(
+      /<button(?=[^>]*disabled="")[^>]*>Готово<\/button>/,
+    );
   });
 });
 ```
