@@ -3,37 +3,17 @@ import type { ReactElement } from "react";
 import { BottomSheetPrimaryAction } from "~/components/ui/bottom-sheet";
 import { Collapsible } from "~/components/ui/collapsible";
 import { SelectField } from "~/components/ui/select-field";
-import type { SelectOption } from "~/components/ui/select-field";
 import { Switch } from "~/components/ui/switch";
 import { TimeInput } from "~/components/ui/time-input";
 import { isValidTime } from "~/lib/tasks/date-time";
-import type { DueUnit } from "~/lib/tasks/quick-task-schema";
+import {
+  DEFAULT_REMINDER_TIME,
+  REMINDER_INTERVAL_OPTIONS,
+  REMINDER_UNIT_OPTIONS,
+} from "~/lib/tasks/reminders";
+import type { ReminderDraft } from "~/lib/tasks/reminders";
 
-const DEFAULT_SCHEDULED_TIME = "14:00";
-
-export const REMINDER_UNIT_OPTIONS: SelectOption<DueUnit>[] = [
-  { value: "minutes", label: "Минут" },
-  { value: "hours", label: "Часов" },
-  { value: "days", label: "Дней" },
-];
-
-export const REMINDER_INTERVAL_OPTIONS: SelectOption<number>[] = [
-  { value: 1, label: "Каждый день" },
-  { value: 2, label: "Каждые 2 дня" },
-  { value: 3, label: "Каждые 3 дня" },
-  { value: 4, label: "Каждые 4 дня" },
-  { value: 7, label: "Каждую неделю" },
-];
-
-export interface ReminderDraft {
-  remindersEnabled: boolean;
-  beforeDueEnabled: boolean;
-  beforeDueAmount: number;
-  beforeDueUnit: DueUnit;
-  scheduledEnabled: boolean;
-  scheduledIntervalDays: number;
-  scheduledTime: string;
-}
+export type { ReminderDraft };
 
 export interface RemindersStepProps {
   value: ReminderDraft;
@@ -49,7 +29,7 @@ export function normalizeReminderDraft(draft: ReminderDraft): ReminderDraft {
     return draft;
   }
 
-  return { ...draft, scheduledTime: DEFAULT_SCHEDULED_TIME };
+  return { ...draft, scheduledTime: DEFAULT_REMINDER_TIME };
 }
 
 function parseAmount(input: string): number | null {

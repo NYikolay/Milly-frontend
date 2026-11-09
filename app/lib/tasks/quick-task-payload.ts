@@ -1,18 +1,11 @@
 import { zonedDateTimeToIso } from "./date-time";
-import type { DueUnit, QuickTaskDraft } from "./quick-task-schema";
+import type { QuickTaskDraft } from "./quick-task-schema";
+import { buildReminderRules } from "./reminders";
 import type {
   ReminderInput,
   SeriesCreateInput,
   TaskCreateInput,
 } from "./types";
-
-const MAX_OFFSET_MINUTES = 525600;
-
-const DUE_UNIT_MINUTES: Record<DueUnit, number> = {
-  minutes: 1,
-  hours: 60,
-  days: 1440,
-};
 
 function dedupeLabelIds(labelIds: number[]): number[] {
   return [...new Set(labelIds)];
@@ -30,27 +23,7 @@ export function buildReminderInputs(draft: QuickTaskDraft): {
     return { enabled: false, reminders: [] };
   }
 
-  const reminders: ReminderInput[] = [];
-
-  if (draft.beforeDueEnabled) {
-    const offsetMinutes =
-      draft.beforeDueAmount * DUE_UNIT_MINUTES[draft.beforeDueUnit];
-
-    reminders.push({
-      kind: "before_due",
-      enabled: true,
-      offset_minutes: Math.min(Math.max(1, offsetMinutes), MAX_OFFSET_MINUTES),
-    });
-  }
-
-  if (draft.scheduledEnabled) {
-    reminders.push({
-      kind: "scheduled",
-      enabled: true,
-      interval_days: draft.scheduledIntervalDays,
-      time_of_day: toTimeOfDay(draft.scheduledTime),
-    });
-  }
+  const reminders = buildReminderRules(draft);
 
   if (reminders.length === 0) {
     return { enabled: false, reminders: [] };
