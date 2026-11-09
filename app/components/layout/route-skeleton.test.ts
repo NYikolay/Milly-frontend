@@ -20,6 +20,11 @@ vi.mock("~/components/tasks/detail/task-detail-skeleton", () => ({
   TaskDetailSkeleton: () => createElement("div", null, "DETAIL_SKELETON"),
 }));
 
+vi.mock("~/components/tasks/reminders/task-reminders-skeleton", () => ({
+  TaskRemindersSkeleton: () =>
+    createElement("div", null, "REMINDERS_SKELETON"),
+}));
+
 import { RouteSkeleton } from "./route-skeleton";
 
 function renderAt(pathname: string): string {
@@ -56,5 +61,12 @@ describe("RouteSkeleton", () => {
     expect(html).toContain("DETAIL_SKELETON");
     expect(html).not.toContain("TASKS_SKELETON");
     expect(html).not.toContain("SEARCH_SKELETON");
+  });
+
+  it("renders the reminders skeleton on a reminders path", () => {
+    const html = renderAt("/tasks/42/reminders");
+
+    expect(html).toContain("REMINDERS_SKELETON");
+    expect(html).not.toContain("DETAIL_SKELETON");
   });
 });

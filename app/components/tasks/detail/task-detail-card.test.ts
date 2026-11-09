@@ -131,6 +131,20 @@ describe("TaskDetailCard", () => {
     expect(render()).not.toContain('aria-label="Изменить срок"');
   });
 
+  it("renders the reminder row as an edit button when a handler is provided", () => {
+    const html = render({ onReminderClick: () => {} });
+
+    expect(html).toContain('aria-label="Изменить напоминание"');
+    expect(html).toMatch(
+      /<button[^>]*aria-label="Изменить напоминание"[^>]*>/,
+    );
+    expect(html).toContain("Напоминание");
+  });
+
+  it("keeps the reminder row non-interactive without a handler", () => {
+    expect(render()).not.toContain('aria-label="Изменить напоминание"');
+  });
+
   it("truncates long plain-text values while the label stays visible", () => {
     const longProjectName =
       "Очень длинное название проекта, которое заметно длиннее шестидесяти символов";

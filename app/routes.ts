@@ -11,5 +11,6 @@ export default [
     route("tasks", "routes/tasks.tsx"),
     route("tasks/search", "routes/task-search.tsx"),
     route("tasks/:id", "routes/task-detail.tsx"),
+    route("tasks/:id/reminders", "routes/task-reminders.tsx"),
   ]),
 ] satisfies RouteConfig;

@@ -24,6 +24,7 @@ interface TaskDetailViewState {
   isPastDueWarning?: boolean;
   onToggleCompleted: () => void;
   onDueClick?: () => void;
+  onReminderClick?: () => void;
 }
 
 interface TaskDueSheetState {
@@ -551,6 +552,12 @@ describe("TaskDetail route", () => {
     renderRoute();
     routeState.viewProps?.onDueClick?.();
     expect(routeState.dueReset).toHaveBeenCalled();
+  });
+
+  it("opens the reminders screen from the reminder row", () => {
+    renderRoute();
+    routeState.viewProps?.onReminderClick?.();
+    expect(routeState.navigate).toHaveBeenCalledWith("/tasks/42/reminders");
   });
 
   it("passes the task, timezone, pending and error to the due sheet", () => {

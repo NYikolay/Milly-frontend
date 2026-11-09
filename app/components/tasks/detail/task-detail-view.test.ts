@@ -68,6 +68,13 @@ describe("TaskDetailView", () => {
     expect(render()).not.toContain('aria-label="Изменить срок"');
   });
 
+  it("forwards the reminder row handler to the card", () => {
+    expect(render({ onReminderClick: () => {} })).toContain(
+      'aria-label="Изменить напоминание"',
+    );
+    expect(render()).not.toContain('aria-label="Изменить напоминание"');
+  });
+
   it("wraps long unbroken titles", () => {
     const html = render({
       task: task({ title: `https://example.com/${"a".repeat(200)}` }),

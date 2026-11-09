@@ -130,6 +130,13 @@ export default function TaskDetail() {
     dueMutation.mutate(input);
   }
 
+  function handleReminderClick() {
+    if (!task) return;
+
+    haptics.selection();
+    void navigate(`/tasks/${task.id}/reminders`);
+  }
+
   const project =
     task?.project_id != null
       ? projectsQuery.data?.find((item) => item.id === task.project_id)
@@ -188,6 +195,7 @@ export default function TaskDetail() {
         now={now}
         onDelete={() => handleDeleteOpenChange(true)}
         onDueClick={() => handleDueOpenChange(true)}
+        onReminderClick={handleReminderClick}
         onToggleCompleted={handleToggleCompleted}
         project={project}
         task={task}

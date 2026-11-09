@@ -30,6 +30,7 @@ export interface TaskDetailCardProps {
   now: Date;
   isDueDateWarning?: boolean;
   onDueClick?: () => void;
+  onReminderClick?: () => void;
 }
 
 interface DetailRowProps {
@@ -112,6 +113,7 @@ export function TaskDetailCard({
   now,
   isDueDateWarning = false,
   onDueClick,
+  onReminderClick,
 }: TaskDetailCardProps): ReactElement {
   const overdue = isTaskOverdue(task, now);
   const labelsSummary = formatTaskLabelsSummary(task.labels);
@@ -145,9 +147,11 @@ export function TaskDetailCard({
         }
       />
       <DetailRow
+        ariaLabel="Изменить напоминание"
         iconSrc={bellIcon}
         isLast={false}
         label="Напоминание"
+        onClick={onReminderClick}
         value={formatTaskReminderSummary(task)}
         valueClassName="text-app-text-secondary"
       />
