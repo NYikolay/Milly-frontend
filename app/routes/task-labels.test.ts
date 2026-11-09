@@ -16,6 +16,7 @@ interface TaskQueryState {
 interface LabelsQueryState {
   data: LabelResponse[] | undefined;
   isPending: boolean;
+  isFetching: boolean;
   isError: boolean;
   refetch: () => void;
 }
@@ -194,6 +195,7 @@ describe("TaskLabels route", () => {
     routeState.labels = {
       data: [],
       isPending: false,
+      isFetching: false,
       isError: false,
       refetch: vi.fn(),
     };
@@ -237,6 +239,7 @@ describe("TaskLabels route", () => {
     routeState.labels = {
       data: labels,
       isPending: false,
+      isFetching: false,
       isError: false,
       refetch: vi.fn(),
     };
@@ -314,6 +317,7 @@ describe("TaskLabels route", () => {
     routeState.labels = {
       data: [],
       isPending: true,
+      isFetching: true,
       isError: false,
       refetch: vi.fn(),
     };
@@ -323,12 +327,30 @@ describe("TaskLabels route", () => {
     expect(routeState.viewProps?.isLabelsLoading).toBe(true);
   });
 
+  it("passes the background refetch state for cached labels to the view", () => {
+    const labels = [label()];
+
+    routeState.labels = {
+      data: labels,
+      isPending: false,
+      isFetching: true,
+      isError: false,
+      refetch: vi.fn(),
+    };
+
+    renderRoute();
+
+    expect(routeState.viewProps?.isLabelsLoading).toBe(true);
+    expect(routeState.viewProps?.labels).toBe(labels);
+  });
+
   it("passes the labels error state and retry to the view", () => {
     const refetch = vi.fn();
 
     routeState.labels = {
       data: [],
       isPending: false,
+      isFetching: false,
       isError: true,
       refetch,
     };
@@ -346,6 +368,7 @@ describe("TaskLabels route", () => {
     routeState.labels = {
       data: [label()],
       isPending: false,
+      isFetching: false,
       isError: false,
       refetch: vi.fn(),
     };
@@ -377,6 +400,7 @@ describe("TaskLabels route", () => {
     routeState.labels = {
       data: [label(), label({ id: 4, name: "Работа" })],
       isPending: false,
+      isFetching: false,
       isError: false,
       refetch: vi.fn(),
     };
@@ -400,6 +424,7 @@ describe("TaskLabels route", () => {
     routeState.labels = {
       data: [label()],
       isPending: false,
+      isFetching: false,
       isError: false,
       refetch: vi.fn(),
     };
@@ -443,6 +468,7 @@ describe("TaskLabels route", () => {
     routeState.labels = {
       data: labels,
       isPending: false,
+      isFetching: false,
       isError: false,
       refetch: vi.fn(),
     };

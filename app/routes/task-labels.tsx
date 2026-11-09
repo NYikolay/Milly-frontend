@@ -107,7 +107,7 @@ export default function TaskLabels() {
     content = (
       <TaskLabelsView
         isLabelsError={labelsQuery.isError}
-        isLabelsLoading={labelsQuery.isPending}
+        isLabelsLoading={labelsQuery.isPending || labelsQuery.isFetching}
         labels={labelsQuery.data ?? []}
         onRetryLabels={() => void labelsQuery.refetch()}
         onToggle={handleToggle}

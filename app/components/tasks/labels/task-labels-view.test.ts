@@ -124,6 +124,15 @@ describe("TaskLabelsView", () => {
     expect(html).not.toContain('role="group"');
   });
 
+  it("keeps cached labels visible while a background fetch is loading", () => {
+    const html = render({ isLabelsLoading: true });
+
+    expect(html).toContain("Срочно");
+    expect(html).toContain('aria-label="Поиск меток"');
+    expect(html).toContain('role="group"');
+    expect(html).toContain("Загружаем метки…");
+  });
+
   it("shows the initial labels error and retry", () => {
     const onRetryLabels = vi.fn();
     const html = render({

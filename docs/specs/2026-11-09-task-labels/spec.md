@@ -370,7 +370,9 @@
   - `app/components/tasks/labels/task-labels-view.test.ts` — заголовок,
     подзаголовок, кнопка создания, поиск, строки, цвета, выбранное
     состояние, `role`/`aria-checked`, пустое состояние, загрузка/ошибка,
-    «Ничего не найдено», пояснение, только `app-*`;
+    пояснение, только `app-*`; состояние «Ничего не найдено» проверяется
+    вручную в `docs/agents/qa.md`, потому что query хранится в локальном
+    состоянии view и не задаётся через SSR-пропсы;
   - `app/components/tasks/labels/task-labels-skeleton.test.ts` —
     `role="status"`, `aria-busy`, `aria-label`, геометрия;
   - `app/routes/task-labels.test.ts` — скелетон, view, `404`,
