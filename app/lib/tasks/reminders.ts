@@ -45,6 +45,27 @@ const DUE_UNIT_MINUTES: Record<DueUnit, number> = {
   days: 1440,
 };
 
+const MS_PER_MINUTE = 60_000;
+
+export function isBeforeDueInPast(
+  dueAt: string,
+  amount: number,
+  unit: DueUnit,
+  now: number,
+): boolean {
+  if (!Number.isInteger(amount) || amount < 0) {
+    return false;
+  }
+
+  const dueTime = Date.parse(dueAt);
+
+  if (Number.isNaN(dueTime)) {
+    return false;
+  }
+
+  return dueTime - amount * DUE_UNIT_MINUTES[unit] * MS_PER_MINUTE <= now;
+}
+
 function splitOffsetMinutes(offsetMinutes: number): {
   amount: number;
   unit: DueUnit;
@@ -133,6 +154,26 @@ export function buildTaskRemindersUpdate(
   }
 
   return { reminders_enabled: true, reminders: buildReminderRules(draft) };
+}
+
+export function canSaveRemindersUpdate(
+  input: TaskUpdateInput | null,
+  dueAt: string,
+  draft: ReminderRuleDraft,
+  now: number,
+): input is TaskUpdateInput {
+  if (!input) {
+    return false;
+  }
+
+  const includesBeforeDue = input.reminders?.some(
+    (rule) => rule.kind === "before_due",
+  );
+
+  return (
+    !includesBeforeDue ||
+    !isBeforeDueInPast(dueAt, draft.beforeDueAmount, draft.beforeDueUnit, now)
+  );
 }
 
 export function getReminderIntervalOptions(

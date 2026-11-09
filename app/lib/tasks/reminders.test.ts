@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   buildReminderRules,
   buildTaskRemindersUpdate,
+  canSaveRemindersUpdate,
   getReminderIntervalOptions,
   getTaskRemindersDraft,
+  isBeforeDueInPast,
   parseReminderAmount,
 } from "./reminders";
 import type { TaskResponse } from "./types";
@@ -344,6 +346,80 @@ describe("getReminderIntervalOptions", () => {
     expect(getReminderIntervalOptions(1).map((option) => option.value)).toEqual([
       1, 2, 3, 4, 7,
     ]);
+  });
+});
+
+describe("canSaveRemindersUpdate", () => {
+  const dueAt = "2026-11-09T19:11:00.000Z";
+  const now = Date.parse("2026-11-09T12:00:00.000Z");
+
+  it("blocks an update that includes a past before-due rule", () => {
+    const draft = {
+      ...getTaskRemindersDraft(task()),
+      beforeDueAmount: 1,
+      beforeDueUnit: "days" as const,
+    };
+
+    expect(
+      canSaveRemindersUpdate(buildTaskRemindersUpdate(draft), dueAt, draft, now),
+    ).toBe(false);
+  });
+
+  it("allows an update with a future before-due rule", () => {
+    const draft = {
+      ...getTaskRemindersDraft(task()),
+      beforeDueAmount: 1,
+      beforeDueUnit: "hours" as const,
+    };
+
+    expect(
+      canSaveRemindersUpdate(buildTaskRemindersUpdate(draft), dueAt, draft, now),
+    ).toBe(true);
+  });
+
+  it("allows turning the master switch off", () => {
+    const draft = {
+      ...getTaskRemindersDraft(task()),
+      remindersEnabled: false,
+      beforeDueAmount: 1,
+      beforeDueUnit: "days" as const,
+    };
+
+    expect(
+      canSaveRemindersUpdate(buildTaskRemindersUpdate(draft), dueAt, draft, now),
+    ).toBe(true);
+  });
+
+  it("blocks an invalid update payload", () => {
+    const draft = { ...getTaskRemindersDraft(task()), beforeDueAmount: -1 };
+
+    expect(canSaveRemindersUpdate(null, dueAt, draft, now)).toBe(false);
+  });
+});
+
+describe("isBeforeDueInPast", () => {
+  const dueAt = "2026-11-09T19:11:00.000Z";
+  const now = Date.parse("2026-11-09T12:00:00.000Z");
+
+  it("detects a before-due moment that already passed", () => {
+    expect(isBeforeDueInPast(dueAt, 1, "days", now)).toBe(true);
+    expect(isBeforeDueInPast(dueAt, 8, "hours", now)).toBe(true);
+  });
+
+  it("accepts future moments and the exact due instant", () => {
+    expect(isBeforeDueInPast(dueAt, 7, "hours", now)).toBe(false);
+    expect(isBeforeDueInPast(dueAt, 0, "minutes", now)).toBe(false);
+  });
+
+  it("treats the current instant as already passed", () => {
+    const current = Date.parse("2026-11-09T18:11:00.000Z");
+
+    expect(isBeforeDueInPast(dueAt, 60, "minutes", current)).toBe(true);
+  });
+
+  it("ignores invalid amounts and due times", () => {
+    expect(isBeforeDueInPast(dueAt, -1, "hours", now)).toBe(false);
+    expect(isBeforeDueInPast("not-a-date", 1, "days", now)).toBe(false);
   });
 });
 

@@ -74,6 +74,7 @@ function render(props: Partial<TaskRemindersViewProps> = {}): string {
       error: null,
       onSave: () => {},
       onRetry: () => {},
+      now: Date.parse("2026-11-07T12:00:00.000Z"),
       ...props,
     }),
   );
@@ -158,6 +159,17 @@ describe("TaskRemindersView", () => {
     expect(html).not.toContain(
       "Напоминание по расписанию будет высылаться в чат с Milly каждый заданный промежуток времени.",
     );
+  });
+
+  it("warns in red when the before-due moment has already passed", () => {
+    const html = render({ now: Date.parse("2026-11-08T00:00:00.000Z") });
+
+    expect(html).toContain("Напоминание уже прошло");
+    expect(html).toContain("text-app-destructive");
+  });
+
+  it("shows no past hint for a future before-due moment", () => {
+    expect(render()).not.toContain("Напоминание уже прошло");
   });
 
   it("shows the save error with a retry button", () => {

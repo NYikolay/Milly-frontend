@@ -8,8 +8,10 @@ import { isValidTime } from "~/lib/tasks/date-time";
 import type { DueUnit } from "~/lib/tasks/quick-task-schema";
 import {
   buildTaskRemindersUpdate,
+  canSaveRemindersUpdate,
   getReminderIntervalOptions,
   getTaskRemindersDraft,
+  isBeforeDueInPast,
   parseReminderAmount,
   REMINDER_UNIT_OPTIONS,
 } from "~/lib/tasks/reminders";
@@ -39,6 +41,7 @@ export interface TaskRemindersViewProps {
   onSave: (input: TaskUpdateInput) => void;
   onRetry: () => void;
   onToggleHaptic?: () => void;
+  now?: number;
 }
 
 export function TaskRemindersView({
@@ -47,6 +50,7 @@ export function TaskRemindersView({
   onSave,
   onRetry,
   onToggleHaptic,
+  now,
 }: TaskRemindersViewProps): ReactElement {
   const [draft, setDraft] = useState<TaskRemindersDraft>(() =>
     getTaskRemindersDraft(task),
@@ -54,15 +58,18 @@ export function TaskRemindersView({
   const [amountInput, setAmountInput] = useState(() =>
     String(getTaskRemindersDraft(task).beforeDueAmount),
   );
+  const currentTime = now ?? Date.now();
 
   function commit(next: TaskRemindersDraft) {
     setDraft(next);
 
     const input = buildTaskRemindersUpdate(next);
 
-    if (input) {
-      onSave(input);
+    if (!canSaveRemindersUpdate(input, task.due_at, next, now ?? Date.now())) {
+      return;
     }
+
+    onSave(input);
   }
 
   function handleMasterChange(checked: boolean) {
@@ -154,6 +161,15 @@ export function TaskRemindersView({
 
   const isAmountValid = parseReminderAmount(amountInput) !== null;
   const isTimeValid = isValidTime(draft.scheduledTime);
+  const isBeforeDuePast =
+    draft.beforeDueEnabled &&
+    isAmountValid &&
+    isBeforeDueInPast(
+      task.due_at,
+      draft.beforeDueAmount,
+      draft.beforeDueUnit,
+      currentTime,
+    );
 
   return (
     <div className="flex flex-1 flex-col gap-2">
@@ -247,6 +263,12 @@ export function TaskRemindersView({
               {draft.beforeDueEnabled && !isAmountValid ? (
                 <p className="px-[15px] text-[13px] leading-[1.4] text-app-text-secondary">
                   Укажите количество
+                </p>
+              ) : null}
+
+              {isBeforeDuePast ? (
+                <p className="px-[15px] text-[13px] leading-[1.4] text-app-destructive">
+                  Напоминание уже прошло
                 </p>
               ) : null}
 
