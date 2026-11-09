@@ -1,5 +1,5 @@
 import { applyCompletionFields, hasCompletionChanged } from "./completion-cache";
-import type { Priority, TaskResponse } from "./types";
+import type { LabelRef, Priority, TaskResponse } from "./types";
 
 export function taskDetailQueryKey(taskId: number) {
   return ["tasks", "detail", taskId] as const;
@@ -30,4 +30,26 @@ export function applyTaskDetailProject(
   if (!task || task.project_id === projectId) return task;
 
   return { ...task, project_id: projectId };
+}
+
+function hasSameLabels(
+  current: readonly LabelRef[],
+  next: readonly LabelRef[],
+): boolean {
+  return (
+    current.length === next.length &&
+    current.every(
+      (label, index) =>
+        label.id === next[index].id && label.name === next[index].name,
+    )
+  );
+}
+
+export function applyTaskDetailLabels(
+  task: TaskResponse | undefined,
+  labels: readonly LabelRef[],
+): TaskResponse | undefined {
+  if (!task || hasSameLabels(task.labels, labels)) return task;
+
+  return { ...task, labels: [...labels] };
 }

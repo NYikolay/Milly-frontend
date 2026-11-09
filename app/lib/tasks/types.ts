@@ -41,6 +41,7 @@ export interface TaskUpdateInput {
   reminders_enabled?: boolean;
   reminders?: ReminderInput[];
   project_id?: number | null;
+  label_ids?: number[];
 }
 
 export interface SeriesCreateInput {

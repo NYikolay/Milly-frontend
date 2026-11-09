@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   applyTaskDetailCompletion,
+  applyTaskDetailLabels,
   applyTaskDetailPriority,
   applyTaskDetailProject,
   taskDetailQueryKey,
@@ -76,6 +77,38 @@ describe("applyTaskDetailPriority", () => {
 
   it("returns undefined for missing data", () => {
     expect(applyTaskDetailPriority(undefined, "neither")).toBeUndefined();
+  });
+});
+
+describe("applyTaskDetailLabels", () => {
+  const urgent = { id: 3, name: "Срочно" };
+  const work = { id: 4, name: "Работа" };
+
+  it("replaces labels optimistically", () => {
+    const next = applyTaskDetailLabels(task(), [urgent, work]);
+    expect(next?.labels).toEqual([urgent, work]);
+  });
+
+  it("clears labels optimistically with an empty array", () => {
+    const next = applyTaskDetailLabels(task({ labels: [urgent] }), []);
+    expect(next?.labels).toEqual([]);
+  });
+
+  it("returns the same task for the same labels", () => {
+    const current = task({ labels: [urgent, work] });
+    expect(applyTaskDetailLabels(current, [urgent, work])).toBe(current);
+  });
+
+  it("returns a new task when a label name changes", () => {
+    const current = task({ labels: [{ id: 3, name: "Срочно" }] });
+    const next = applyTaskDetailLabels(current, [
+      { id: 3, name: "Очень срочно" },
+    ]);
+    expect(next?.labels).toEqual([{ id: 3, name: "Очень срочно" }]);
+  });
+
+  it("returns undefined for missing data", () => {
+    expect(applyTaskDetailLabels(undefined, [urgent])).toBeUndefined();
   });
 });
 

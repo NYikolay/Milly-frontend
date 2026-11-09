@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   showTaskCreatedToast,
   showTaskDeletedToast,
+  showTaskLabelsUpdateErrorToast,
   showTaskPastDueToast,
   showTaskPriorityUpdateErrorToast,
   showTaskProjectUpdateErrorToast,
@@ -58,6 +59,15 @@ describe("task toasts", () => {
 
     expect(sonner.error).toHaveBeenCalledWith(
       "Не удалось изменить проект. Попробуйте ещё раз.",
+      { icon: null },
+    );
+  });
+
+  it("shows a labels update error toast without an icon", () => {
+    showTaskLabelsUpdateErrorToast();
+
+    expect(sonner.error).toHaveBeenCalledWith(
+      "Не удалось изменить метки. Попробуйте ещё раз.",
       { icon: null },
     );
   });

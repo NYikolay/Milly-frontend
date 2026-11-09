@@ -8,6 +8,8 @@ export const TASK_PRIORITY_UPDATE_ERROR =
   "Не удалось изменить приоритет. Попробуйте ещё раз.";
 export const TASK_PROJECT_UPDATE_ERROR =
   "Не удалось изменить проект. Попробуйте ещё раз.";
+export const TASK_LABELS_UPDATE_ERROR =
+  "Не удалось изменить метки. Попробуйте ещё раз.";
 
 export function showTaskCreatedToast(): void {
   toast.success(TASK_CREATED_TOAST_MESSAGE);
@@ -27,4 +29,8 @@ export function showTaskPriorityUpdateErrorToast(): void {
 
 export function showTaskProjectUpdateErrorToast(): void {
   toast.error(TASK_PROJECT_UPDATE_ERROR, { icon: null });
+}
+
+export function showTaskLabelsUpdateErrorToast(): void {
+  toast.error(TASK_LABELS_UPDATE_ERROR, { icon: null });
 }
