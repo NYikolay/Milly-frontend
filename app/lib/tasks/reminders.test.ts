@@ -234,6 +234,18 @@ describe("buildTaskRemindersUpdate", () => {
     ).toEqual({ reminders_enabled: false, reminders: [] });
   });
 
+  it("clears stored rules when the master and both rules are off", () => {
+    const current = task();
+    expect(
+      buildTaskRemindersUpdate({
+        ...getTaskRemindersDraft(current),
+        remindersEnabled: false,
+        beforeDueEnabled: false,
+        scheduledEnabled: false,
+      }),
+    ).toEqual({ reminders_enabled: false, reminders: [] });
+  });
+
   it("returns null for an invalid time", () => {
     const current = task();
     expect(

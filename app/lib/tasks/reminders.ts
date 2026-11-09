@@ -124,12 +124,12 @@ export function buildTaskRemindersUpdate(
     return null;
   }
 
-  if (!draft.remindersEnabled) {
-    return { reminders_enabled: false };
-  }
-
   if (!draft.beforeDueEnabled && !draft.scheduledEnabled) {
     return { reminders_enabled: false, reminders: [] };
+  }
+
+  if (!draft.remindersEnabled) {
+    return { reminders_enabled: false };
   }
 
   return { reminders_enabled: true, reminders: buildReminderRules(draft) };
