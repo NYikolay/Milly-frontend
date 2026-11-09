@@ -4,13 +4,12 @@ import { ApiError } from "~/lib/api/errors";
 
 import {
   TASK_PAST_DUE_MESSAGE,
-  isDueDateInPast,
+  isDueTimeInPast,
   isPastDueUncompleteError,
   shouldBlockTaskReactivation,
 } from "./task-reactivation";
 import type { TaskResponse } from "./types";
 
-const TIME_ZONE = "Europe/Moscow";
 const NOW = new Date("2026-11-06T10:00:00.000Z");
 
 function task(overrides: Partial<TaskResponse> = {}): TaskResponse {
@@ -48,70 +47,40 @@ function apiError(
   });
 }
 
-describe("isDueDateInPast", () => {
-  it("returns true for a due date on the previous local day", () => {
+describe("isDueTimeInPast", () => {
+  it("returns true for a due moment yesterday", () => {
     expect(
-      isDueDateInPast(
-        task({ due_at: "2026-11-05T08:00:00.000Z" }),
-        TIME_ZONE,
-        NOW,
-      ),
+      isDueTimeInPast(task({ due_at: "2026-11-05T08:00:00.000Z" }), NOW),
     ).toBe(true);
   });
 
-  it("returns false for an earlier time on the same local day", () => {
+  it("returns true for an earlier moment today", () => {
     expect(
-      isDueDateInPast(
-        task({ due_at: "2026-11-06T07:00:00.000Z" }),
-        TIME_ZONE,
-        NOW,
-      ),
-    ).toBe(false);
-  });
-
-  it("returns false for a due date on the next local day", () => {
-    expect(
-      isDueDateInPast(
-        task({ due_at: "2026-11-07T08:00:00.000Z" }),
-        TIME_ZONE,
-        NOW,
-      ),
-    ).toBe(false);
-  });
-
-  it("compares local dates instead of UTC dates at the timezone boundary", () => {
-    expect(
-      isDueDateInPast(
-        task({ due_at: "2026-11-05T22:05:00.000Z" }),
-        TIME_ZONE,
-        NOW,
-      ),
-    ).toBe(false);
-  });
-
-  it("treats a late-UTC due date as the previous local day in a negative-offset zone", () => {
-    expect(
-      isDueDateInPast(
-        task({ due_at: "2026-11-06T05:00:00.000Z" }),
-        "America/Los_Angeles",
-        NOW,
-      ),
+      isDueTimeInPast(task({ due_at: "2026-11-06T09:00:00.000Z" }), NOW),
     ).toBe(true);
   });
 
-  it("treats a late-UTC due date as the current local day in a negative-offset zone", () => {
+  it("returns false for a later moment today", () => {
     expect(
-      isDueDateInPast(
-        task({ due_at: "2026-11-06T08:30:00.000Z" }),
-        "America/Los_Angeles",
-        NOW,
-      ),
+      isDueTimeInPast(task({ due_at: "2026-11-06T11:00:00.000Z" }), NOW),
     ).toBe(false);
+  });
+
+  it("returns false for a due moment tomorrow", () => {
+    expect(
+      isDueTimeInPast(task({ due_at: "2026-11-07T08:00:00.000Z" }), NOW),
+    ).toBe(false);
+  });
+
+  it("returns true for a due moment exactly at now", () => {
+    expect(
+      isDueTimeInPast(task({ due_at: "2026-11-06T10:00:00.000Z" }), NOW),
+    ).toBe(true);
   });
 });
 
 describe("shouldBlockTaskReactivation", () => {
-  it("blocks a completed one-off task due on a previous day", () => {
+  it("blocks a completed one-off task due yesterday", () => {
     expect(
       shouldBlockTaskReactivation(
         task({
@@ -119,27 +88,38 @@ describe("shouldBlockTaskReactivation", () => {
           completed_at: "2026-11-05T09:00:00.000Z",
         }),
         false,
-        TIME_ZONE,
         NOW,
       ),
     ).toBe(true);
   });
 
-  it("allows a completed one-off task due today even before its time", () => {
+  it("blocks a completed one-off task due earlier today", () => {
     expect(
       shouldBlockTaskReactivation(
         task({
-          due_at: "2026-11-06T07:00:00.000Z",
+          due_at: "2026-11-06T09:00:00.000Z",
           completed_at: "2026-11-06T08:00:00.000Z",
         }),
         false,
-        TIME_ZONE,
+        NOW,
+      ),
+    ).toBe(true);
+  });
+
+  it("allows a completed one-off task due later today", () => {
+    expect(
+      shouldBlockTaskReactivation(
+        task({
+          due_at: "2026-11-06T11:00:00.000Z",
+          completed_at: "2026-11-06T08:00:00.000Z",
+        }),
+        false,
         NOW,
       ),
     ).toBe(false);
   });
 
-  it("allows a completed series task due on a previous day", () => {
+  it("blocks a completed series task due yesterday", () => {
     expect(
       shouldBlockTaskReactivation(
         task({
@@ -148,10 +128,9 @@ describe("shouldBlockTaskReactivation", () => {
           completed_at: "2026-11-05T09:00:00.000Z",
         }),
         false,
-        TIME_ZONE,
         NOW,
       ),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it("allows an active task due on a previous day", () => {
@@ -162,7 +141,6 @@ describe("shouldBlockTaskReactivation", () => {
           completed_at: null,
         }),
         false,
-        TIME_ZONE,
         NOW,
       ),
     ).toBe(false);
@@ -176,7 +154,6 @@ describe("shouldBlockTaskReactivation", () => {
           completed_at: "2026-11-05T09:00:00.000Z",
         }),
         true,
-        TIME_ZONE,
         NOW,
       ),
     ).toBe(false);

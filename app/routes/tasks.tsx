@@ -62,7 +62,7 @@ export default function Tasks() {
     task: TaskResponse,
     nextCompleted: boolean,
   ) {
-    if (shouldBlockTaskReactivation(task, nextCompleted, timeZone, now)) {
+    if (shouldBlockTaskReactivation(task, nextCompleted, new Date())) {
       toggleMutation.reset();
       showTaskPastDueToast();
       return;

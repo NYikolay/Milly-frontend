@@ -1,6 +1,5 @@
 import { ApiError } from "~/lib/api/errors";
 
-import { formatZonedDate, formatZonedToday } from "./date-time";
 import type { TaskResponse } from "./types";
 
 export const TASK_PAST_DUE_MESSAGE =
@@ -8,27 +7,22 @@ export const TASK_PAST_DUE_MESSAGE =
 
 const TASK_PAST_DUE_ERROR_MESSAGE = "Task due date is in the past";
 
-export function isDueDateInPast(
+export function isDueTimeInPast(
   task: Pick<TaskResponse, "due_at">,
-  timeZone: string,
   now: Date,
 ): boolean {
-  return (
-    formatZonedDate(task.due_at, timeZone) < formatZonedToday(now, timeZone)
-  );
+  return new Date(task.due_at).getTime() <= now.getTime();
 }
 
 export function shouldBlockTaskReactivation(
-  task: Pick<TaskResponse, "due_at" | "completed_at" | "series_id">,
+  task: Pick<TaskResponse, "due_at" | "completed_at">,
   nextCompleted: boolean,
-  timeZone: string,
   now: Date,
 ): boolean {
   return (
     !nextCompleted &&
     task.completed_at !== null &&
-    task.series_id === null &&
-    isDueDateInPast(task, timeZone, now)
+    isDueTimeInPast(task, now)
   );
 }
 

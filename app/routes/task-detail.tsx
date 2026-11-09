@@ -104,7 +104,7 @@ export default function TaskDetail() {
 
     const nextCompleted = task.completed_at === null;
 
-    if (shouldBlockTaskReactivation(task, nextCompleted, timeZone, now)) {
+    if (shouldBlockTaskReactivation(task, nextCompleted, new Date())) {
       toggleMutation.reset();
       setIsPastDueWarning(true);
       return;

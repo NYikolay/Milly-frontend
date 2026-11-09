@@ -214,10 +214,26 @@ describe("Tasks route overview state", () => {
     expect(routeState.toggle.mutate).not.toHaveBeenCalled();
   });
 
-  it("sends a completed series task due yesterday to the backend", () => {
+  it("shows the past-due toast instead of reactivating a completed series task due yesterday", () => {
     renderTasks();
 
     routeState.onToggleTask?.(pastDueTask({ series_id: 42 }), false);
+
+    expect(taskToasts.showTaskPastDueToast).toHaveBeenCalledTimes(1);
+    expect(routeState.toggle.reset).toHaveBeenCalledTimes(1);
+    expect(routeState.toggle.mutate).not.toHaveBeenCalled();
+  });
+
+  it("sends reactivation of a completed task due later today", () => {
+    renderTasks();
+
+    routeState.onToggleTask?.(
+      pastDueTask({
+        due_at: "2026-11-08T13:00:00.000Z",
+        completed_at: "2026-11-08T11:00:00.000Z",
+      }),
+      false,
+    );
 
     expect(taskToasts.showTaskPastDueToast).not.toHaveBeenCalled();
     expect(routeState.toggle.mutate).toHaveBeenCalledWith({

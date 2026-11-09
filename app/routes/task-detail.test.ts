@@ -479,7 +479,7 @@ describe("TaskDetail route", () => {
     expect(routeState.toggle.mutate).not.toHaveBeenCalled();
   });
 
-  it("sends reactivation of a completed series task due yesterday to the backend", () => {
+  it("blocks reactivation of a completed series task due yesterday", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-11-08T10:00:00Z"));
     routeState.task = {
@@ -496,13 +496,11 @@ describe("TaskDetail route", () => {
     renderRoute();
     routeState.viewProps?.onToggleCompleted();
 
-    expect(routeState.toggle.mutate).toHaveBeenCalledWith({
-      taskId: 42,
-      nextCompleted: false,
-    });
+    expect(routeState.toggle.reset).toHaveBeenCalledTimes(1);
+    expect(routeState.toggle.mutate).not.toHaveBeenCalled();
   });
 
-  it("sends reactivation of a completed task due today with an earlier time", () => {
+  it("blocks reactivation of a completed task due today with an earlier time", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-11-08T10:00:00Z"));
     routeState.task = {
@@ -510,6 +508,26 @@ describe("TaskDetail route", () => {
       data: task({
         completed_at: "2026-11-08T08:00:00.000Z",
         due_at: "2026-11-08T07:00:00.000Z",
+      }),
+      error: null,
+      refetch: vi.fn(),
+    };
+
+    renderRoute();
+    routeState.viewProps?.onToggleCompleted();
+
+    expect(routeState.toggle.reset).toHaveBeenCalledTimes(1);
+    expect(routeState.toggle.mutate).not.toHaveBeenCalled();
+  });
+
+  it("sends reactivation of a completed task due today with a later time", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-08T10:00:00Z"));
+    routeState.task = {
+      isPending: false,
+      data: task({
+        completed_at: "2026-11-08T08:00:00.000Z",
+        due_at: "2026-11-08T12:00:00.000Z",
       }),
       error: null,
       refetch: vi.fn(),
