@@ -520,6 +520,27 @@ describe("TaskDetail route", () => {
     expect(routeState.toggle.mutate).not.toHaveBeenCalled();
   });
 
+  it("blocks reactivation using the click-time instant after render", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-08T10:00:00Z"));
+    routeState.task = {
+      isPending: false,
+      data: task({
+        completed_at: "2026-11-08T08:00:00.000Z",
+        due_at: "2026-11-08T10:30:00.000Z",
+      }),
+      error: null,
+      refetch: vi.fn(),
+    };
+
+    renderRoute();
+    vi.setSystemTime(new Date("2026-11-08T10:30:00Z"));
+    routeState.viewProps?.onToggleCompleted();
+
+    expect(routeState.toggle.reset).toHaveBeenCalledTimes(1);
+    expect(routeState.toggle.mutate).not.toHaveBeenCalled();
+  });
+
   it("sends reactivation of a completed task due today with a later time", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-11-08T10:00:00Z"));
