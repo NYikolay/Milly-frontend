@@ -3,11 +3,14 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { DueStep } from "./due-step";
-import type { DueStepValue } from "./due-step";
+import type { DueStepProps, DueStepValue } from "./due-step";
 
 const now = new Date("2026-11-05T13:07:42Z");
 
-function render(overrides: Partial<DueStepValue> = {}) {
+function render(
+  overrides: Partial<DueStepValue> = {},
+  props: Partial<DueStepProps> = {},
+) {
   return renderToStaticMarkup(
     createElement(DueStep, {
       value: {
@@ -20,6 +23,7 @@ function render(overrides: Partial<DueStepValue> = {}) {
       now,
       onChange: () => {},
       onApply: () => {},
+      ...props,
     }),
   );
 }
@@ -85,6 +89,27 @@ describe("DueStep", () => {
 
     expect(html).toMatch(
       /<button[^>]*aria-label="Предыдущий месяц"[^>]*disabled=""/,
+    );
+  });
+
+  it("shows the update error above the apply button", () => {
+    const html = render(
+      {},
+      { error: "Не удалось изменить срок. Попробуйте ещё раз." },
+    );
+
+    expect(html).toContain('role="alert"');
+    expect(html).toContain("Не удалось изменить срок. Попробуйте ещё раз.");
+    expect(html.indexOf('role="alert"')).toBeLessThan(
+      html.indexOf("Готово"),
+    );
+  });
+
+  it("disables apply and marks it busy while pending", () => {
+    const html = render({}, { isPending: true });
+
+    expect(html).toMatch(
+      /<button(?=[^>]*aria-busy="true")(?=[^>]*disabled="")[^>]*>Готово<\/button>/,
     );
   });
 });

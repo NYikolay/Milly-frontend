@@ -27,6 +27,8 @@ export interface DueStepProps {
   onChange: (patch: Partial<DueStepValue>) => void;
   onApply: (value: DueStepValue) => void;
   onToggleHaptic?: () => void;
+  isPending?: boolean;
+  error?: string | null;
 }
 
 export function DueStep({
@@ -36,6 +38,8 @@ export function DueStep({
   onChange,
   onApply,
   onToggleHaptic,
+  isPending = false,
+  error = null,
 }: DueStepProps): ReactElement {
   const today = formatZonedToday(now, timeZone);
   const selectedDate = value.date < today ? today : value.date;
@@ -102,9 +106,18 @@ export function DueStep({
           </motion.p>
         </AnimatePresence>
       </div>
+      {error ? (
+        <p
+          className="pt-[10px] text-[13px] leading-[1.4] text-app-destructive"
+          role="alert"
+        >
+          {error}
+        </p>
+      ) : null}
       <div className="mt-auto pt-[15px]">
         <BottomSheetPrimaryAction
-          disabled={!isTimeValid}
+          aria-busy={isPending || undefined}
+          disabled={!isTimeValid || isPending}
           onClick={() =>
             onApply({
               date: selectedDate,
