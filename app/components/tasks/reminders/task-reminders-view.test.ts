@@ -2,9 +2,14 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+import type { TaskRemindersDraft } from "~/lib/tasks/reminders";
 import type { TaskResponse } from "~/lib/tasks/types";
 
-import { TaskRemindersView, type TaskRemindersViewProps } from "./task-reminders-view";
+import {
+  enableRemindersDraft,
+  TaskRemindersView,
+  type TaskRemindersViewProps,
+} from "./task-reminders-view";
 
 function task(overrides: Partial<TaskResponse> = {}): TaskResponse {
   return {
@@ -47,6 +52,21 @@ function task(overrides: Partial<TaskResponse> = {}): TaskResponse {
   };
 }
 
+function draft(
+  overrides: Partial<TaskRemindersDraft> = {},
+): TaskRemindersDraft {
+  return {
+    remindersEnabled: false,
+    beforeDueEnabled: false,
+    beforeDueAmount: -1,
+    beforeDueUnit: "hours",
+    scheduledEnabled: false,
+    scheduledIntervalDays: 1,
+    scheduledTime: "14:00",
+    ...overrides,
+  };
+}
+
 function render(props: Partial<TaskRemindersViewProps> = {}): string {
   return renderToStaticMarkup(
     createElement(TaskRemindersView, {
@@ -58,6 +78,25 @@ function render(props: Partial<TaskRemindersViewProps> = {}): string {
     }),
   );
 }
+
+describe("enableRemindersDraft", () => {
+  it("enables the default before-due rule for an invalid amount", () => {
+    expect(enableRemindersDraft(draft(), "")).toEqual({
+      ...draft(),
+      remindersEnabled: true,
+      beforeDueEnabled: true,
+      beforeDueAmount: 1,
+    });
+  });
+
+  it("preserves a valid amount", () => {
+    expect(enableRemindersDraft(draft({ beforeDueAmount: 14 }), "14")).toEqual({
+      ...draft({ beforeDueAmount: 14 }),
+      remindersEnabled: true,
+      beforeDueEnabled: true,
+    });
+  });
+});
 
 describe("TaskRemindersView", () => {
   it("renders the header and description", () => {
@@ -82,10 +121,11 @@ describe("TaskRemindersView", () => {
     expect(html).toContain("НАСТРОЙКИ");
     expect(html).toContain("До срока задачи");
     expect(html).toContain("По расписанию");
-    expect(html).toContain("14");
+    expect(html).toContain('value="14"');
     expect(html).toContain("Часов");
     expect(html).toContain("Каждый день");
     expect(html).toContain("14:00");
+    expect(html).toContain("flex-wrap");
     expect(html).toContain(
       "Напоминание будет выслано в чат с Milly один раз до её завершения.",
     );

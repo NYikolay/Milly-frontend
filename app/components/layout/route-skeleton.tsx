@@ -11,7 +11,7 @@ import { CONTENT_BOTTOM_PADDING } from "~/lib/layout";
 export function RouteSkeleton(): ReactElement {
   const { pathname } = useLocation();
   const isSearch = pathname.startsWith("/tasks/search");
-  const isTaskReminders = /^\/tasks\/[^/]+\/reminders$/.test(pathname);
+  const isTaskReminders = /^\/tasks\/[^/]+\/reminders\/?$/.test(pathname);
   const isTaskDetail = pathname.startsWith("/tasks/") && !isSearch;
 
   if (pathname.startsWith("/tasks")) {

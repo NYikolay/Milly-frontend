@@ -91,7 +91,9 @@ describe("createUpdateTaskRemindersMutationOptions", () => {
     const current = task();
     const updated = task({ id: 99 });
     queryClient.setQueryData(queryKey, current);
-    vi.spyOn(queryClient, "invalidateQueries").mockResolvedValue(undefined);
+    const invalidateQueries = vi
+      .spyOn(queryClient, "invalidateQueries")
+      .mockResolvedValue(undefined);
     const options = createUpdateTaskRemindersMutationOptions({
       queryClient,
       haptics,
@@ -101,6 +103,9 @@ describe("createUpdateTaskRemindersMutationOptions", () => {
     options.onSuccess(updated);
 
     expect(queryClient.getQueryData(queryKey)).toEqual(current);
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey });
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["tasks"] });
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["task-series"] });
   });
 
   it("invalidates the detail on 404 and reports an error", () => {
@@ -134,6 +139,22 @@ describe("createUpdateTaskRemindersMutationOptions", () => {
     options.onError(
       new ApiError("Server error", { status: 500, code: "internal_error", requestId: "test" }),
     );
+
+    expect(invalidateQueries).not.toHaveBeenCalledWith({ queryKey });
+    expect(haptics.notification).toHaveBeenCalledWith("error");
+  });
+
+  it("keeps the detail on a generic error and reports an error", () => {
+    const invalidateQueries = vi
+      .spyOn(queryClient, "invalidateQueries")
+      .mockResolvedValue(undefined);
+    const options = createUpdateTaskRemindersMutationOptions({
+      queryClient,
+      haptics,
+      taskId: TASK_ID,
+    });
+
+    options.onError(new Error("Boom"));
 
     expect(invalidateQueries).not.toHaveBeenCalledWith({ queryKey });
     expect(haptics.notification).toHaveBeenCalledWith("error");

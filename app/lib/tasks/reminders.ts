@@ -141,7 +141,7 @@ export function getReminderIntervalOptions(
   if (
     REMINDER_INTERVAL_OPTIONS.some((option) => option.value === intervalDays)
   ) {
-    return REMINDER_INTERVAL_OPTIONS;
+    return [...REMINDER_INTERVAL_OPTIONS];
   }
 
   return [

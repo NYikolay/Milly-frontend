@@ -54,11 +54,24 @@ export default function TaskReminders() {
     mutation.mutate(input);
   }
 
-  const error = mutation.isError ? TASK_REMINDERS_SAVE_ERROR : null;
+  const isSaveNotFound =
+    mutation.isError &&
+    mutation.error instanceof ApiError &&
+    mutation.error.status === 404;
+  const error =
+    mutation.isError && !isSaveNotFound ? TASK_REMINDERS_SAVE_ERROR : null;
 
   let content: ReactNode;
 
   if (!isValidId) {
+    content = (
+      <TaskDetailError
+        kind="not-found"
+        onBack={handleBack}
+        onRetry={handleBack}
+      />
+    );
+  } else if (isSaveNotFound) {
     content = (
       <TaskDetailError
         kind="not-found"
@@ -81,6 +94,7 @@ export default function TaskReminders() {
   } else {
     content = (
       <TaskRemindersView
+        key={taskQuery.data.id}
         error={error}
         onRetry={handleRetry}
         onSave={(input) => mutation.mutate(input)}

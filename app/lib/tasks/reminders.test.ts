@@ -336,6 +336,15 @@ describe("getReminderIntervalOptions", () => {
       label: "Каждые 5 дней",
     });
   });
+
+  it("returns a copy for known intervals", () => {
+    const options = getReminderIntervalOptions(1);
+    options.push({ value: 9, label: "Каждые 9 дней" });
+
+    expect(getReminderIntervalOptions(1).map((option) => option.value)).toEqual([
+      1, 2, 3, 4, 7,
+    ]);
+  });
 });
 
 describe("parseReminderAmount", () => {

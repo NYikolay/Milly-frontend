@@ -16,6 +16,23 @@ import {
 import type { TaskRemindersDraft } from "~/lib/tasks/reminders";
 import type { TaskResponse, TaskUpdateInput } from "~/lib/tasks/types";
 
+export function enableRemindersDraft(
+  draft: TaskRemindersDraft,
+  amountInput: string,
+): TaskRemindersDraft {
+  if (draft.beforeDueEnabled || draft.scheduledEnabled) {
+    return { ...draft, remindersEnabled: true };
+  }
+
+  return {
+    ...draft,
+    remindersEnabled: true,
+    beforeDueEnabled: true,
+    beforeDueAmount:
+      parseReminderAmount(amountInput) === null ? 1 : draft.beforeDueAmount,
+  };
+}
+
 export interface TaskRemindersViewProps {
   task: TaskResponse;
   error: string | null;
@@ -56,12 +73,15 @@ export function TaskRemindersView({
       return;
     }
 
-    if (!draft.beforeDueEnabled && !draft.scheduledEnabled) {
-      commit({ ...draft, remindersEnabled: true, beforeDueEnabled: true });
-      return;
+    if (
+      !draft.beforeDueEnabled &&
+      !draft.scheduledEnabled &&
+      parseReminderAmount(amountInput) === null
+    ) {
+      setAmountInput("1");
     }
 
-    commit({ ...draft, remindersEnabled: true });
+    commit(enableRemindersDraft(draft, amountInput));
   }
 
   function handleBeforeDueEnabledChange(checked: boolean) {

@@ -308,9 +308,27 @@ describe("TaskReminders route", () => {
       variables: undefined,
     };
 
-    renderRoute();
+    const html = renderRoute();
 
+    expect(html).toContain("VIEW");
     expect(routeState.viewProps?.error).toBe(TASK_REMINDERS_SAVE_ERROR);
+  });
+
+  it("shows not found when the save fails with a 404", () => {
+    routeState.mutation = {
+      mutate: vi.fn(),
+      reset: vi.fn(),
+      isPending: false,
+      isError: true,
+      error: new ApiError("Not found", {
+        status: 404,
+        code: "not_found",
+        requestId: "test",
+      }),
+      variables: undefined,
+    };
+
+    expect(renderRoute()).toContain("ERROR:not-found");
   });
 
   it("falls back to /tasks/42 from the back button without history", () => {
@@ -322,6 +340,16 @@ describe("TaskReminders route", () => {
     expect(routeState.navigate).toHaveBeenCalledWith("/tasks/42");
   });
 
+  it("falls back to /tasks from not-found without an id", () => {
+    routeState.params = { id: "abc" };
+    vi.stubGlobal("window", { history: { state: {} } });
+
+    renderRoute();
+    routeState.onBack?.();
+
+    expect(routeState.navigate).toHaveBeenCalledWith("/tasks");
+  });
+
   it("goes back through history", () => {
     vi.stubGlobal("window", { history: { state: { idx: 1 } } });
 
@@ -331,9 +359,13 @@ describe("TaskReminders route", () => {
     expect(routeState.navigate).toHaveBeenCalledWith(-1);
   });
 
-  it("returns the public meta title", () => {
+  it("returns the public meta title and description", () => {
     expect(meta({} as never)).toContainEqual({
       title: "Напоминания — Milly",
+    });
+    expect(meta({} as never)).toContainEqual({
+      name: "description",
+      content: "Автоматические напоминания задачи в Milly",
     });
   });
 });

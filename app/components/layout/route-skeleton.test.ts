@@ -69,4 +69,11 @@ describe("RouteSkeleton", () => {
     expect(html).toContain("REMINDERS_SKELETON");
     expect(html).not.toContain("DETAIL_SKELETON");
   });
+
+  it("renders the reminders skeleton with a trailing slash", () => {
+    const html = renderAt("/tasks/42/reminders/");
+
+    expect(html).toContain("REMINDERS_SKELETON");
+    expect(html).not.toContain("DETAIL_SKELETON");
+  });
 });
