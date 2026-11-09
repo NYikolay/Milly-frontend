@@ -16,9 +16,42 @@ const EXPLANATION =
   "Это позволит вам группировать и фильтровать свои задачи";
 const STATUS_TEXT_CLASSES =
   "text-[15px] leading-[1.3] text-app-text-secondary";
-const STATUS_BLOCK_CLASSES = cn("py-[10px]", STATUS_TEXT_CLASSES);
+const STATUS_BLOCK_CLASSES = cn("px-[15px] py-[10px]", STATUS_TEXT_CLASSES);
 const RETRY_BUTTON_CLASSES =
   "text-[15px] font-semibold text-app-accent transition-opacity active:opacity-70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent";
+
+function LabelsLoadingStatus(): ReactElement {
+  return (
+    <p
+      aria-live="polite"
+      className={STATUS_BLOCK_CLASSES}
+      role="status"
+    >
+      Загружаем метки…
+    </p>
+  );
+}
+
+function LabelsErrorStatus({
+  onRetry,
+}: {
+  onRetry: () => void;
+}): ReactElement {
+  return (
+    <div className="flex flex-col items-start gap-[10px] px-[15px] py-[10px]">
+      <p className={STATUS_TEXT_CLASSES} role="alert">
+        Не удалось загрузить метки
+      </p>
+      <button
+        className={RETRY_BUTTON_CLASSES}
+        onClick={onRetry}
+        type="button"
+      >
+        Повторить
+      </button>
+    </div>
+  );
+}
 
 export interface TaskLabelsViewProps {
   selectedIds: readonly number[];
@@ -61,6 +94,7 @@ export function TaskLabelsView({
   const items = uniqueLabels(labels);
   const [query, setQuery] = useState("");
   const isReady = !isLabelsLoading && !isLabelsError;
+  const isErrorVisible = isLabelsError && !isLabelsLoading;
   const filteredItems = filterLabels(items, query);
   const hasNoMatches =
     query.trim().length > 0 && items.length > 0 && filteredItems.length === 0;
@@ -91,20 +125,11 @@ export function TaskLabelsView({
       ) : null}
 
       {isLabelsLoading && items.length === 0 ? (
-        <p className={STATUS_BLOCK_CLASSES}>Загружаем метки…</p>
+        <LabelsLoadingStatus />
       ) : null}
 
-      {isLabelsError && items.length === 0 ? (
-        <div className="flex flex-col items-start gap-[10px] py-[10px] px-[15px]">
-          <p className={STATUS_TEXT_CLASSES}>Не удалось загрузить метки</p>
-          <button
-            className={RETRY_BUTTON_CLASSES}
-            onClick={onRetryLabels}
-            type="button"
-          >
-            Повторить
-          </button>
-        </div>
+      {isErrorVisible && items.length === 0 ? (
+        <LabelsErrorStatus onRetry={onRetryLabels} />
       ) : null}
 
       {items.length > 0 ? (
@@ -169,20 +194,11 @@ export function TaskLabelsView({
       ) : null}
 
       {isLabelsLoading && items.length > 0 ? (
-        <p className={STATUS_BLOCK_CLASSES}>Загружаем метки…</p>
+        <LabelsLoadingStatus />
       ) : null}
 
-      {isLabelsError && items.length > 0 ? (
-        <div className="flex flex-col items-start gap-[10px] py-[10px] px-[15px]">
-          <p className={STATUS_TEXT_CLASSES}>Не удалось загрузить метки</p>
-          <button
-            className={RETRY_BUTTON_CLASSES}
-            onClick={onRetryLabels}
-            type="button"
-          >
-            Повторить
-          </button>
-        </div>
+      {isErrorVisible && items.length > 0 ? (
+        <LabelsErrorStatus onRetry={onRetryLabels} />
       ) : null}
 
       <p className="px-[15px] text-[13px] leading-[1.4] text-app-text-secondary">

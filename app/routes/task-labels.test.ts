@@ -93,10 +93,6 @@ vi.mock("~/hooks/use-telegram-back-button", () => ({
   },
 }));
 
-vi.mock("~/providers/auth-provider", () => ({
-  useAuth: () => ({ user: { timezone: "UTC" } }),
-}));
-
 vi.mock("~/providers/telegram-provider", () => ({
   useTelegram: () => ({
     haptics: {
@@ -247,6 +243,7 @@ describe("TaskLabels route", () => {
     const html = renderRoute();
 
     expect(html).toContain("VIEW");
+    expect(routeState.labelsEnabled).toBe(true);
     expect(routeState.viewProps?.selectedIds).toEqual([3]);
     expect(routeState.viewProps?.labels).toBe(labels);
     expect(routeState.bottomNavActive).toBe("tasks");
@@ -411,6 +408,56 @@ describe("TaskLabels route", () => {
     expect(routeState.mutation.mutate).toHaveBeenCalledWith({
       labelIds: [4],
       labels: [{ id: 4, name: "Работа" }],
+    });
+  });
+
+  it("drops a task label missing from GET /labels when another label is toggled", () => {
+    routeState.task = {
+      isPending: false,
+      data: task({
+        labels: [
+          { id: 3, name: "Срочно" },
+          { id: 99, name: "Удалённая" },
+        ],
+      }),
+      error: null,
+      refetch: vi.fn(),
+    };
+    routeState.labels = {
+      data: [label(), label({ id: 4, name: "Работа" })],
+      isPending: false,
+      isFetching: false,
+      isError: false,
+      refetch: vi.fn(),
+    };
+
+    renderRoute();
+    routeState.viewProps?.onToggle(4);
+
+    expect(routeState.mutation.mutate).toHaveBeenCalledWith({
+      labelIds: [3, 4],
+      labels: [
+        { id: 3, name: "Срочно" },
+        { id: 4, name: "Работа" },
+      ],
+    });
+  });
+
+  it("dedupes duplicate label ids in the PATCH payload", () => {
+    routeState.labels = {
+      data: [label(), label({ name: "Срочно (дубль)" })],
+      isPending: false,
+      isFetching: false,
+      isError: false,
+      refetch: vi.fn(),
+    };
+
+    renderRoute();
+    routeState.viewProps?.onToggle(3);
+
+    expect(routeState.mutation.mutate).toHaveBeenCalledWith({
+      labelIds: [3],
+      labels: [{ id: 3, name: "Срочно" }],
     });
   });
 

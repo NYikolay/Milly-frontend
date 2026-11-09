@@ -70,9 +70,15 @@ export default function TaskLabels() {
       selectedIds.add(labelId);
     }
 
-    const nextLabels = (labelsQuery.data ?? [])
-      .filter((label) => selectedIds.has(label.id))
-      .map((label) => ({ id: label.id, name: label.name }));
+    const nextLabelsById = new Map<number, { id: number; name: string }>();
+
+    for (const label of labelsQuery.data ?? []) {
+      if (selectedIds.has(label.id) && !nextLabelsById.has(label.id)) {
+        nextLabelsById.set(label.id, { id: label.id, name: label.name });
+      }
+    }
+
+    const nextLabels = [...nextLabelsById.values()];
 
     haptics.selection();
     mutation.mutate({

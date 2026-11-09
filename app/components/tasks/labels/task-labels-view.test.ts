@@ -120,6 +120,11 @@ describe("TaskLabelsView", () => {
     const html = render({ labels: [], isLabelsLoading: true });
 
     expect(html).toContain("Загружаем метки…");
+    expect(html).toContain('role="status"');
+    expect(html).toContain('aria-live="polite"');
+    expect(html).toMatch(
+      /class="[^"]*px-\[15px\][^"]*"[^>]*>Загружаем метки…/,
+    );
     expect(html).not.toContain('aria-label="Поиск меток"');
     expect(html).not.toContain('role="group"');
   });
@@ -143,6 +148,7 @@ describe("TaskLabelsView", () => {
 
     expect(html).toContain("Не удалось загрузить метки");
     expect(html).toContain("Повторить");
+    expect(html).toContain('role="alert"');
     expect(html).not.toContain('aria-label="Поиск меток"');
     expect(html).not.toContain('role="group"');
   });
@@ -153,6 +159,16 @@ describe("TaskLabelsView", () => {
     expect(html).toContain("Срочно");
     expect(html).toContain("Не удалось загрузить метки");
     expect(html).toContain("Повторить");
+    expect(html).toContain('role="alert"');
+  });
+
+  it("hides the stale error while a retry loads cached labels", () => {
+    const html = render({ isLabelsLoading: true, isLabelsError: true });
+
+    expect(html).toContain("Срочно");
+    expect(html).toContain("Загружаем метки…");
+    expect(html).not.toContain("Не удалось загрузить метки");
+    expect(html).not.toContain("Повторить");
   });
 
   it("uses app tokens", () => {

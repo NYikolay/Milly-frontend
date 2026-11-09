@@ -78,9 +78,11 @@ export function createUpdateTaskLabelsMutationOptions({
       }
     },
     onSuccess: (updated) => {
-      if (updated.id === taskId) {
-        queryClient.setQueryData(queryKey, updated);
+      if (updated.id !== taskId) {
+        return;
       }
+
+      queryClient.setQueryData(queryKey, updated);
       haptics.notification("success");
     },
     onSettled: () => {

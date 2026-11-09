@@ -1,4 +1,4 @@
-import { QueryClient } from "@tanstack/react-query";
+import { MutationObserver, QueryClient } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "~/lib/api/errors";
@@ -52,6 +52,18 @@ function input(
   return { labelIds, labels };
 }
 
+function deferred<T>(): {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+} {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((resolvePromise) => {
+    resolve = resolvePromise;
+  });
+
+  return { promise, resolve };
+}
+
 let queryClient: QueryClient;
 let haptics: TelegramHaptics;
 
@@ -71,6 +83,56 @@ describe("createUpdateTaskLabelsMutationOptions", () => {
     });
 
     expect(options.scope).toEqual({ id: "task-labels" });
+  });
+
+  it("runs scoped mutations through the cache in FIFO order", async () => {
+    queryClient.setQueryData(queryKey, task({ labels: [] }));
+    const firstResponse = deferred<TaskResponse>();
+    const secondResponse = deferred<TaskResponse>();
+
+    updateTaskMock
+      .mockImplementationOnce(() => firstResponse.promise)
+      .mockImplementationOnce(() => secondResponse.promise);
+
+    const options = createUpdateTaskLabelsMutationOptions({
+      queryClient,
+      haptics,
+      taskId: TASK_ID,
+    });
+    const firstObserver = new MutationObserver(queryClient, options);
+    const secondObserver = new MutationObserver(queryClient, options);
+
+    const firstResult = firstObserver.mutate(input([URGENT.id], [URGENT]));
+    const secondResult = secondObserver.mutate(
+      input([URGENT.id, WORK.id], [URGENT, WORK]),
+    );
+
+    await vi.waitFor(() => {
+      expect(updateTaskMock).toHaveBeenCalledTimes(1);
+    });
+    expect(updateTaskMock).toHaveBeenNthCalledWith(1, TASK_ID, {
+      label_ids: [URGENT.id],
+    });
+
+    firstResponse.resolve(task({ labels: [URGENT] }));
+    await firstResult;
+
+    await vi.waitFor(() => {
+      expect(updateTaskMock).toHaveBeenCalledTimes(2);
+    });
+    expect(updateTaskMock).toHaveBeenNthCalledWith(2, TASK_ID, {
+      label_ids: [URGENT.id, WORK.id],
+    });
+
+    secondResponse.resolve(task({ labels: [URGENT, WORK] }));
+    await secondResult;
+
+    expect(queryClient.getQueryData<TaskResponse>(queryKey)?.labels).toEqual([
+      URGENT,
+      WORK,
+    ]);
+    expect(haptics.notification).toHaveBeenCalledWith("success");
+    expect(haptics.notification).toHaveBeenCalledTimes(2);
   });
 
   it("calls PATCH with the full label_ids set", async () => {
@@ -174,6 +236,7 @@ describe("createUpdateTaskLabelsMutationOptions", () => {
     options.onSuccess(updated);
 
     expect(queryClient.getQueryData(queryKey)).toEqual(current);
+    expect(haptics.notification).not.toHaveBeenCalled();
   });
 
   it("invalidates detail, tasks and series after settling", () => {
