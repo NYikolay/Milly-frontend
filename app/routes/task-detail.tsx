@@ -139,6 +139,13 @@ export default function TaskDetail() {
     void navigate(`/tasks/${task.id}/reminders`);
   }
 
+  function handleLabelsClick() {
+    if (!task) return;
+
+    haptics.selection();
+    void navigate(`/tasks/${task.id}/labels`);
+  }
+
   function handlePriorityClick() {
     if (!task) return;
 
@@ -217,6 +224,7 @@ export default function TaskDetail() {
         now={now}
         onDelete={() => handleDeleteOpenChange(true)}
         onDueClick={() => handleDueOpenChange(true)}
+        onLabelsClick={handleLabelsClick}
         onPriorityClick={handlePriorityClick}
         onProjectClick={handleProjectClick}
         onReminderClick={handleReminderClick}

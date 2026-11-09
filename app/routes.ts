@@ -14,5 +14,6 @@ export default [
     route("tasks/:id/reminders", "routes/task-reminders.tsx"),
     route("tasks/:id/priority", "routes/task-priority.tsx"),
     route("tasks/:id/project", "routes/task-project.tsx"),
+    route("tasks/:id/labels", "routes/task-labels.tsx"),
   ]),
 ] satisfies RouteConfig;

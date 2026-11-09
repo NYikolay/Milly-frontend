@@ -3,6 +3,7 @@ import { useLocation } from "react-router";
 
 import { HomeSkeleton } from "~/components/home/home-skeleton";
 import { TaskDetailSkeleton } from "~/components/tasks/detail/task-detail-skeleton";
+import { TaskLabelsSkeleton } from "~/components/tasks/labels/task-labels-skeleton";
 import { TaskPrioritySkeleton } from "~/components/tasks/priority/task-priority-skeleton";
 import { TaskProjectSkeleton } from "~/components/tasks/project/task-project-skeleton";
 import { TaskRemindersSkeleton } from "~/components/tasks/reminders/task-reminders-skeleton";
@@ -16,6 +17,7 @@ export function RouteSkeleton(): ReactElement {
   const isTaskReminders = /^\/tasks\/[^/]+\/reminders\/?$/.test(pathname);
   const isTaskPriority = /^\/tasks\/[^/]+\/priority\/?$/.test(pathname);
   const isTaskProject = /^\/tasks\/[^/]+\/project\/?$/.test(pathname);
+  const isTaskLabels = /^\/tasks\/[^/]+\/labels\/?$/.test(pathname);
   const isTaskDetail = pathname.startsWith("/tasks/") && !isSearch;
 
   if (pathname.startsWith("/tasks")) {
@@ -27,6 +29,8 @@ export function RouteSkeleton(): ReactElement {
         >
           {isSearch ? (
             <SearchTasksPageSkeleton />
+          ) : isTaskLabels ? (
+            <TaskLabelsSkeleton />
           ) : isTaskProject ? (
             <TaskProjectSkeleton />
           ) : isTaskPriority ? (

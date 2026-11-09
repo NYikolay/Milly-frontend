@@ -103,7 +103,7 @@ describe("TaskDetailCard", () => {
     expect(html).toContain("За 30 минут");
     expect(html).toContain("Приоритет");
     expect(html).toContain("Срочные и важные");
-    expect(html).toContain("Теги");
+    expect(html).toContain("Метки");
     expect(html).toContain("Личное + 3");
     expect(html).toContain("Проект");
     expect(html).toContain("Работа");
@@ -167,6 +167,18 @@ describe("TaskDetailCard", () => {
 
   it("keeps the project row non-interactive without a handler", () => {
     expect(render()).not.toContain('aria-label="Изменить проект"');
+  });
+
+  it("renders the labels row as an edit button when a handler is provided", () => {
+    const html = render({ onLabelsClick: () => {} });
+
+    expect(html).toContain('aria-label="Изменить метки"');
+    expect(html).toMatch(/<button[^>]*aria-label="Изменить метки"[^>]*>/);
+    expect(html).toContain("Метки");
+  });
+
+  it("keeps the labels row non-interactive without a handler", () => {
+    expect(render()).not.toContain('aria-label="Изменить метки"');
   });
 
   it("truncates long plain-text values while the label stays visible", () => {

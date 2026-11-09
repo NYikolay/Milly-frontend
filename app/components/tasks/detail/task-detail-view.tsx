@@ -20,6 +20,7 @@ export interface TaskDetailViewProps {
   onToggleCompleted: () => void;
   onDelete: () => void;
   onDueClick?: () => void;
+  onLabelsClick?: () => void;
   onPriorityClick?: () => void;
   onProjectClick?: () => void;
   onReminderClick?: () => void;
@@ -37,6 +38,7 @@ export function TaskDetailView({
   onToggleCompleted,
   onDelete,
   onDueClick,
+  onLabelsClick,
   onPriorityClick,
   onProjectClick,
   onReminderClick,
@@ -65,6 +67,7 @@ export function TaskDetailView({
         labels={labels}
         now={now}
         onDueClick={onDueClick}
+        onLabelsClick={onLabelsClick}
         onPriorityClick={onPriorityClick}
         onProjectClick={onProjectClick}
         onReminderClick={onReminderClick}

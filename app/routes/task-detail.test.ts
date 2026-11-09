@@ -24,6 +24,7 @@ interface TaskDetailViewState {
   isPastDueWarning?: boolean;
   onToggleCompleted: () => void;
   onDueClick?: () => void;
+  onLabelsClick?: () => void;
   onPriorityClick?: () => void;
   onProjectClick?: () => void;
   onReminderClick?: () => void;
@@ -626,6 +627,12 @@ describe("TaskDetail route", () => {
     renderRoute();
     routeState.viewProps?.onReminderClick?.();
     expect(routeState.navigate).toHaveBeenCalledWith("/tasks/42/reminders");
+  });
+
+  it("opens the labels screen from the labels row", () => {
+    renderRoute();
+    routeState.viewProps?.onLabelsClick?.();
+    expect(routeState.navigate).toHaveBeenCalledWith("/tasks/42/labels");
   });
 
   it("passes the task, timezone, pending and error to the due sheet", () => {

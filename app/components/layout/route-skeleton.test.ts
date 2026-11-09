@@ -34,6 +34,10 @@ vi.mock("~/components/tasks/project/task-project-skeleton", () => ({
   TaskProjectSkeleton: () => createElement("div", null, "PROJECT_SKELETON"),
 }));
 
+vi.mock("~/components/tasks/labels/task-labels-skeleton", () => ({
+  TaskLabelsSkeleton: () => createElement("div", null, "LABELS_SKELETON"),
+}));
+
 import { RouteSkeleton } from "./route-skeleton";
 
 function renderAt(pathname: string): string {
@@ -111,6 +115,20 @@ describe("RouteSkeleton", () => {
     const html = renderAt("/tasks/42/project/");
 
     expect(html).toContain("PROJECT_SKELETON");
+    expect(html).not.toContain("DETAIL_SKELETON");
+  });
+
+  it("renders the labels skeleton on a labels path", () => {
+    const html = renderAt("/tasks/42/labels");
+
+    expect(html).toContain("LABELS_SKELETON");
+    expect(html).not.toContain("DETAIL_SKELETON");
+  });
+
+  it("renders the labels skeleton with a trailing slash", () => {
+    const html = renderAt("/tasks/42/labels/");
+
+    expect(html).toContain("LABELS_SKELETON");
     expect(html).not.toContain("DETAIL_SKELETON");
   });
 });

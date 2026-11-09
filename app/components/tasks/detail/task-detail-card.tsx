@@ -30,6 +30,7 @@ export interface TaskDetailCardProps {
   now: Date;
   isDueDateWarning?: boolean;
   onDueClick?: () => void;
+  onLabelsClick?: () => void;
   onPriorityClick?: () => void;
   onProjectClick?: () => void;
   onReminderClick?: () => void;
@@ -115,6 +116,7 @@ export function TaskDetailCard({
   now,
   isDueDateWarning = false,
   onDueClick,
+  onLabelsClick,
   onPriorityClick,
   onProjectClick,
   onReminderClick,
@@ -169,9 +171,11 @@ export function TaskDetailCard({
         valueClassName="text-app-text-secondary"
       />
       <DetailRow
+        ariaLabel="Изменить метки"
         iconSrc={tagIcon}
         isLast={false}
-        label="Теги"
+        label="Метки"
+        onClick={onLabelsClick}
         value={labelsValue}
       />
       <DetailRow

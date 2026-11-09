@@ -89,6 +89,13 @@ describe("TaskDetailView", () => {
     expect(render()).not.toContain('aria-label="Изменить проект"');
   });
 
+  it("forwards the labels row handler to the card", () => {
+    expect(render({ onLabelsClick: () => {} })).toContain(
+      'aria-label="Изменить метки"',
+    );
+    expect(render()).not.toContain('aria-label="Изменить метки"');
+  });
+
   it("wraps long unbroken titles", () => {
     const html = render({
       task: task({ title: `https://example.com/${"a".repeat(200)}` }),
