@@ -7,6 +7,7 @@ import type {
   TaskListQuery,
   TaskListResponse,
   TaskResponse,
+  TaskUpdateInput,
   TodayProgressResponse,
 } from "./types";
 
@@ -73,6 +74,18 @@ export function fetchTask(
   signal?: AbortSignal,
 ): Promise<TaskResponse> {
   return apiRequest<TaskResponse>(`/tasks/${taskId}`, { signal });
+}
+
+export function updateTask(
+  taskId: number,
+  input: TaskUpdateInput,
+  signal?: AbortSignal,
+): Promise<TaskResponse> {
+  return apiRequest<TaskResponse>(`/tasks/${taskId}`, {
+    method: "PATCH",
+    body: input,
+    signal,
+  });
 }
 
 export function deleteTask(

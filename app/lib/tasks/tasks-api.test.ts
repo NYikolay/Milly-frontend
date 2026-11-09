@@ -10,6 +10,7 @@ import {
   fetchTasks,
   fetchTodayProgress,
   uncompleteTask,
+  updateTask,
 } from "./tasks-api";
 import type { SeriesCreateInput, TaskCreateInput } from "./types";
 
@@ -189,6 +190,22 @@ describe("tasks completion API", () => {
 });
 
 describe("task detail API", () => {
+  it("updates a task with PATCH /tasks/{id}", async () => {
+    apiRequestMock.mockResolvedValue({ id: 42 });
+    const input = {
+      due_at: "2026-11-09T13:00:00.000Z",
+      recurrence: "regular" as const,
+    };
+
+    await updateTask(42, input);
+
+    expect(apiRequestMock).toHaveBeenCalledWith("/tasks/42", {
+      method: "PATCH",
+      body: input,
+      signal: undefined,
+    });
+  });
+
   it("fetches a task with GET /tasks/{id}", async () => {
     apiRequestMock.mockResolvedValue({ id: 100 });
     await expect(fetchTask(100)).resolves.toEqual({ id: 100 });

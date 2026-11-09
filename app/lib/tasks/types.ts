@@ -34,6 +34,11 @@ export interface TaskCreateInput {
   reminders?: ReminderInput[];
 }
 
+export interface TaskUpdateInput {
+  due_at?: string;
+  recurrence?: TaskRecurrence;
+}
+
 export interface SeriesCreateInput {
   title: string;
   description?: string | null;
