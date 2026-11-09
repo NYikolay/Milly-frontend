@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactElement } from "react";
 
 import chevronLeftIcon from "~/assets/icons/chevron-left.svg";
@@ -72,6 +72,13 @@ export function Calendar({
   className,
 }: CalendarProps): ReactElement {
   const [view, setView] = useState<MonthView>(() => toMonth(value));
+
+  useEffect(() => {
+    setView((current) => {
+      const next = toMonth(value);
+      return compareMonths(current, next) === 0 ? current : next;
+    });
+  }, [value]);
 
   const title = formatMonthTitle(view.year, view.month);
   const weeks = chunkWeeks(getMonthGrid(view.year, view.month));

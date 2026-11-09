@@ -1,14 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { ReactElement } from "react";
 
 import { DueStep } from "~/components/tasks/quick-add/due-step";
 import type { DueStepValue } from "~/components/tasks/quick-add/due-step";
 import { BottomSheet } from "~/components/ui/bottom-sheet";
-import {
-  buildTaskDueUpdate,
-  getTaskDueDraft,
-  type TaskDueDraft,
-} from "~/lib/tasks/task-due";
+import { buildTaskDueUpdate, getTaskDueDraft } from "~/lib/tasks/task-due";
 import type { TaskResponse, TaskUpdateInput } from "~/lib/tasks/types";
 
 export interface TaskDueSheetProps {
@@ -20,6 +16,7 @@ export interface TaskDueSheetProps {
   error: string | null;
   onOpenChange: (open: boolean) => void;
   onSave: (input: TaskUpdateInput) => void;
+  onToggleHaptic?: () => void;
 }
 
 export function TaskDueSheet({
@@ -31,23 +28,22 @@ export function TaskDueSheet({
   error,
   onOpenChange,
   onSave,
+  onToggleHaptic,
 }: TaskDueSheetProps): ReactElement {
-  const [draft, setDraft] = useState<TaskDueDraft>(() =>
-    getTaskDueDraft(task, timeZone),
-  );
+  const draftSignature = `${open}|${task.due_at}|${task.recurrence}|${timeZone}`;
+  const [draftState, setDraftState] = useState(() => ({
+    signature: draftSignature,
+    draft: getTaskDueDraft(task, timeZone),
+  }));
 
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
+  if (draftState.signature !== draftSignature) {
+    setDraftState({
+      signature: draftSignature,
+      draft: getTaskDueDraft(task, timeZone),
+    });
+  }
 
-    setDraft(
-      getTaskDueDraft(
-        { due_at: task.due_at, recurrence: task.recurrence },
-        timeZone,
-      ),
-    );
-  }, [open, task.due_at, task.recurrence, timeZone]);
+  const draft = draftState.draft;
 
   function handleApply(next: DueStepValue) {
     const input = buildTaskDueUpdate(task, next, timeZone);
@@ -75,9 +71,13 @@ export function TaskDueSheet({
         now={now}
         timeZone={timeZone}
         onChange={(patch) =>
-          setDraft((current) => ({ ...current, ...patch }))
+          setDraftState((current) => ({
+            ...current,
+            draft: { ...current.draft, ...patch },
+          }))
         }
         onApply={handleApply}
+        onToggleHaptic={onToggleHaptic}
         isPending={isPending}
         error={error}
       />

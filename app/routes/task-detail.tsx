@@ -224,6 +224,7 @@ export default function TaskDetail() {
           now={now}
           onOpenChange={handleDueOpenChange}
           onSave={handleDueSave}
+          onToggleHaptic={() => haptics.selection()}
           open={isDueOpen}
           task={task}
           timeZone={timeZone}

@@ -143,11 +143,12 @@ describe("createUpdateTaskDueMutationOptions", () => {
     const invalidateQueries = vi
       .spyOn(queryClient, "invalidateQueries")
       .mockResolvedValue(undefined);
+    const onUpdated = vi.fn();
     const options = createUpdateTaskDueMutationOptions({
       queryClient,
       haptics,
       taskId: TASK_ID,
-      onUpdated: vi.fn(),
+      onUpdated,
     });
 
     options.onError(
@@ -159,6 +160,16 @@ describe("createUpdateTaskDueMutationOptions", () => {
     );
 
     expect(invalidateQueries).not.toHaveBeenCalledWith({ queryKey });
+    expect(invalidateQueries).not.toHaveBeenCalledWith({
+      queryKey: ["tasks"],
+    });
+    expect(invalidateQueries).not.toHaveBeenCalledWith({
+      queryKey: ["task-series"],
+    });
+    expect(invalidateQueries).not.toHaveBeenCalledWith({
+      queryKey: ["projects"],
+    });
     expect(haptics.notification).toHaveBeenCalledWith("error");
+    expect(onUpdated).not.toHaveBeenCalled();
   });
 });

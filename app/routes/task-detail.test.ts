@@ -30,6 +30,7 @@ interface TaskDueSheetState {
   open: boolean;
   task: TaskResponse;
   timeZone: string;
+  isPending: boolean;
   error: string | null;
   onSave: (input: TaskUpdateInput) => void;
   onOpenChange: (open: boolean) => void;
@@ -553,10 +554,12 @@ describe("TaskDetail route", () => {
   });
 
   it("passes the task, timezone, pending and error to the due sheet", () => {
+    routeState.duePending = true;
     routeState.dueError = true;
     renderRoute();
     expect(routeState.dueProps?.task.id).toBe(42);
     expect(routeState.dueProps?.timeZone).toBe("UTC");
+    expect(routeState.dueProps?.isPending).toBe(true);
     expect(routeState.dueProps?.error).toBe(
       "Не удалось изменить срок. Попробуйте ещё раз.",
     );
