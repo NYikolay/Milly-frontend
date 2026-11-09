@@ -24,12 +24,14 @@
   промежутков; ведущие иконки `calendar.svg`, `bell.svg` (новая),
   `flag.svg`, `tag.svg`, `folder.svg`; разделитель `app-stroke` под каждой
   строкой, кроме последней; шевроны декоративные. Строки карточки свойств
-  неинтерактивны, кроме «Срок», «Напоминание», «Приоритет» и «Проект»:
-  «Срок» открывает шторку «Дата и время задачи» (BottomSheet,
+  неинтерактивны, кроме «Срок», «Напоминание», «Приоритет», «Метки» и
+  «Проект»: «Срок» открывает шторку «Дата и время задачи» (BottomSheet,
   `showCloseButton`, свайп, только `app-*`, 320/412/448 px, safe-area),
   «Напоминание» — страницу `/tasks/:id/reminders`, «Приоритет» —
-  `/tasks/:id/priority`, «Проект» — `/tasks/:id/project`. Значение
-  проекта — текст без `ProjectIconBadge`. Под карточкой —
+  `/tasks/:id/priority`, «Метки» — `/tasks/:id/labels`, «Проект» —
+  `/tasks/:id/project`. Значение меток остаётся сводкой «первая метка +
+  N» с цветной иконкой; значение проекта — текст без `ProjectIconBadge`.
+  Под карточкой —
   `Создано DD.MM.YYYY, HH:mm` и две кнопки `50px` («Отметить
   выполненной»/«Сделать активной» и «Удалить задачу»). Удаление — через
   существующий `Modal` (`variant="sheet"`): две панели `app-card`, для
@@ -42,4 +44,5 @@
 - Шапка шторки и поведение detail-шторок — в `docs/agents/features/quick-add.md`.
 - Экран выбора приоритета — в `docs/agents/features/task-priority.md`.
 - Экран выбора проекта — в `docs/agents/features/task-project.md`.
-- Проверки — в `docs/agents/qa.md` (разделы «`/tasks/:id`», «Шторка „Дата и время задачи“», «`/tasks/:id/priority`» и «`/tasks/:id/project`»).
+- Экран выбора меток — в `docs/agents/features/task-labels.md`.
+- Проверки — в `docs/agents/qa.md` (разделы «`/tasks/:id`», «Шторка „Дата и время задачи“», «`/tasks/:id/priority`», «`/tasks/:id/project`» и «`/tasks/:id/labels`»).

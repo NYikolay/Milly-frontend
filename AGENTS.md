@@ -21,6 +21,7 @@
 | Автоматические напоминания (`/tasks/:id/reminders`) | `docs/agents/features/reminders.md` |
 | Приоритет задачи (`/tasks/:id/priority`) | `docs/agents/features/task-priority.md` |
 | Проект задачи (`/tasks/:id/project`) | `docs/agents/features/task-project.md` |
+| Метки задачи (`/tasks/:id/labels`) | `docs/agents/features/task-labels.md` |
 | Telegram Mini App | `docs/agents/telegram.md` |
 | UI, токены, общие примитивы | `docs/agents/ui.md` |
 | Ручные проверки перед завершением | `docs/agents/qa.md` |
@@ -31,11 +32,11 @@
 
 ### Быстрая карта
 
-- `app/routes.ts` — маршруты; `app/routes/_app.tsx` — `AppShell > AuthGate > Outlet`. Экраны задач: `/tasks`, `/tasks/search`, `/tasks/:id`, `/tasks/:id/reminders`, `/tasks/:id/priority`, `/tasks/:id/project`.
+- `app/routes.ts` — маршруты; `app/routes/_app.tsx` — `AppShell > AuthGate > Outlet`. Экраны задач: `/tasks`, `/tasks/search`, `/tasks/:id`, `/tasks/:id/reminders`, `/tasks/:id/priority`, `/tasks/:id/project`, `/tasks/:id/labels`.
 - `app/providers/` — QueryClient, Telegram, Auth.
 - `app/lib/` — api, auth, tasks, errors, projects, labels, telegram, voice.
-- `app/components/` — auth, errors, home, layout, tasks (`detail`, `priority`, `project`, `quick-add`, `reminders`, `search`, `today`), ui, voice.
-- `app/hooks/` — данные экранов, завершение задач, PATCH срока/приоритета/напоминаний/проекта, навигация, BackButton, включая `use-update-task-priority.ts` и `use-update-task-project.ts`.
+- `app/components/` — auth, errors, home, layout, tasks (`detail`, `labels`, `priority`, `project`, `quick-add`, `reminders`, `search`, `today`), ui, voice.
+- `app/hooks/` — данные экранов, завершение задач, PATCH срока/приоритета/проекта/меток/напоминаний, навигация, BackButton, включая `use-update-task-priority.ts`, `use-update-task-project.ts` и `use-update-task-labels.ts`.
 
 ## 2. Стек и запуск
 
@@ -74,6 +75,7 @@ npm run test:watch  # Vitest в watch-режиме
 - `AuthGate` в `app/routes/_app.tsx` оборачивает `Outlet`. Access token — только в памяти; refresh token — HttpOnly cookie. Не хранить access/refresh/`initData` в браузерных или Telegram-хранилищах и не логировать их; `useAuth()` не отдаёт токены.
 - Приоритет задачи: выбор варианта на `/tasks/:id/priority` сразу отправляет `PATCH { priority }`, оптимистично обновляет `["tasks","detail",id]` и возвращает на детали; выбор текущего приоритета `PATCH` не отправляет, только возвращает. Не-`404` ошибка откатывает кэш и показывает toast «Не удалось изменить приоритет. Попробуйте ещё раз.»; `404` инвалидирует детали, и маршрут показывает «Задача не найдена».
 - Проект задачи: выбор на `/tasks/:id/project` сразу отправляет `PATCH { project_id }` (включая `null`), оптимистично обновляет `["tasks","detail",id]` и возвращает на детали; выбор текущего проекта `PATCH` не отправляет. Ошибка любого статуса откатывает кэш и показывает toast «Не удалось изменить проект. Попробуйте ещё раз.»; при `404` дополнительно инвалидируются детали и `["projects"]`; `onSettled` инвалидирует детали, `["tasks"]`, `["task-series"]` и `["projects"]`.
+- Метки задачи: каждое нажатие на `/tasks/:id/labels` сразу отправляет `PATCH { label_ids }` с полным новым набором (полная замена, `[]` — очистка), остаётся на странице и оптимистично обновляет `["tasks","detail",id]`; мутации сериализуются через `scope: "task-labels"`; ошибка любого статуса откатывает кэш, вызывает error haptic и показывает toast «Не удалось изменить метки. Попробуйте ещё раз.», при `404` дополнительно инвалидируются детали и `["labels"]`; лимит — 100 меток, лишнее нажатие игнорируется; строка «Метки» на деталях открывает страницу; кнопка «Создать метку» пока ничего не делает.
 - SSR не отключать. `telegram-web-app.js` — в `<head>` в `root.tsx` до `Meta`, `Links` и app-скриптов, не переносить в `<body>` и не подключать лениво.
 - С Telegram работать только через `useTelegram()` и helpers из `app/lib/telegram/`, не через `window.Telegram`. Новые API гейтить через `supportsVersion`; `initDataUnsafe` — только для отображения, для авторизации отправлять сырой `initData`. Пустой `initData` допустим (refresh-cookie).
 - Безопасные зоны — через `AppShell` и `--app-inset-*`; нижние панели — от `viewportStableHeight`, не от `viewportHeight`. Клавиатура в нижних шторках не меняет высоту и позицию панели.
@@ -94,7 +96,7 @@ npm run build
 
 - `npm test` обязателен перед завершением.
 - Для UI-изменений дополнительно проверить SSR-ответ; для error-экранов — `curl -i http://localhost:3000/does-not-exist`.
-- Полный чеклист ручных проверок по экранам — `docs/agents/qa.md` (для выбора проекта — раздел «`/tasks/:id/project`»).
+- Полный чеклист ручных проверок по экранам — `docs/agents/qa.md` (для выбора проекта — раздел «`/tasks/:id/project`», для выбора меток — раздел «`/tasks/:id/labels`»).
 
 <!-- CODEGRAPH_START -->
 ## CodeGraph
