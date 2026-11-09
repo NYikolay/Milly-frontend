@@ -29,6 +29,7 @@ export interface TaskDetailCardProps {
   timeZone: string;
   now: Date;
   isDueDateWarning?: boolean;
+  onDueClick?: () => void;
 }
 
 interface DetailRowProps {
@@ -37,6 +38,8 @@ interface DetailRowProps {
   value: ReactNode;
   valueClassName?: string;
   isLast: boolean;
+  onClick?: () => void;
+  ariaLabel?: string;
 }
 
 function DetailRow({
@@ -45,14 +48,18 @@ function DetailRow({
   value,
   valueClassName,
   isLast,
+  onClick,
+  ariaLabel,
 }: DetailRowProps): ReactElement {
-  return (
-    <div
-      className={cn(
-        "flex h-[47px] items-center gap-[11px]",
-        !isLast && "border-b border-app-stroke",
-      )}
-    >
+  const className = cn(
+    "flex h-[47px] items-center gap-[11px]",
+    !isLast && "border-b border-app-stroke",
+    onClick &&
+      "w-full text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-accent",
+  );
+
+  const content = (
+    <>
       <span className="flex shrink-0 items-center gap-[5px]">
         <AssetIcon
           className="size-[18px] shrink-0 text-app-text"
@@ -78,8 +85,23 @@ function DetailRow({
         className="size-6 shrink-0 text-app-text-secondary"
         src={chevronRightIcon}
       />
-    </div>
+    </>
   );
+
+  if (onClick) {
+    return (
+      <button
+        aria-label={ariaLabel}
+        className={className}
+        onClick={onClick}
+        type="button"
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return <div className={className}>{content}</div>;
 }
 
 export function TaskDetailCard({
@@ -89,6 +111,7 @@ export function TaskDetailCard({
   timeZone,
   now,
   isDueDateWarning = false,
+  onDueClick,
 }: TaskDetailCardProps): ReactElement {
   const overdue = isTaskOverdue(task, now);
   const labelsSummary = formatTaskLabelsSummary(task.labels);
@@ -109,9 +132,11 @@ export function TaskDetailCard({
   return (
     <div className="flex flex-col rounded-[25px] bg-app-card px-[15px] py-[15px]">
       <DetailRow
+        ariaLabel="Изменить срок"
         iconSrc={calendarIcon}
         isLast={false}
         label="Срок"
+        onClick={onDueClick}
         value={formatTaskDueValue(task, timeZone, now)}
         valueClassName={
           isDueDateWarning || overdue

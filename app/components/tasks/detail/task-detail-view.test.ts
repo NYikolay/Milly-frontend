@@ -61,6 +61,13 @@ describe("TaskDetailView", () => {
     expect(html).not.toContain("Изменить название и описание задачи");
   });
 
+  it("forwards the due row handler to the card", () => {
+    expect(render({ onDueClick: () => {} })).toContain(
+      'aria-label="Изменить срок"',
+    );
+    expect(render()).not.toContain('aria-label="Изменить срок"');
+  });
+
   it("wraps long unbroken titles", () => {
     const html = render({
       task: task({ title: `https://example.com/${"a".repeat(200)}` }),

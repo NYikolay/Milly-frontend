@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "~/lib/api/errors";
-import type { TaskResponse } from "~/lib/tasks/types";
+import type { TaskResponse, TaskUpdateInput } from "~/lib/tasks/types";
 
 interface TaskQueryState {
   isPending: boolean;
@@ -23,6 +23,16 @@ interface ToggleState {
 interface TaskDetailViewState {
   isPastDueWarning?: boolean;
   onToggleCompleted: () => void;
+  onDueClick?: () => void;
+}
+
+interface TaskDueSheetState {
+  open: boolean;
+  task: TaskResponse;
+  timeZone: string;
+  error: string | null;
+  onSave: (input: TaskUpdateInput) => void;
+  onOpenChange: (open: boolean) => void;
 }
 
 const routeState = vi.hoisted(() => ({
@@ -39,6 +49,15 @@ const routeState = vi.hoisted(() => ({
     }): void => {},
     reset: (): void => {},
   } as ToggleState,
+  dueOpen: undefined as boolean | undefined,
+  dueProps: undefined as TaskDueSheetState | undefined,
+  dueMutate: ((_input: TaskUpdateInput): void => {}) as (
+    input: TaskUpdateInput,
+  ) => void,
+  dueReset: (): void => {},
+  duePending: false,
+  dueError: false,
+  onUpdated: undefined as (() => void) | undefined,
   viewProps: undefined as TaskDetailViewState | undefined,
   navigate: vi.fn(),
   bottomNavActive: undefined as string | undefined,
@@ -74,6 +93,19 @@ vi.mock("~/hooks/use-task-detail", () => ({
       isError: false,
       error: null,
       reset: vi.fn(),
+    };
+  },
+}));
+
+vi.mock("~/hooks/use-update-task-due", () => ({
+  useUpdateTaskDue: (_taskId: number, onUpdated: () => void) => {
+    routeState.onUpdated = onUpdated;
+
+    return {
+      mutate: routeState.dueMutate,
+      reset: routeState.dueReset,
+      isPending: routeState.duePending,
+      isError: routeState.dueError,
     };
   },
 }));
@@ -129,6 +161,15 @@ vi.mock("~/components/tasks/detail/task-detail-error", () => ({
     routeState.onRetry = onRetry;
 
     return createElement("div", null, `ERROR:${kind}`);
+  },
+}));
+
+vi.mock("~/components/tasks/detail/task-due-sheet", () => ({
+  TaskDueSheet: (props: TaskDueSheetState) => {
+    routeState.dueProps = props;
+    routeState.dueOpen = props.open;
+
+    return null;
   },
 }));
 
@@ -194,6 +235,13 @@ describe("TaskDetail route", () => {
       mutate: vi.fn(),
       reset: vi.fn(),
     };
+    routeState.dueOpen = undefined;
+    routeState.dueProps = undefined;
+    routeState.dueMutate = vi.fn();
+    routeState.dueReset = vi.fn();
+    routeState.duePending = false;
+    routeState.dueError = false;
+    routeState.onUpdated = undefined;
     routeState.viewProps = undefined;
     routeState.navigate.mockClear();
     routeState.bottomNavActive = undefined;
@@ -496,5 +544,33 @@ describe("TaskDetail route", () => {
     renderRoute();
 
     expect(routeState.viewProps?.isPastDueWarning).toBe(true);
+  });
+
+  it("opens the due sheet from the due row", () => {
+    renderRoute();
+    routeState.viewProps?.onDueClick?.();
+    expect(routeState.dueReset).toHaveBeenCalled();
+  });
+
+  it("passes the task, timezone, pending and error to the due sheet", () => {
+    routeState.dueError = true;
+    renderRoute();
+    expect(routeState.dueProps?.task.id).toBe(42);
+    expect(routeState.dueProps?.timeZone).toBe("UTC");
+    expect(routeState.dueProps?.error).toBe(
+      "Не удалось изменить срок. Попробуйте ещё раз.",
+    );
+  });
+
+  it("saves due changes through the mutation", () => {
+    renderRoute();
+    routeState.dueProps?.onSave({
+      due_at: "2026-11-09T13:00:00.000Z",
+      recurrence: "regular",
+    });
+    expect(routeState.dueMutate).toHaveBeenCalledWith({
+      due_at: "2026-11-09T13:00:00.000Z",
+      recurrence: "regular",
+    });
   });
 });

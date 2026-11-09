@@ -19,6 +19,7 @@ export interface TaskDetailViewProps {
   isPastDueWarning: boolean;
   onToggleCompleted: () => void;
   onDelete: () => void;
+  onDueClick?: () => void;
 }
 
 export function TaskDetailView({
@@ -32,6 +33,7 @@ export function TaskDetailView({
   isPastDueWarning,
   onToggleCompleted,
   onDelete,
+  onDueClick,
 }: TaskDetailViewProps): ReactElement {
   const description = task.description?.trim() ?? "";
 
@@ -56,6 +58,7 @@ export function TaskDetailView({
         isDueDateWarning={isPastDueWarning}
         labels={labels}
         now={now}
+        onDueClick={onDueClick}
         project={project}
         task={task}
         timeZone={timeZone}

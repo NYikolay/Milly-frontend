@@ -119,6 +119,18 @@ describe("TaskDetailCard", () => {
     expect(html).not.toContain("<button");
   });
 
+  it("renders the due row as an edit button when a handler is provided", () => {
+    const html = render({ onDueClick: () => {} });
+
+    expect(html).toContain('aria-label="Изменить срок"');
+    expect(html).toMatch(/<button[^>]*aria-label="Изменить срок"[^>]*>/);
+    expect(html).toContain("Срок");
+  });
+
+  it("keeps the due row non-interactive without a handler", () => {
+    expect(render()).not.toContain('aria-label="Изменить срок"');
+  });
+
   it("truncates long plain-text values while the label stays visible", () => {
     const longProjectName =
       "Очень длинное название проекта, которое заметно длиннее шестидесяти символов";

@@ -7,6 +7,7 @@ import { DeleteTaskModal } from "~/components/tasks/detail/delete-task-modal";
 import { TaskDetailError } from "~/components/tasks/detail/task-detail-error";
 import { TaskDetailSkeleton } from "~/components/tasks/detail/task-detail-skeleton";
 import { TaskDetailView } from "~/components/tasks/detail/task-detail-view";
+import { TaskDueSheet } from "~/components/tasks/detail/task-due-sheet";
 import { useBottomNavigation } from "~/hooks/use-bottom-navigation";
 import {
   useDeleteTask,
@@ -14,6 +15,7 @@ import {
   useToggleTaskDetailCompletion,
 } from "~/hooks/use-task-detail";
 import { useTelegramBackButton } from "~/hooks/use-telegram-back-button";
+import { useUpdateTaskDue } from "~/hooks/use-update-task-due";
 import { ApiError } from "~/lib/api/errors";
 import { shouldGoBack } from "~/lib/errors/navigation";
 import { labelsQueryOptions } from "~/lib/labels/labels-query";
@@ -24,6 +26,7 @@ import {
   isPastDueUncompleteError,
   shouldBlockTaskReactivation,
 } from "~/lib/tasks/task-reactivation";
+import type { TaskUpdateInput } from "~/lib/tasks/types";
 import { useAuth } from "~/providers/auth-provider";
 import { useTelegram } from "~/providers/telegram-provider";
 import type { Route } from "./+types/task-detail";
@@ -59,9 +62,11 @@ export default function TaskDetail() {
   });
   const toggleMutation = useToggleTaskDetailCompletion(taskId);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isDueOpen, setIsDueOpen] = useState(false);
   const [isPastDueWarning, setIsPastDueWarning] = useState(false);
   const isMountedRef = useRef(true);
   const deleteMutation = useDeleteTask(taskId, handleDeleted);
+  const dueMutation = useUpdateTaskDue(taskId, () => setIsDueOpen(false));
   useTelegramBackButton(handleBack);
 
   useEffect(() => {
@@ -115,6 +120,16 @@ export default function TaskDetail() {
     if (open) haptics.selection();
   }
 
+  function handleDueOpenChange(open: boolean) {
+    dueMutation.reset();
+    setIsDueOpen(open);
+    if (open) haptics.selection();
+  }
+
+  function handleDueSave(input: TaskUpdateInput) {
+    dueMutation.mutate(input);
+  }
+
   const project =
     task?.project_id != null
       ? projectsQuery.data?.find((item) => item.id === task.project_id)
@@ -137,6 +152,9 @@ export default function TaskDetail() {
     )
       ? "Не удалось удалить задачу. Попробуйте ещё раз."
       : null;
+  const dueError = dueMutation.isError
+    ? "Не удалось изменить срок. Попробуйте ещё раз."
+    : null;
 
   let content: ReactNode;
 
@@ -169,6 +187,7 @@ export default function TaskDetail() {
         labels={labelsQuery.data ?? []}
         now={now}
         onDelete={() => handleDeleteOpenChange(true)}
+        onDueClick={() => handleDueOpenChange(true)}
         onToggleCompleted={handleToggleCompleted}
         project={project}
         task={task}
@@ -196,6 +215,18 @@ export default function TaskDetail() {
           onOpenChange={handleDeleteOpenChange}
           open={isDeleteOpen}
           showSeriesWarning={showSeriesWarning}
+        />
+      ) : null}
+      {task ? (
+        <TaskDueSheet
+          error={dueError}
+          isPending={dueMutation.isPending}
+          now={now}
+          onOpenChange={handleDueOpenChange}
+          onSave={handleDueSave}
+          open={isDueOpen}
+          task={task}
+          timeZone={timeZone}
         />
       ) : null}
     </main>
