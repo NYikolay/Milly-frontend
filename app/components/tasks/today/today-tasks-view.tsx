@@ -81,6 +81,7 @@ export function TodayTasksView({
         <TodayTaskGroup
           expanded={expanded.planned}
           id="planned"
+          now={now}
           onOpenTask={onOpenTask}
           onToggleExpanded={() => onToggleExpanded("planned")}
           onToggleTask={onToggleTask}
@@ -96,6 +97,7 @@ export function TodayTasksView({
         <TodayTaskGroup
           expanded={expanded.completed}
           id="completed"
+          now={now}
           onOpenTask={onOpenTask}
           onToggleExpanded={() => onToggleExpanded("completed")}
           onToggleTask={onToggleTask}

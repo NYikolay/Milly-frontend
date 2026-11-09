@@ -5,8 +5,8 @@ import calendarIcon from "~/assets/icons/calendar.svg?no-inline";
 import chevronRightIcon from "~/assets/icons/chevron-right.svg?no-inline";
 import flagIcon from "~/assets/icons/flag.svg?no-inline";
 import folderIcon from "~/assets/icons/folder.svg?no-inline";
-import tagRawIcon from "~/assets/icons/tag-raw.svg?no-inline";
-import tagIcon from "~/assets/icons/tag.svg?no-inline";
+import tagRawIcon from "~/assets/icons/tag.svg?no-inline";
+import tagIcon from "~/assets/icons/tag-raw.svg?no-inline";
 
 import { AssetIcon } from "~/components/ui/asset-icon";
 import { cn } from "~/lib/cn";
@@ -19,6 +19,7 @@ import {
   formatTaskPriority,
   formatTaskReminderSummary,
 } from "~/lib/tasks/task-detail";
+import { isTaskOverdue } from "~/lib/tasks/task-overdue";
 import type { TaskResponse } from "~/lib/tasks/types";
 
 export interface TaskDetailCardProps {
@@ -27,6 +28,7 @@ export interface TaskDetailCardProps {
   labels: readonly LabelResponse[];
   timeZone: string;
   now: Date;
+  isDueDateWarning?: boolean;
 }
 
 interface DetailRowProps {
@@ -86,7 +88,9 @@ export function TaskDetailCard({
   labels,
   timeZone,
   now,
+  isDueDateWarning = false,
 }: TaskDetailCardProps): ReactElement {
+  const overdue = isTaskOverdue(task, now);
   const labelsSummary = formatTaskLabelsSummary(task.labels);
   const labelColor =
     findTaskLabelColor(task.labels, labels) ?? "var(--app-success)";
@@ -109,7 +113,11 @@ export function TaskDetailCard({
         isLast={false}
         label="Срок"
         value={formatTaskDueValue(task, timeZone, now)}
-        valueClassName="text-app-accent"
+        valueClassName={
+          isDueDateWarning || overdue
+            ? "text-app-destructive"
+            : "text-app-accent"
+        }
       />
       <DetailRow
         iconSrc={bellIcon}

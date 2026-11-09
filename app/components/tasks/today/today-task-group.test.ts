@@ -45,6 +45,7 @@ function render(
       onToggleExpanded: () => {},
       projectsById: new Map(),
       timeZone: "Europe/Moscow",
+      now: new Date("2026-11-06T07:00:00.000Z"),
       pendingTaskId: null,
       onToggleTask: () => {},
       onOpenTask: () => {},

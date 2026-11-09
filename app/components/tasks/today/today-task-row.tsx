@@ -14,12 +14,14 @@ import {
 } from "~/lib/projects/project-icons";
 import type { ProjectResponse } from "~/lib/projects/types";
 import { formatZonedTime } from "~/lib/tasks/date-time";
+import { isTaskOverdue } from "~/lib/tasks/task-overdue";
 import type { TaskResponse } from "~/lib/tasks/types";
 
 export interface TodayTaskRowProps {
   task: TaskResponse;
   project?: ProjectResponse;
   timeZone: string;
+  now: Date;
   isPending: boolean;
   isLast: boolean;
   onToggle: (task: TaskResponse, nextCompleted: boolean) => void;
@@ -30,6 +32,7 @@ export function TodayTaskRow({
   task,
   project,
   timeZone,
+  now,
   isPending,
   isLast,
   onToggle,
@@ -38,6 +41,12 @@ export function TodayTaskRow({
   const completed = task.completed_at !== null;
   const showFlag = !completed && task.priority === "urgent_important";
   const showAccentTime = showFlag;
+  const overdue = isTaskOverdue(task, now);
+  const timeClassName = overdue
+    ? "text-app-destructive"
+    : showAccentTime
+      ? "text-app-accent"
+      : "text-app-text-secondary";
   const content = (
     <>
       <div className="flex min-w-0 flex-1 flex-col gap-[6px]">
@@ -51,18 +60,13 @@ export function TodayTaskRow({
         >
           {task.title}
         </span>
-        <div className="flex min-w-0 items-center gap-[5px] text-[12px] leading-[1.4] text-app-text-secondary">
+        <div className="flex min-w-0 items-center gap-[5px] text-[13px] leading-[1.4] text-app-text-secondary">
           <ProjectIconBadge
             colorHex={project?.color.hex ?? null}
             icon={project ? getProjectIcon(project.icon) : NO_PROJECT_ICON}
           />
           <span className="truncate">{project?.name ?? "Без проекта"}</span>
-          <span
-            className={cn(
-              "shrink-0",
-              showAccentTime ? "text-app-accent" : "text-app-text-secondary",
-            )}
-          >
+          <span className={cn("shrink-0", timeClassName)}>
             · {formatZonedTime(task.due_at, timeZone)}
           </span>
           {task.series_id !== null ? (

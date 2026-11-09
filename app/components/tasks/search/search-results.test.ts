@@ -9,6 +9,7 @@ import { SearchResults } from "./search-results";
 
 const DATE = "2026-10-29";
 const TIME_ZONE = "Europe/Moscow";
+const NOW = new Date("2026-10-29T07:00:00.000Z");
 
 function task(overrides: Partial<TaskResponse> = {}): TaskResponse {
   return {
@@ -54,6 +55,7 @@ function render(
       tasks: [],
       projects: [],
       timeZone: TIME_ZONE,
+      now: NOW,
       pendingTaskId: null,
       completionError: null,
       onToggleTask: () => {},
@@ -120,6 +122,14 @@ describe("SearchResults", () => {
     expect(html).toContain("Без проекта");
     expect(html).toContain("no-project.svg");
     expect(html).not.toContain("file.svg");
+  });
+
+  it("renders the due time as destructive for an overdue task", () => {
+    const html = render({
+      tasks: [task({ id: 1, due_at: "2026-10-29T06:00:00.000Z" })],
+    });
+
+    expect(html).toContain('text-app-destructive">· 09:00');
   });
 
   it("renders a row that opens the task detail", () => {

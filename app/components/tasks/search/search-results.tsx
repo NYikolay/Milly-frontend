@@ -12,6 +12,7 @@ export interface SearchResultsProps {
   tasks: TaskResponse[];
   projects: ProjectResponse[];
   timeZone: string;
+  now: Date;
   pendingTaskId: number | null;
   completionError: string | null;
   onToggleTask: (task: TaskResponse, nextCompleted: boolean) => void;
@@ -23,6 +24,7 @@ export function SearchResults({
   tasks,
   projects,
   timeZone,
+  now,
   pendingTaskId,
   completionError,
   onToggleTask,
@@ -60,6 +62,7 @@ export function SearchResults({
               isLast={index === tasks.length - 1}
               isPending={pendingTaskId === task.id}
               key={task.id}
+              now={now}
               onOpen={onOpenTask}
               onToggle={onToggleTask}
               project={

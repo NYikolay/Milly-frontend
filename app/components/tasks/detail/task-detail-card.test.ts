@@ -151,4 +151,44 @@ describe("TaskDetailCard", () => {
     });
     expect(html).toContain("var(--app-success)");
   });
+
+  it("marks the due date as destructive when warned", () => {
+    const html = render({ isDueDateWarning: true });
+    const dueRow = html.slice(
+      html.indexOf("Срок"),
+      html.indexOf("Напоминание"),
+    );
+
+    expect(dueRow).toContain("text-app-destructive");
+    expect(dueRow).not.toContain("text-app-accent");
+  });
+
+  it("marks the due date as destructive when the task is overdue", () => {
+    const html = render({
+      task: task({ due_at: "2026-11-08T09:00:00.000Z" }),
+    });
+    const dueRow = html.slice(
+      html.indexOf("Срок"),
+      html.indexOf("Напоминание"),
+    );
+
+    expect(dueRow).toContain("text-app-destructive");
+    expect(dueRow).not.toContain("text-app-accent");
+  });
+
+  it("keeps the accent due date for a completed overdue task", () => {
+    const html = render({
+      task: task({
+        due_at: "2026-11-08T09:00:00.000Z",
+        completed_at: "2026-11-08T09:30:00.000Z",
+      }),
+    });
+    const dueRow = html.slice(
+      html.indexOf("Срок"),
+      html.indexOf("Напоминание"),
+    );
+
+    expect(dueRow).toContain("text-app-accent");
+    expect(dueRow).not.toContain("text-app-destructive");
+  });
 });

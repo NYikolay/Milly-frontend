@@ -215,6 +215,7 @@ export default function TaskSearch({ loaderData }: Route.ComponentProps) {
             tasks={displayedTasks}
             projects={projectsQuery.data ?? []}
             timeZone={timeZone}
+            now={now}
             pendingTaskId={pendingTaskId}
             completionError={completionError}
             onToggleTask={handleToggleTask}

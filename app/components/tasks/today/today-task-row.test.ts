@@ -43,6 +43,7 @@ function project(overrides: Partial<ProjectResponse> = {}): ProjectResponse {
 }
 
 const TIME_ZONE = "Europe/Moscow";
+const NOW = new Date("2026-11-06T07:00:00.000Z");
 
 function render(
   props: Partial<Parameters<typeof TodayTaskRow>[0]> = {},
@@ -51,6 +52,7 @@ function render(
     createElement(TodayTaskRow, {
       task: task(),
       timeZone: TIME_ZONE,
+      now: NOW,
       isPending: false,
       isLast: false,
       onToggle: () => {},
@@ -129,6 +131,40 @@ describe("TodayTaskRow", () => {
     expect(html).not.toContain("file.svg");
     expect(html).toContain('bg-app-track text-app-text"');
     expect(html).toContain("Без проекта");
+  });
+
+  it("renders the due time as destructive when the task is overdue", () => {
+    const html = render({
+      task: task({ due_at: "2026-11-06T06:00:00.000Z" }),
+    });
+
+    expect(html).toContain('text-app-destructive">· 09:00');
+    expect(html).not.toContain('text-app-accent">· 09:00');
+  });
+
+  it("prefers the destructive time over the urgent-important accent", () => {
+    const html = render({
+      task: task({
+        due_at: "2026-11-06T06:00:00.000Z",
+        priority: "urgent_important",
+      }),
+    });
+
+    expect(html).toContain("flag.svg");
+    expect(html).toContain('text-app-destructive">· 09:00');
+    expect(html).not.toContain('text-app-accent">· ');
+  });
+
+  it("keeps the secondary time for a completed overdue task", () => {
+    const html = render({
+      task: task({
+        due_at: "2026-11-06T06:00:00.000Z",
+        completed_at: "2026-11-06T06:30:00.000Z",
+      }),
+    });
+
+    expect(html).toContain('text-app-text-secondary">· 09:00');
+    expect(html).not.toContain("text-app-destructive");
   });
 
   it("renders no flag and secondary time for the neither priority", () => {

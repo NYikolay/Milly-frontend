@@ -15,6 +15,7 @@ export interface TodayTaskGroupProps {
   onToggleExpanded: () => void;
   projectsById: ReadonlyMap<number, ProjectResponse>;
   timeZone: string;
+  now: Date;
   pendingTaskId: number | null;
   onToggleTask: (task: TaskResponse, nextCompleted: boolean) => void;
   onOpenTask: (task: TaskResponse) => void;
@@ -29,6 +30,7 @@ export function TodayTaskGroup({
   onToggleExpanded,
   projectsById,
   timeZone,
+  now,
   pendingTaskId,
   onToggleTask,
   onOpenTask,
@@ -64,6 +66,7 @@ export function TodayTaskGroup({
               isLast={index === visible.length - 1}
               isPending={pendingTaskId === task.id}
               key={task.id}
+              now={now}
               onOpen={onOpenTask}
               onToggle={onToggleTask}
               project={
