@@ -113,6 +113,14 @@ export function buildReminderRules(draft: ReminderRuleDraft): ReminderInput[] {
 export function buildTaskRemindersUpdate(
   draft: TaskRemindersDraft,
 ): TaskUpdateInput | null {
+  if (!draft.beforeDueEnabled && !draft.scheduledEnabled) {
+    return { reminders_enabled: false, reminders: [] };
+  }
+
+  if (!draft.remindersEnabled) {
+    return { reminders_enabled: false };
+  }
+
   if (
     draft.beforeDueEnabled &&
     (!Number.isInteger(draft.beforeDueAmount) || draft.beforeDueAmount < 0)
@@ -122,14 +130,6 @@ export function buildTaskRemindersUpdate(
 
   if (draft.scheduledEnabled && !isValidTime(draft.scheduledTime)) {
     return null;
-  }
-
-  if (!draft.beforeDueEnabled && !draft.scheduledEnabled) {
-    return { reminders_enabled: false, reminders: [] };
-  }
-
-  if (!draft.remindersEnabled) {
-    return { reminders_enabled: false };
   }
 
   return { reminders_enabled: true, reminders: buildReminderRules(draft) };

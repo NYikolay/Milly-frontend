@@ -246,6 +246,62 @@ describe("buildTaskRemindersUpdate", () => {
     ).toEqual({ reminders_enabled: false, reminders: [] });
   });
 
+  it("turns the master off despite an invalid hidden scheduled time", () => {
+    const current = task();
+    expect(
+      buildTaskRemindersUpdate({
+        ...getTaskRemindersDraft(current),
+        remindersEnabled: false,
+        scheduledTime: "",
+      }),
+    ).toEqual({ reminders_enabled: false });
+  });
+
+  it("turns the master off despite an invalid hidden before-due amount", () => {
+    const current = task();
+    expect(
+      buildTaskRemindersUpdate({
+        ...getTaskRemindersDraft(current),
+        remindersEnabled: false,
+        beforeDueAmount: -1,
+      }),
+    ).toEqual({ reminders_enabled: false });
+  });
+
+  it("ignores invalid fields of a disabled before-due rule", () => {
+    const current = task();
+    expect(
+      buildTaskRemindersUpdate({
+        ...getTaskRemindersDraft(current),
+        beforeDueEnabled: false,
+        beforeDueAmount: -1,
+      }),
+    ).toEqual({
+      reminders_enabled: true,
+      reminders: [
+        {
+          kind: "scheduled",
+          enabled: true,
+          interval_days: 3,
+          time_of_day: "09:00:00",
+        },
+      ],
+    });
+  });
+
+  it("clears stored rules when both rules are off with invalid fields", () => {
+    const current = task();
+    expect(
+      buildTaskRemindersUpdate({
+        ...getTaskRemindersDraft(current),
+        beforeDueEnabled: false,
+        beforeDueAmount: -1,
+        scheduledEnabled: false,
+        scheduledTime: "",
+      }),
+    ).toEqual({ reminders_enabled: false, reminders: [] });
+  });
+
   it("returns null for an invalid time", () => {
     const current = task();
     expect(
